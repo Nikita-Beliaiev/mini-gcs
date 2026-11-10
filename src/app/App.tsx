@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { startAlertMonitor } from '../alerts/alertMonitor'
 import { AlertSummary } from '../alerts/AlertSummary'
+import { ChartsPanel } from '../charts/ChartsPanel'
 import { ConnectionControl } from '../connection/ConnectionControl'
 import { MapPanel } from '../map/MapPanel'
 import { ControlsPanel } from './ControlsPanel'
@@ -30,7 +31,10 @@ export function App() {
         </div>
       </header>
       <main className={styles.main}>
-        <MapPanel />
+        <div className={styles.primary}>
+          <MapPanel />
+          <ChartsPanel />
+        </div>
         <div className={styles.sidebar}>
           <TelemetryPanel />
           <ControlsPanel />

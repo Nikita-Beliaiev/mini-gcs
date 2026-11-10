@@ -7,6 +7,10 @@ vi.mock('../map/MapView', () => ({
   default: () => <p>Map view</p>,
 }))
 
+vi.mock('../charts/TimeSeriesChart', () => ({
+  default: () => <figure>Chart</figure>,
+}))
+
 describe('App', () => {
   it('shows the station title, the map and the telemetry panel', async () => {
     renderWithStation(<App />)

@@ -1,0 +1,18 @@
+.charts {
+  display: grid;
+  gap: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 140px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}

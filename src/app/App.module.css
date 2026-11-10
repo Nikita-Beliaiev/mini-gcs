@@ -43,9 +43,19 @@
   min-width: 0;
 }
 
+.primary {
+  display: grid;
+  grid-template-rows: minmax(320px, 1fr) auto;
+  gap: var(--gap);
+  min-width: 0;
+}
+
 @media (max-width: 768px) {
   .main {
     grid-template-columns: 1fr;
+  }
+
+  .primary {
     grid-template-rows: minmax(360px, 60svh) auto;
   }
 }
