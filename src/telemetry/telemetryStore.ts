@@ -28,15 +28,18 @@ export interface TelemetryStore {
   reset: () => void
   getSnapshot: () => TelemetryState
   getPositionHistory: () => readonly PositionMessage[]
+  getStatusHistory: () => readonly SystemStatusMessage[]
   subscribe: (listener: () => void) => () => void
 }
 
 export interface TelemetryStoreOptions {
   historySize?: number
+  statusHistorySize?: number
   scheduleFrame?: (callback: () => void) => void
 }
 
 const DEFAULT_HISTORY_SIZE = 1200
+const DEFAULT_STATUS_HISTORY_SIZE = 240
 
 export const EMPTY_TELEMETRY_STATE: TelemetryState = {
   heartbeat: null,
@@ -78,10 +81,12 @@ function applyMessage(state: TelemetryState, message: TelemetryMessage): Telemet
 
 export function createTelemetryStore({
   historySize = DEFAULT_HISTORY_SIZE,
+  statusHistorySize = DEFAULT_STATUS_HISTORY_SIZE,
   scheduleFrame = scheduleAnimationFrame,
 }: TelemetryStoreOptions = {}): TelemetryStore {
   const changes = createEmitter()
   const positionHistory = new RingBuffer<PositionMessage>(historySize)
+  const statusHistory = new RingBuffer<SystemStatusMessage>(statusHistorySize)
   let latest = EMPTY_TELEMETRY_STATE
   let published = EMPTY_TELEMETRY_STATE
   let flushScheduled = false
@@ -106,15 +111,20 @@ export function createTelemetryStore({
       if (message.type === 'position') {
         positionHistory.push(message)
       }
+      if (message.type === 'systemStatus') {
+        statusHistory.push(message)
+      }
       scheduleFlush()
     },
     reset() {
       latest = EMPTY_TELEMETRY_STATE
       positionHistory.clear()
+      statusHistory.clear()
       scheduleFlush()
     },
     getSnapshot: () => published,
     getPositionHistory: () => positionHistory.toArray(),
+    getStatusHistory: () => statusHistory.toArray(),
     subscribe: changes.subscribe,
   }
 }

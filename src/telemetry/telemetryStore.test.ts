@@ -16,6 +16,7 @@ function setup(historySize?: number) {
   const pendingFrames: (() => void)[] = []
   const store = createTelemetryStore({
     historySize,
+    statusHistorySize: historySize,
     scheduleFrame: (callback) => {
       pendingFrames.push(callback)
     },
@@ -152,10 +153,22 @@ describe('createTelemetryStore', () => {
     expect(store.getPositionHistory().map((position) => position.seq)).toEqual([3, 4, 5])
   })
 
+  it('keeps a bounded system status history in arrival order', () => {
+    const { store } = setup(2)
+
+    for (let seq = 1; seq <= 4; seq += 1) {
+      store.push(systemStatusMessage({ seq }))
+    }
+    store.push(positionMessage({ seq: 5 }))
+
+    expect(store.getStatusHistory().map((status) => status.seq)).toEqual([3, 4])
+  })
+
   it('clears telemetry and history on reset', () => {
     const { store, runFrame } = setup()
     store.push(heartbeatMessage())
     store.push(positionMessage())
+    store.push(systemStatusMessage())
     runFrame()
 
     store.reset()
@@ -164,5 +177,6 @@ describe('createTelemetryStore', () => {
     expect(store.getSnapshot().heartbeat).toBeNull()
     expect(store.getSnapshot().position).toBeNull()
     expect(store.getPositionHistory()).toEqual([])
+    expect(store.getStatusHistory()).toEqual([])
   })
 })
