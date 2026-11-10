@@ -51,6 +51,7 @@ describe('MissionPanel', () => {
     renderPanel()
 
     expect(screen.getByText(/No waypoints yet/)).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Mission problems' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Upload to vehicle' })).toBeDisabled()
   })
 
@@ -63,6 +64,21 @@ describe('MissionPanel', () => {
     })
 
     expect(screen.getByText('Vehicle mission 1: 2 waypoints, flying to WP 2')).toBeInTheDocument()
+  })
+
+  it('turns map editing on and off for waypoints', async () => {
+    const user = userEvent.setup()
+    renderPanel()
+    const toggle = screen.getByRole('button', { name: 'Edit on map' })
+
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    expect(usePlanningStore.getState().editMode).toBe('mission')
+    expect(screen.getByText(/Click the map to add a waypoint/)).toBeInTheDocument()
+
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(usePlanningStore.getState().editMode).toBeNull()
   })
 
   it('loads the vehicle mission into the draft', async () => {

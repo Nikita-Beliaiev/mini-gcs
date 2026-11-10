@@ -1,17 +1,25 @@
 import type { TelemetryState } from '../telemetry/telemetryStore'
 
-export function describeVehicleMission(state: TelemetryState): string {
+export function activeWaypointIndex(state: TelemetryState): number | null {
   const { mission, missionCurrent, heartbeat } = state
+  const isFlyingThisMission =
+    heartbeat?.mode === 'AUTO' &&
+    mission !== null &&
+    missionCurrent?.missionId === mission.missionId
+  return isFlyingThisMission ? missionCurrent.waypointIndex : null
+}
+
+export function describeVehicleMission(state: TelemetryState): string {
+  const { mission } = state
   if (!mission) {
     return 'Waiting for the vehicle mission'
   }
 
   const count = mission.waypoints.length
   const summary = `Vehicle mission ${String(mission.missionId)}: ${String(count)} ${count === 1 ? 'waypoint' : 'waypoints'}`
-  const isFlyingThisMission =
-    heartbeat?.mode === 'AUTO' && missionCurrent?.missionId === mission.missionId
-  if (!isFlyingThisMission) {
+  const activeIndex = activeWaypointIndex(state)
+  if (activeIndex === null) {
     return summary
   }
-  return `${summary}, flying to WP ${String(missionCurrent.waypointIndex + 1)}`
+  return `${summary}, flying to WP ${String(activeIndex + 1)}`
 }

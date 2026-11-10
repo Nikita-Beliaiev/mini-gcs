@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { TelemetryState } from '../telemetry/telemetryStore'
 import { heartbeatMessage, missionCurrentMessage, missionMessage } from '../test/messages'
-import { describeVehicleMission } from './vehicleMission'
+import { activeWaypointIndex, describeVehicleMission } from './vehicleMission'
 
 const EMPTY: TelemetryState = {
   heartbeat: null,
@@ -44,5 +44,32 @@ describe('describeVehicleMission', () => {
     }
 
     expect(describeVehicleMission(state)).toBe('Vehicle mission 3: 1 waypoint')
+  })
+})
+
+describe('activeWaypointIndex', () => {
+  it('is the reported waypoint while the vehicle flies its mission in AUTO', () => {
+    const state = {
+      ...EMPTY,
+      heartbeat: heartbeatMessage({ mode: 'AUTO' }),
+      mission: missionMessage({ missionId: 2 }),
+      missionCurrent: missionCurrentMessage({ missionId: 2, waypointIndex: 1 }),
+    }
+
+    expect(activeWaypointIndex(state)).toBe(1)
+  })
+
+  it('is null outside AUTO or for an outdated mission', () => {
+    const flying = {
+      ...EMPTY,
+      heartbeat: heartbeatMessage({ mode: 'AUTO' }),
+      mission: missionMessage({ missionId: 2 }),
+      missionCurrent: missionCurrentMessage({ missionId: 2, waypointIndex: 1 }),
+    }
+    const outdated = { ...flying, missionCurrent: missionCurrentMessage({ missionId: 1 }) }
+    const returning = { ...flying, heartbeat: heartbeatMessage({ mode: 'RTL' }) }
+
+    expect(activeWaypointIndex(outdated)).toBeNull()
+    expect(activeWaypointIndex(returning)).toBeNull()
   })
 })

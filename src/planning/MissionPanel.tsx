@@ -7,6 +7,7 @@ import { classNames } from '../ui/classNames'
 import styles from './PlanEditor.module.css'
 import { usePlanningStore } from './planningStore'
 import { DraftPointList } from './DraftPointList'
+import { EditOnMapToggle } from './EditOnMapToggle'
 import { describeUpload, uploadPlan } from './uploadPlan'
 import { describeVehicleMission } from './vehicleMission'
 
@@ -25,12 +26,17 @@ export function MissionPanel() {
   const vehicleSummary = useTelemetry(describeVehicleMission)
 
   const issues = home ? validateMission(draft, home, vehicleGeofence) : [WAITING_FOR_HOME]
-  const generalIssues = issues.filter((issue) => issue.pointIndex === null)
+  const generalIssues =
+    draft.length === 0 ? [] : issues.filter((issue) => issue.pointIndex === null)
   const canUpload = isConnected && issues.length === 0 && upload.status !== 'pending'
 
   return (
     <div className={styles.editor}>
       <p className={styles.summary}>{vehicleSummary}</p>
+      <EditOnMapToggle
+        target="mission"
+        hint="Click the map to add a waypoint, drag a number to move it."
+      />
       {draft.length === 0 ? (
         <p className={styles.hint}>
           No waypoints yet. Load the vehicle mission or add points on the map.

@@ -1,16 +1,15 @@
-import {
-  type GeoJSONSource,
-  Map as MapLibreMap,
-  Marker,
-  NavigationControl,
-  setWorkerUrl,
-} from 'maplibre-gl'
+import { Map as MapLibreMap, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useEffectEvent, useRef } from 'react'
 import type { LatLon } from '../geo/geo'
+import type { MissionMessage } from '../protocol/telemetry'
+import { usePlanningStore, type PlanTarget } from '../planning/planningStore'
+import { activeWaypointIndex } from '../planning/vehicleMission'
 import { useGroundStation } from '../station/stationContext'
-import { createTrailData, toLngLat } from './mapData'
+import { createLineData, createPointData, toLngLat } from './mapData'
+import { addMapLayers, setSourceData, SOURCES } from './mapLayers'
+import { createDraftMarkers, createHomeMarker, createVehicleMarker, placeMarker } from './markers'
 import styles from './MapView.module.css'
 
 export interface MapViewProps {
@@ -19,44 +18,9 @@ export interface MapViewProps {
 }
 
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark'
-const TRAIL_SOURCE_ID = 'trail'
-const TRAIL_COLOR = '#38bdf8'
 const HOME_ZOOM = 15.5
 
 setWorkerUrl(maplibreWorkerUrl)
-
-function createMarkerElement(className: string | undefined, label: string): HTMLElement {
-  const element = document.createElement('div')
-  element.className = className ?? ''
-  element.setAttribute('role', 'img')
-  element.setAttribute('aria-label', label)
-  return element
-}
-
-function createVehicleElement(): HTMLElement {
-  const element = createMarkerElement(styles.vehicle, 'Vehicle')
-  const arrow = document.createElement('div')
-  arrow.className = styles.vehicleArrow ?? ''
-  element.append(arrow)
-  return element
-}
-
-function createHomeElement(): HTMLElement {
-  const element = createMarkerElement(styles.home, 'Home')
-  element.textContent = 'H'
-  return element
-}
-
-function placeMarker(marker: Marker, map: MapLibreMap, point: LatLon | null): void {
-  if (!point) {
-    marker.remove()
-    return
-  }
-  marker.setLngLat(toLngLat(point))
-  if (!marker.getElement().isConnected) {
-    marker.addTo(map)
-  }
-}
 
 export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -81,17 +45,39 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
     })
     map.addControl(new NavigationControl(), 'top-right')
 
-    const vehicleMarker = new Marker({ element: createVehicleElement(), rotationAlignment: 'map' })
-    const homeMarker = new Marker({ element: createHomeElement() })
+    const vehicleMarker = createVehicleMarker()
+    const homeMarker = createHomeMarker()
+    const missionDraftMarkers = createDraftMarkers(map, {
+      className: styles.draftWaypoint,
+      label: (index) => `Draft waypoint ${String(index + 1)}`,
+      text: (index) => String(index + 1),
+      onMove: (id, position) => {
+        usePlanningStore.getState().movePoint('mission', id, position)
+      },
+    })
+    const unsubscribers: (() => void)[] = []
     let centeredOnHome = false
-    let unsubscribe: (() => void) | null = null
+    let shownMission: MissionMessage | null = null
+    let shownActiveIndex: number | null = null
 
-    function render(): void {
+    function renderVehicleMission(): void {
+      const state = telemetry.getSnapshot()
+      const activeIndex = activeWaypointIndex(state)
+      if (state.mission === shownMission && activeIndex === shownActiveIndex) {
+        return
+      }
+      const waypoints = state.mission?.waypoints ?? []
+      setSourceData(map, SOURCES.vehicleMissionLine, createLineData(waypoints))
+      setSourceData(map, SOURCES.vehicleMissionPoints, createPointData(waypoints, activeIndex))
+      shownMission = state.mission
+      shownActiveIndex = activeIndex
+    }
+
+    function renderTelemetry(): void {
       const { position, home } = telemetry.getSnapshot()
 
-      const trailSource = map.getSource<GeoJSONSource>(TRAIL_SOURCE_ID)
-      void trailSource?.setData(createTrailData(telemetry.getPositionHistory()))
-
+      setSourceData(map, SOURCES.trail, createLineData(telemetry.getPositionHistory()))
+      renderVehicleMission()
       placeMarker(homeMarker, map, home)
       placeMarker(vehicleMarker, map, position)
       if (position) {
@@ -107,24 +93,54 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
       }
     }
 
+    function renderMissionDraft(points: readonly (LatLon & { id: string })[]): void {
+      setSourceData(map, SOURCES.draftMissionLine, createLineData(points))
+      missionDraftMarkers.update(points)
+    }
+
+    function applyEditMode(mode: PlanTarget | null): void {
+      map.getCanvas().style.cursor = mode ? 'crosshair' : ''
+      if (mode) {
+        map.doubleClickZoom.disable()
+      } else {
+        map.doubleClickZoom.enable()
+      }
+    }
+
     map.on('load', () => {
-      map.addSource(TRAIL_SOURCE_ID, { type: 'geojson', data: createTrailData([]) })
-      map.addLayer({
-        id: TRAIL_SOURCE_ID,
-        type: 'line',
-        source: TRAIL_SOURCE_ID,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': TRAIL_COLOR, 'line-width': 2.5, 'line-opacity': 0.85 },
-      })
-      render()
-      unsubscribe = telemetry.subscribe(render)
+      addMapLayers(map)
+      const planning = usePlanningStore.getState()
+      renderTelemetry()
+      renderMissionDraft(planning.drafts.mission)
+      applyEditMode(planning.editMode)
+
+      unsubscribers.push(telemetry.subscribe(renderTelemetry))
+      unsubscribers.push(
+        usePlanningStore.subscribe((state, previous) => {
+          if (state.drafts.mission !== previous.drafts.mission) {
+            renderMissionDraft(state.drafts.mission)
+          }
+          if (state.editMode !== previous.editMode) {
+            applyEditMode(state.editMode)
+          }
+        }),
+      )
+    })
+    map.on('click', (event) => {
+      const { editMode, addPoint } = usePlanningStore.getState()
+      if (editMode) {
+        addPoint(editMode, { lat: event.lngLat.lat, lon: event.lngLat.lng })
+      }
     })
     map.on('dragstart', () => {
       handleUserPan()
     })
 
     return () => {
-      unsubscribe?.()
+      for (const unsubscribe of unsubscribers) {
+        unsubscribe()
+      }
+      missionDraftMarkers.remove()
       map.remove()
     }
   }, [telemetry])
