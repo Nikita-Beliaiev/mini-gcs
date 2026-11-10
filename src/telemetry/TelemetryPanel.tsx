@@ -55,9 +55,11 @@ function Readout({ label, unit, select }: ReadoutDefinition) {
   const showUnit = unit !== undefined && value !== NO_VALUE
 
   return (
-    <div className={styles.readout}>
-      <dt id={labelId}>{label}</dt>
-      <dd aria-labelledby={labelId}>
+    <div role="group" aria-labelledby={labelId} className={styles.readout}>
+      <span id={labelId} className={styles.label}>
+        {label}
+      </span>
+      <span className={styles.value}>
         {value}
         {showUnit ? (
           <>
@@ -65,7 +67,7 @@ function Readout({ label, unit, select }: ReadoutDefinition) {
             <span className={styles.unit}>{unit}</span>
           </>
         ) : null}
-      </dd>
+      </span>
     </div>
   )
 }
@@ -79,11 +81,11 @@ export function TelemetryPanel() {
         Telemetry
       </h2>
       <AttitudeIndicator />
-      <dl className={styles.readouts}>
+      <div className={styles.readouts}>
         {READOUTS.map((readout) => (
           <Readout key={readout.label} {...readout} />
         ))}
-      </dl>
+      </div>
     </aside>
   )
 }

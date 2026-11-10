@@ -23,7 +23,7 @@ const LABELS = [
 ]
 
 function readout(label: string): HTMLElement {
-  return screen.getByRole('definition', { name: label })
+  return screen.getByRole('group', { name: label })
 }
 
 describe('TelemetryPanel', () => {
@@ -31,13 +31,11 @@ describe('TelemetryPanel', () => {
     renderWithStation(<TelemetryPanel />)
 
     const panel = screen.getByRole('complementary', { name: 'Telemetry' })
-    const labels = within(panel)
-      .getAllByRole('term')
-      .map((term) => term.textContent)
+    const readoutsInOrder = LABELS.map((label) => within(panel).getByRole('group', { name: label }))
 
-    expect(labels).toEqual(LABELS)
+    expect(within(panel).getAllByRole('group')).toEqual(readoutsInOrder)
     for (const label of LABELS) {
-      expect(readout(label)).toHaveTextContent(/^—$/)
+      expect(readout(label)).toHaveTextContent(/—$/)
     }
   })
 

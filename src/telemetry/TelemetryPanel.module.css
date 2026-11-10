@@ -11,17 +11,18 @@
 }
 
 .readout {
+  display: grid;
   padding: 8px 10px;
   border-radius: var(--radius);
   background: var(--color-surface-raised);
 }
 
-.readout dt {
+.label {
   font-size: 12px;
   color: var(--color-text-muted);
 }
 
-.readout dd {
+.value {
   font-family: var(--font-mono);
   font-size: 20px;
   white-space: nowrap;
