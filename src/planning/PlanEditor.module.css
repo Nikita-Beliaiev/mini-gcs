@@ -1,0 +1,79 @@
+.editor {
+  display: grid;
+  gap: 10px;
+}
+
+.hint,
+.summary,
+.uploadStatus {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.uploadStatus {
+  min-height: 1.45em;
+}
+
+.points {
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.point {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--color-surface-raised);
+}
+
+.point[data-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.pointName {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pointDetails {
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pointActions {
+  display: flex;
+  gap: 4px;
+}
+
+.pointIssue {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--color-danger);
+}
+
+.issues {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

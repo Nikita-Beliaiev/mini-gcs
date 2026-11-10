@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { ConnectionControl } from '../connection/ConnectionControl'
 import { MapPanel } from '../map/MapPanel'
+import { PlanningPanel } from '../planning/PlanningPanel'
 import { useGroundStation } from '../station/stationContext'
 import { TelemetryPanel } from '../telemetry/TelemetryPanel'
 import styles from './App.module.css'
@@ -23,7 +24,10 @@ export function App() {
       </header>
       <main className={styles.main}>
         <MapPanel />
-        <TelemetryPanel />
+        <div className={styles.sidebar}>
+          <TelemetryPanel />
+          <PlanningPanel />
+        </div>
       </main>
     </div>
   )

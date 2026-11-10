@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { systemStatusMessage } from '../test/messages'
-import { formatArmed, formatDecimal, formatGps, formatHeading, NO_VALUE } from './format'
+import {
+  formatArmed,
+  formatCoordinates,
+  formatDecimal,
+  formatDistance,
+  formatGps,
+  formatHeading,
+  NO_VALUE,
+} from './format'
 
 describe('formatDecimal', () => {
   it('rounds to the requested number of digits', () => {
@@ -47,5 +55,24 @@ describe('formatGps', () => {
 
   it('shows a placeholder without a status', () => {
     expect(formatGps(null)).toBe(NO_VALUE)
+  })
+})
+
+describe('formatDistance', () => {
+  it('uses metres below a kilometre and kilometres above', () => {
+    expect(formatDistance(0)).toBe('0 m')
+    expect(formatDistance(382.6)).toBe('383 m')
+    expect(formatDistance(1000)).toBe('1.0 km')
+    expect(formatDistance(2372)).toBe('2.4 km')
+  })
+
+  it('shows a placeholder without a value', () => {
+    expect(formatDistance(undefined)).toBe(NO_VALUE)
+  })
+})
+
+describe('formatCoordinates', () => {
+  it('shows latitude and longitude with five decimals', () => {
+    expect(formatCoordinates({ lat: 43.098211, lon: 11.6466 })).toBe('43.09821, 11.64660')
   })
 })

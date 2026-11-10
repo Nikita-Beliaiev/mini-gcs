@@ -23,9 +23,16 @@
 
 .main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: var(--gap);
   padding: var(--gap);
+}
+
+.sidebar {
+  display: grid;
+  align-content: start;
+  gap: var(--gap);
+  min-width: 0;
 }
 
 @media (max-width: 768px) {
