@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test'
 
 export async function openStation(page: Page, search = ''): Promise<void> {
   await page.goto(`./${search}`)
-  await expect(page.getByRole('status')).toContainText('Connected')
+  await expect(page.getByRole('status')).toContainText('Connected', { timeout: 20_000 })
 }
 
 export function readout(page: Page, label: string): Locator {

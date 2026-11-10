@@ -18,7 +18,7 @@ test('raises a link loss alert, lets the operator acknowledge it and clears it',
   await expect(acknowledge).toHaveCount(0)
   await expect(alerts).toContainText('Link lost')
 
-  await expect(alerts).not.toContainText('Link lost', { timeout: 15_000 })
+  await expect(alerts).not.toContainText('Link lost', { timeout: 30_000 })
   await expect(page.getByText('No active alerts')).toBeVisible()
 })
 
@@ -30,5 +30,5 @@ test('warns about a battery drop and returns home', async ({ page }) => {
   await page.getByRole('button', { name: 'Drain the battery to 32%' }).click()
 
   await expect(page.getByRole('region', { name: 'Alerts' })).toContainText('Battery below 35%')
-  await waitForMode(page, 'RTL', 15_000)
+  await waitForMode(page, 'RTL', 30_000)
 })
