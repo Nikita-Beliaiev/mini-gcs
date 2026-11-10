@@ -1,6 +1,11 @@
 import { act, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { heartbeatMessage, positionMessage, systemStatusMessage } from '../test/messages'
+import {
+  attitudeMessage,
+  heartbeatMessage,
+  positionMessage,
+  systemStatusMessage,
+} from '../test/messages'
 import { renderWithStation } from '../test/render'
 import { TelemetryPanel } from './TelemetryPanel'
 
@@ -10,6 +15,8 @@ const LABELS = [
   'Altitude',
   'Ground speed',
   'Heading',
+  'Roll',
+  'Pitch',
   'Battery',
   'GPS',
   'Link quality',
@@ -39,6 +46,7 @@ describe('TelemetryPanel', () => {
 
     act(() => {
       transport.receive(heartbeatMessage({ mode: 'RTL', armed: true }))
+      transport.receive(attitudeMessage({ rollDeg: 12.4, pitchDeg: -9.6 }))
       transport.receive(
         positionMessage({ altitudeM: 38.27, groundSpeedMs: 11.94, headingDeg: 7.2 }),
       )
@@ -57,6 +65,8 @@ describe('TelemetryPanel', () => {
     expect(readout('Altitude')).toHaveTextContent('38.3 m')
     expect(readout('Ground speed')).toHaveTextContent('11.9 m/s')
     expect(readout('Heading')).toHaveTextContent('007°')
+    expect(readout('Roll')).toHaveTextContent('+12°')
+    expect(readout('Pitch')).toHaveTextContent('-10°')
     expect(readout('Battery')).toHaveTextContent('65 %')
     expect(readout('GPS')).toHaveTextContent('3D · 15 sats')
     expect(readout('Link quality')).toHaveTextContent('91 %')

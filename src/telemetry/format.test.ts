@@ -7,6 +7,7 @@ import {
   formatDistance,
   formatGps,
   formatHeading,
+  formatSignedAngle,
   NO_VALUE,
 } from './format'
 
@@ -35,6 +36,21 @@ describe('formatHeading', () => {
 
   it('shows a placeholder without a value', () => {
     expect(formatHeading(undefined)).toBe(NO_VALUE)
+  })
+})
+
+describe('formatSignedAngle', () => {
+  it.each([
+    [12.4, '+12°'],
+    [-9.6, '-10°'],
+    [0.2, '0°'],
+    [-0.2, '0°'],
+  ])('shows %d degrees as %s', (degrees, expected) => {
+    expect(formatSignedAngle(degrees)).toBe(expected)
+  })
+
+  it('shows a placeholder without a value', () => {
+    expect(formatSignedAngle(undefined)).toBe(NO_VALUE)
   })
 })
 

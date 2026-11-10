@@ -2,7 +2,15 @@ import { useId } from 'react'
 import { useTelemetry } from '../station/stationContext'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
-import { formatArmed, formatDecimal, formatGps, formatHeading, NO_VALUE } from './format'
+import { AttitudeIndicator } from './AttitudeIndicator'
+import {
+  formatArmed,
+  formatDecimal,
+  formatGps,
+  formatHeading,
+  formatSignedAngle,
+  NO_VALUE,
+} from './format'
 import styles from './TelemetryPanel.module.css'
 import type { TelemetryState } from './telemetryStore'
 
@@ -26,6 +34,8 @@ const READOUTS: readonly ReadoutDefinition[] = [
     select: (state) => formatDecimal(state.position?.groundSpeedMs, 1),
   },
   { label: 'Heading', select: (state) => formatHeading(state.position?.headingDeg) },
+  { label: 'Roll', select: (state) => formatSignedAngle(state.attitude?.rollDeg) },
+  { label: 'Pitch', select: (state) => formatSignedAngle(state.attitude?.pitchDeg) },
   {
     label: 'Battery',
     unit: '%',
@@ -68,6 +78,7 @@ export function TelemetryPanel() {
       <h2 id={titleId} className={panelStyles.title}>
         Telemetry
       </h2>
+      <AttitudeIndicator />
       <dl className={styles.readouts}>
         {READOUTS.map((readout) => (
           <Readout key={readout.label} {...readout} />

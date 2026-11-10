@@ -20,6 +20,14 @@ export function formatHeading(headingDeg: number | undefined): string {
   return `${String(normalizeDegrees(Math.round(headingDeg))).padStart(3, '0')}°`
 }
 
+export function formatSignedAngle(degrees: number | undefined): string {
+  if (degrees === undefined) {
+    return NO_VALUE
+  }
+  const rounded = Math.round(degrees)
+  return `${rounded > 0 ? '+' : ''}${String(rounded === 0 ? 0 : rounded)}°`
+}
+
 export function formatArmed(armed: boolean | undefined): string {
   if (armed === undefined) {
     return NO_VALUE

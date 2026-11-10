@@ -1,0 +1,50 @@
+.indicator {
+  display: block;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto;
+  clip-path: circle(50%);
+}
+
+.sky {
+  fill: #1d4f7a;
+}
+
+.ground {
+  fill: #5a3d22;
+}
+
+.horizonLine,
+.ladder,
+.rollMark {
+  stroke: #e5edf5;
+  stroke-width: 1.5;
+}
+
+.ladderLabel {
+  fill: #e5edf5;
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.rollPointer {
+  fill: var(--color-warning);
+}
+
+.aircraft {
+  fill: none;
+  stroke: var(--color-warning);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.aircraftCenter {
+  fill: var(--color-warning);
+}
+
+.bezel {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 4;
+}
