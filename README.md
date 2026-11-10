@@ -8,7 +8,7 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 
 ![The station flying a patrol, uploading a new mission and raising a link loss alert](docs/demo.gif)
 
-> **Status:** in development. Telemetry, mission planning, geofencing, alerts, charts and the WebSocket simulator work; end-to-end tests and a recorded demo come next (see [Roadmap](#roadmap)).
+> **Status:** the planned roadmap is complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, end-to-end and accessibility tests. Stretch goals are listed in the [Roadmap](#roadmap).
 >
 > All flight data is simulated. This project does not connect to or control real aircraft.
 
@@ -35,18 +35,18 @@ The demo flies over farmland in Val d'Orcia, Tuscany.
 
 ## Tech stack
 
-| Area             | Choice                                                    |
-| ---------------- | --------------------------------------------------------- |
-| UI               | React 19, TypeScript (strict)                             |
-| Build            | Vite                                                      |
-| Map              | MapLibre GL JS with OpenFreeMap tiles                     |
-| Charts           | uPlot                                                     |
-| State            | Custom telemetry store, Zustand for planning and alerts   |
-| Validation       | Zod                                                       |
-| Simulator server | Node.js, ws, tsx                                          |
-| Testing          | Vitest, React Testing Library, Playwright _(e2e planned)_ |
-| Quality          | ESLint with type-aware rules, Prettier                    |
-| CI/CD            | GitHub Actions, deployed to GitHub Pages                  |
+| Area             | Choice                                                  |
+| ---------------- | ------------------------------------------------------- |
+| UI               | React 19, TypeScript (strict)                           |
+| Build            | Vite                                                    |
+| Map              | MapLibre GL JS with OpenFreeMap tiles                   |
+| Charts           | uPlot                                                   |
+| State            | Custom telemetry store, Zustand for planning and alerts |
+| Validation       | Zod                                                     |
+| Simulator server | Node.js, ws, tsx                                        |
+| Testing          | Vitest, React Testing Library, Playwright, axe          |
+| Quality          | ESLint with type-aware rules, Prettier                  |
+| CI/CD            | GitHub Actions, deployed to GitHub Pages                |
 
 ## Getting started
 
@@ -67,17 +67,18 @@ Then open http://localhost:5173/?server=ws://127.0.0.1:8787. The server listens 
 
 ## Scripts
 
-| Command               | What it does                                              |
-| --------------------- | --------------------------------------------------------- |
-| `npm run dev`         | Start the dev server                                      |
-| `npm run sim:server`  | Run the simulator in Node behind a WebSocket on port 8787 |
-| `npm run build`       | Type-check and build for production                       |
-| `npm run preview`     | Serve the production build locally                        |
-| `npm run check`       | Type-check, lint, check formatting and run tests          |
-| `npm test`            | Run unit, component and simulator server tests once       |
-| `npm run test:watch`  | Run the tests in watch mode                               |
-| `npm run demo:record` | Record `docs/demo.gif` from a scripted Playwright session |
-| `npm run format`      | Format all files with Prettier                            |
+| Command               | What it does                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------- |
+| `npm run dev`         | Start the dev server                                                                              |
+| `npm run sim:server`  | Run the simulator in Node behind a WebSocket on port 8787                                         |
+| `npm run build`       | Type-check and build for production                                                               |
+| `npm run preview`     | Serve the production build locally                                                                |
+| `npm run check`       | Type-check, lint, check formatting and run tests                                                  |
+| `npm test`            | Run unit, component and simulator server tests once                                               |
+| `npm run test:watch`  | Run the tests in watch mode                                                                       |
+| `npm run test:e2e`    | Run the Playwright end-to-end and accessibility tests against a production build in Google Chrome |
+| `npm run demo:record` | Record `docs/demo.gif` from a scripted Playwright session                                         |
+| `npm run format`      | Format all files with Prettier                                                                    |
 
 ## Roadmap
 
@@ -85,7 +86,7 @@ Then open http://localhost:5173/?server=ws://127.0.0.1:8787. The server listens 
 - [x] **Phase 1:** telemetry protocol, simulator, map with vehicle and trail, telemetry panel
 - [x] **Phase 2:** mission planning, geofence, alerts
 - [x] **Phase 3:** charts, attitude indicator, reconnect, WebSocket simulator mode
-- [ ] **Phase 4:** demo GIF, architecture diagram, end-to-end tests
+- [x] **Phase 4:** demo GIF, architecture diagram, end-to-end tests
 
 Stretch goals: multiple vehicles, flight log replay, video feed, MAVLink via ArduPilot SITL.
 
