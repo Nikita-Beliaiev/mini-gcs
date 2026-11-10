@@ -1,10 +1,5 @@
 import { bearingDegrees, destinationPoint, distanceMeters, type LatLon } from '../geo/geo'
-import type {
-  FlightMode,
-  GpsFix,
-  TelemetryMessage,
-  TelemetryMessageType,
-} from '../protocol/telemetry'
+import type { FlightMode, GpsFix, TelemetryMessage } from '../protocol/telemetry'
 import { approach, clamp, turnToward } from './motion'
 import { createRandom, randomBetween } from './random'
 
@@ -39,7 +34,9 @@ const GPS_JITTER_M = 0.3
 const LINK_RANGE_M = 5000
 const LINK_NOISE_PERCENT = 2
 
-const MESSAGE_SCHEDULE: readonly { type: TelemetryMessageType; intervalMs: number }[] = [
+type ScheduledMessageType = 'heartbeat' | 'home' | 'systemStatus' | 'position'
+
+const MESSAGE_SCHEDULE: readonly { type: ScheduledMessageType; intervalMs: number }[] = [
   { type: 'heartbeat', intervalMs: 1000 },
   { type: 'home', intervalMs: 5000 },
   { type: 'systemStatus', intervalMs: 500 },
@@ -93,7 +90,7 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
     gpsSatellites: 0,
     waypointIndex: 0,
   }
-  const nextMessageAtMs: Record<TelemetryMessageType, number> = {
+  const nextMessageAtMs: Record<ScheduledMessageType, number> = {
     heartbeat: 0,
     home: 0,
     systemStatus: 0,
@@ -229,7 +226,7 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
     return clamp(100 * (1 - distanceHome / LINK_RANGE_M) + noise, 0, 100)
   }
 
-  function createMessage(type: TelemetryMessageType): TelemetryMessage {
+  function createMessage(type: ScheduledMessageType): TelemetryMessage {
     sequence += 1
     const header = { seq: sequence, timeMs }
 
@@ -260,6 +257,7 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
           gpsSatellites: vehicle.gpsSatellites,
           gpsFix: gpsFixFor(vehicle.gpsSatellites),
           linkQualityPercent: linkQualityPercent(),
+          fenceBreached: false,
         }
       case 'home':
         return { type, ...header, lat: home.lat, lon: home.lon }

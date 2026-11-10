@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  commandAckMessage,
+  geofenceMessage,
   heartbeatMessage,
   homeMessage,
+  missionCurrentMessage,
+  missionMessage,
   positionMessage,
   systemStatusMessage,
 } from '../test/messages'
@@ -34,6 +38,9 @@ describe('createTelemetryStore', () => {
       position: null,
       systemStatus: null,
       home: null,
+      mission: null,
+      missionCurrent: null,
+      geofence: null,
     })
     expect(store.getPositionHistory()).toEqual([])
   })
@@ -43,9 +50,21 @@ describe('createTelemetryStore', () => {
     const heartbeat = heartbeatMessage()
     const systemStatus = systemStatusMessage()
     const home = homeMessage()
+    const mission = missionMessage()
+    const missionCurrent = missionCurrentMessage()
+    const geofence = geofenceMessage()
     const newerPosition = positionMessage({ seq: 2, altitudeM: 41 })
 
-    for (const message of [heartbeat, positionMessage(), systemStatus, home, newerPosition]) {
+    for (const message of [
+      heartbeat,
+      positionMessage(),
+      systemStatus,
+      home,
+      mission,
+      missionCurrent,
+      geofence,
+      newerPosition,
+    ]) {
       store.push(message)
     }
     runFrame()
@@ -55,7 +74,22 @@ describe('createTelemetryStore', () => {
       position: newerPosition,
       systemStatus,
       home,
+      mission,
+      missionCurrent,
+      geofence,
     })
+  })
+
+  it('leaves command acknowledgements to the command sender', () => {
+    const { store, runFrame } = setup()
+    store.push(heartbeatMessage())
+    runFrame()
+    const snapshot = store.getSnapshot()
+
+    store.push(commandAckMessage())
+    runFrame()
+
+    expect(store.getSnapshot()).toBe(snapshot)
   })
 
   it('publishes changes only on the next frame', () => {
