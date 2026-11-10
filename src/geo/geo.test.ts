@@ -3,7 +3,9 @@ import {
   bearingDegrees,
   destinationPoint,
   distanceMeters,
+  isPointInPolygon,
   normalizeDegrees,
+  routeLengthMeters,
   signedAngleDifference,
 } from './geo'
 
@@ -78,5 +80,58 @@ describe('destinationPoint', () => {
 
     expect(end.lat).toBeCloseTo(start.lat, 12)
     expect(end.lon).toBeCloseTo(start.lon, 12)
+  })
+})
+
+describe('routeLengthMeters', () => {
+  it('is zero for fewer than two points', () => {
+    expect(routeLengthMeters([])).toBe(0)
+    expect(routeLengthMeters([ORIGIN])).toBe(0)
+  })
+
+  it('adds up every leg of the route', () => {
+    const route = [ORIGIN, { lat: 0, lon: 1 }, { lat: 1, lon: 1 }]
+
+    expect(routeLengthMeters(route)).toBeCloseTo(2 * ONE_DEGREE_ON_EQUATOR_M, -2)
+  })
+})
+
+describe('isPointInPolygon', () => {
+  const square = [
+    { lat: 0, lon: 0 },
+    { lat: 0, lon: 2 },
+    { lat: 2, lon: 2 },
+    { lat: 2, lon: 0 },
+  ]
+  const lShape = [
+    { lat: 0, lon: 0 },
+    { lat: 0, lon: 3 },
+    { lat: 1, lon: 3 },
+    { lat: 1, lon: 1 },
+    { lat: 3, lon: 1 },
+    { lat: 3, lon: 0 },
+  ]
+
+  it('finds points inside a convex polygon', () => {
+    expect(isPointInPolygon({ lat: 1, lon: 1 }, square)).toBe(true)
+  })
+
+  it('rejects points outside a convex polygon', () => {
+    expect(isPointInPolygon({ lat: 3, lon: 1 }, square)).toBe(false)
+    expect(isPointInPolygon({ lat: 1, lon: -0.5 }, square)).toBe(false)
+  })
+
+  it('handles concave polygons', () => {
+    expect(isPointInPolygon({ lat: 0.5, lon: 2 }, lShape)).toBe(true)
+    expect(isPointInPolygon({ lat: 2, lon: 0.5 }, lShape)).toBe(true)
+    expect(isPointInPolygon({ lat: 2, lon: 2 }, lShape)).toBe(false)
+  })
+
+  it('does not depend on the vertex order', () => {
+    expect(isPointInPolygon({ lat: 1, lon: 1 }, [...square].reverse())).toBe(true)
+  })
+
+  it('treats fewer than three vertices as no area', () => {
+    expect(isPointInPolygon({ lat: 0, lon: 0 }, square.slice(0, 2))).toBe(false)
   })
 })

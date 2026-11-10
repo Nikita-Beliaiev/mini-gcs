@@ -65,3 +65,40 @@ export function destinationPoint(from: LatLon, bearing: number, distance: number
 
   return { lat: toDegrees(lat), lon: toDegrees(lon) }
 }
+
+export function routeLengthMeters(points: readonly LatLon[]): number {
+  let length = 0
+  points.forEach((point, index) => {
+    const previous = index > 0 ? points[index - 1] : undefined
+    if (previous) {
+      length += distanceMeters(previous, point)
+    }
+  })
+  return length
+}
+
+export function isPointInPolygon(point: LatLon, polygon: readonly LatLon[]): boolean {
+  if (polygon.length < 3) {
+    return false
+  }
+
+  let inside = false
+  polygon.forEach((vertex, index) => {
+    const previous = polygon.at(index - 1)
+    if (!previous) {
+      return
+    }
+    const vertexIsNorth = vertex.lat > point.lat
+    const previousIsNorth = previous.lat > point.lat
+    if (vertexIsNorth === previousIsNorth) {
+      return
+    }
+    const edgeLonAtPointLat =
+      vertex.lon +
+      ((point.lat - vertex.lat) * (previous.lon - vertex.lon)) / (previous.lat - vertex.lat)
+    if (point.lon < edgeLonAtPointLat) {
+      inside = !inside
+    }
+  })
+  return inside
+}
