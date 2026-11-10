@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { telemetryStoreWithoutFrames } from '../test/station'
 import { createFakeTransport } from '../test/fakeTransport'
-import { heartbeatMessage, positionMessage } from '../test/messages'
+import { commandAckMessage, heartbeatMessage, positionMessage } from '../test/messages'
 import { createGroundStation } from './groundStation'
 
 function setup() {
@@ -51,5 +51,19 @@ describe('createGroundStation', () => {
 
     expect(transport.getStatus()).toBe('disconnected')
     expect(station.telemetry.getSnapshot().position).not.toBeNull()
+  })
+})
+
+describe('createGroundStation commands', () => {
+  it('sends commands over the transport and reports the answer', async () => {
+    const { transport, station } = setup()
+
+    const result = station.sendCommand({ type: 'clearGeofence' })
+    const [envelope] = transport.sent
+    transport.receive(
+      commandAckMessage({ commandId: envelope?.commandId, command: 'clearGeofence' }),
+    )
+
+    await expect(result).resolves.toEqual({ status: 'accepted' })
   })
 })

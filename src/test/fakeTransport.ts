@@ -1,8 +1,10 @@
+import type { CommandEnvelope } from '../protocol/commands'
 import type { TelemetryMessage } from '../protocol/telemetry'
 import { createEmitter } from '../shared/emitter'
 import type { ConnectionStatus, Transport } from '../transport/transport'
 
 export interface FakeTransport extends Transport {
+  sent: CommandEnvelope[]
   receive: (message: TelemetryMessage) => void
   setStatus: (status: ConnectionStatus) => void
 }
@@ -11,6 +13,7 @@ export function createFakeTransport(): FakeTransport {
   const statusChanges = createEmitter()
   const messages = createEmitter<TelemetryMessage>()
   let status: ConnectionStatus = 'disconnected'
+  const sent: CommandEnvelope[] = []
 
   function setStatus(next: ConnectionStatus): void {
     status = next
@@ -24,6 +27,10 @@ export function createFakeTransport(): FakeTransport {
     disconnect: () => {
       setStatus('disconnected')
     },
+    send: (envelope) => {
+      sent.push(envelope)
+    },
+    sent,
     getStatus: () => status,
     subscribeStatus: statusChanges.subscribe,
     subscribeMessages: messages.subscribe,

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { CommandEnvelope } from '../protocol/commands'
 import type { TelemetryMessage } from '../protocol/telemetry'
 import { heartbeatMessage, positionMessage } from '../test/messages'
 import { createWorkerTransport, type WorkerLike } from './workerTransport'
@@ -7,6 +8,11 @@ class FakeWorker implements WorkerLike {
   onmessage: WorkerLike['onmessage'] = null
   onerror: WorkerLike['onerror'] = null
   terminated = false
+  posted: CommandEnvelope[] = []
+
+  postMessage(envelope: CommandEnvelope): void {
+    this.posted.push(envelope)
+  }
 
   terminate(): void {
     this.terminated = true
@@ -131,5 +137,25 @@ describe('createWorkerTransport', () => {
 
     expect(workers).toHaveLength(2)
     expect(transport.getStatus()).toBe('connecting')
+  })
+})
+
+describe('createWorkerTransport send', () => {
+  it('posts commands to the connected worker', () => {
+    const { transport, workers } = setup()
+    transport.connect()
+    const envelope: CommandEnvelope = { commandId: 7, command: { type: 'clearGeofence' } }
+
+    transport.send(envelope)
+
+    expect(onlyWorker(workers).posted).toEqual([envelope])
+  })
+
+  it('drops commands while disconnected', () => {
+    const { transport, workers } = setup()
+
+    transport.send({ commandId: 1, command: { type: 'clearGeofence' } })
+
+    expect(workers).toHaveLength(0)
   })
 })

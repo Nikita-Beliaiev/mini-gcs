@@ -1,3 +1,4 @@
+import type { CommandEnvelope } from '../protocol/commands'
 import type { TelemetryMessage } from '../protocol/telemetry'
 import { createEmitter } from '../shared/emitter'
 import type { ConnectionStatus, Transport } from './transport'
@@ -5,6 +6,7 @@ import type { ConnectionStatus, Transport } from './transport'
 export interface WorkerLike {
   onmessage: ((event: MessageEvent<TelemetryMessage>) => void) | null
   onerror: ((event: ErrorEvent) => void) | null
+  postMessage: (envelope: CommandEnvelope) => void
   terminate: () => void
 }
 
@@ -54,6 +56,9 @@ export function createWorkerTransport(createWorker: () => WorkerLike): Transport
   return {
     connect,
     disconnect,
+    send: (envelope) => {
+      worker?.postMessage(envelope)
+    },
     getStatus: () => status,
     subscribeStatus: statusChanges.subscribe,
     subscribeMessages: messages.subscribe,
