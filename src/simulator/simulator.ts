@@ -1,16 +1,19 @@
 import { bearingDegrees, destinationPoint, distanceMeters, type LatLon } from '../geo/geo'
+import { validateMission } from '../mission/missionRules'
+import type { CommandEnvelope } from '../protocol/commands'
 import type { FlightMode, GpsFix, TelemetryMessage } from '../protocol/telemetry'
 import { approach, clamp, turnToward } from './motion'
 import { createRandom, randomBetween } from './random'
 
 export interface SimulatorConfig {
   home: LatLon
-  patrolRoute: readonly LatLon[]
+  defaultMission: readonly LatLon[]
   seed: number
 }
 
 export interface Simulator {
   step: (dtMs: number) => TelemetryMessage[]
+  handleCommand: (envelope: CommandEnvelope) => TelemetryMessage[]
 }
 
 const CRUISE_ALTITUDE_M = 40
@@ -34,11 +37,14 @@ const GPS_JITTER_M = 0.3
 const LINK_RANGE_M = 5000
 const LINK_NOISE_PERCENT = 2
 
-type ScheduledMessageType = 'heartbeat' | 'home' | 'systemStatus' | 'position'
+type ScheduledMessageType =
+  'heartbeat' | 'home' | 'mission' | 'missionCurrent' | 'systemStatus' | 'position'
 
 const MESSAGE_SCHEDULE: readonly { type: ScheduledMessageType; intervalMs: number }[] = [
   { type: 'heartbeat', intervalMs: 1000 },
   { type: 'home', intervalMs: 5000 },
+  { type: 'mission', intervalMs: 5000 },
+  { type: 'missionCurrent', intervalMs: 1000 },
   { type: 'systemStatus', intervalMs: 500 },
   { type: 'position', intervalMs: 100 },
 ]
@@ -54,6 +60,11 @@ interface VehicleState {
   batteryPercent: number
   gpsSatellites: number
   waypointIndex: number
+}
+
+interface Mission {
+  id: number
+  waypoints: readonly LatLon[]
 }
 
 interface Guidance {
@@ -72,9 +83,9 @@ export function gpsFixFor(satellites: number): GpsFix {
   return 'none'
 }
 
-export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): Simulator {
-  if (patrolRoute.length === 0) {
-    throw new Error('Patrol route needs at least one waypoint')
+export function createSimulator({ home, defaultMission, seed }: SimulatorConfig): Simulator {
+  if (validateMission(defaultMission, home, null).length > 0) {
+    throw new Error('Default mission is not valid')
   }
 
   const random = createRandom(seed)
@@ -90,9 +101,12 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
     gpsSatellites: 0,
     waypointIndex: 0,
   }
+  let mission: Mission = { id: 1, waypoints: defaultMission }
   const nextMessageAtMs: Record<ScheduledMessageType, number> = {
     heartbeat: 0,
     home: 0,
+    mission: 0,
+    missionCurrent: 0,
     systemStatus: 0,
     position: 0,
   }
@@ -106,7 +120,7 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
   }
 
   function currentWaypoint(): LatLon {
-    return patrolRoute[vehicle.waypointIndex] ?? home
+    return mission.waypoints[vehicle.waypointIndex] ?? home
   }
 
   function updateGps(): void {
@@ -148,7 +162,7 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
         if (vehicle.batteryPercent <= RTL_BATTERY_PERCENT) {
           setMode('RTL')
         } else if (distanceMeters(vehicle.position, currentWaypoint()) <= WAYPOINT_RADIUS_M) {
-          vehicle.waypointIndex = (vehicle.waypointIndex + 1) % patrolRoute.length
+          advanceMission()
         }
         break
       case 'RTL':
@@ -163,6 +177,14 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
         }
         break
     }
+  }
+
+  function advanceMission(): void {
+    if (vehicle.waypointIndex >= mission.waypoints.length - 1) {
+      setMode('RTL')
+      return
+    }
+    vehicle.waypointIndex += 1
   }
 
   function guidance(): Guidance {
@@ -226,9 +248,13 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
     return clamp(100 * (1 - distanceHome / LINK_RANGE_M) + noise, 0, 100)
   }
 
-  function createMessage(type: ScheduledMessageType): TelemetryMessage {
+  function nextHeader(): { seq: number; timeMs: number } {
     sequence += 1
-    const header = { seq: sequence, timeMs }
+    return { seq: sequence, timeMs }
+  }
+
+  function createMessage(type: ScheduledMessageType): TelemetryMessage {
+    const header = nextHeader()
 
     switch (type) {
       case 'heartbeat':
@@ -261,6 +287,15 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
         }
       case 'home':
         return { type, ...header, lat: home.lat, lon: home.lon }
+      case 'mission':
+        return { type, ...header, missionId: mission.id, waypoints: [...mission.waypoints] }
+      case 'missionCurrent':
+        return {
+          type,
+          ...header,
+          missionId: mission.id,
+          waypointIndex: vehicle.waypointIndex,
+        }
     }
   }
 
@@ -275,6 +310,29 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
     return messages
   }
 
+  function acknowledge({ commandId, command }: CommandEnvelope, reason: string | null) {
+    return {
+      type: 'commandAck' as const,
+      ...nextHeader(),
+      commandId,
+      command: command.type,
+      accepted: reason === null,
+      reason,
+    }
+  }
+
+  function uploadMission(waypoints: readonly LatLon[]): string | null {
+    const [firstIssue] = validateMission(waypoints, home, null)
+    if (firstIssue) {
+      return firstIssue.message
+    }
+    mission = { id: mission.id + 1, waypoints: [...waypoints] }
+    vehicle.waypointIndex = 0
+    nextMessageAtMs.mission = timeMs
+    nextMessageAtMs.missionCurrent = timeMs
+    return null
+  }
+
   return {
     step(dtMs) {
       const dtS = dtMs / 1000
@@ -284,6 +342,17 @@ export function createSimulator({ home, patrolRoute, seed }: SimulatorConfig): S
       updateMotion(dtS)
       updateBattery(dtS)
       return collectDueMessages()
+    },
+    handleCommand(envelope) {
+      const { command } = envelope
+      switch (command.type) {
+        case 'uploadMission':
+          return [acknowledge(envelope, uploadMission(command.waypoints))]
+        case 'uploadGeofence':
+        case 'clearGeofence':
+        case 'simulateFault':
+          return [acknowledge(envelope, 'Command is not supported yet')]
+      }
     },
   }
 }

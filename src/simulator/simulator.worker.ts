@@ -5,7 +5,7 @@ const TICK_MS = 50
 
 const simulator = createSimulator({
   home: DEMO_HOME,
-  patrolRoute: DEMO_PATROL_ROUTE,
+  defaultMission: DEMO_PATROL_ROUTE,
   seed: Date.now(),
 })
 
