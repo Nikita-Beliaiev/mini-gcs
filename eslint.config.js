@@ -26,7 +26,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['server/**/*.ts'],
+    files: ['server/**/*.ts', 'e2e/**/*.ts', 'scripts/**/*.ts', 'playwright.config.ts'],
     languageOptions: {
       globals: globals.node,
     },
