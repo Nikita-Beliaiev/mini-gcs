@@ -1,0 +1,33 @@
+.telemetry {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.readout {
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--color-surface-raised);
+}
+
+.readout dt {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.readout dd {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.unit {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}

@@ -1,34 +1,29 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { renderWithStation } from '../test/render'
 import { App } from './App'
 
 describe('App', () => {
-  it('shows the station title and a disconnected link status', () => {
-    render(<App />)
+  it('shows the station title, the map and the telemetry panel', () => {
+    renderWithStation(<App />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Mini GCS' })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Disconnected')
+    expect(screen.getByRole('region', { name: 'Map' })).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Telemetry' })).toBeInTheDocument()
   })
 
-  it('renders every telemetry readout with an empty value', () => {
-    render(<App />)
+  it('connects to the vehicle on start', () => {
+    const { transport } = renderWithStation(<App />)
 
-    const telemetry = screen.getByRole('complementary', { name: 'Telemetry' })
-    const labels = within(telemetry)
-      .getAllByRole('term')
-      .map((term) => term.textContent)
+    expect(transport.getStatus()).toBe('connecting')
+    expect(screen.getByRole('status')).toHaveTextContent('Connecting…')
+  })
 
-    expect(labels).toEqual([
-      'Altitude',
-      'Ground speed',
-      'Heading',
-      'Battery',
-      'GPS satellites',
-      'Link quality',
-    ])
+  it('disconnects when the station closes', () => {
+    const { transport, unmount } = renderWithStation(<App />)
 
-    for (const value of within(telemetry).getAllByRole('definition')) {
-      expect(value).toHaveTextContent(/^—/)
-    }
+    unmount()
+
+    expect(transport.getStatus()).toBe('disconnected')
   })
 })

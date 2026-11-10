@@ -21,22 +21,6 @@
   text-transform: uppercase;
 }
 
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--color-text-muted);
-}
-
-.statusDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-danger);
-}
-
 .main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -44,31 +28,11 @@
   padding: var(--gap);
 }
 
-.panel {
-  padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-}
-
 .map {
-  composes: panel;
   display: grid;
   grid-template-rows: auto 1fr;
+  gap: 12px;
   min-height: 320px;
-}
-
-.telemetry {
-  composes: panel;
-}
-
-.panelTitle {
-  margin-bottom: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
 }
 
 .placeholder {
@@ -76,34 +40,6 @@
   place-items: center;
   border: 1px dashed var(--color-border);
   border-radius: var(--radius);
-  color: var(--color-text-muted);
-}
-
-.readouts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.readout {
-  padding: 8px 10px;
-  border-radius: var(--radius);
-  background: var(--color-surface-raised);
-}
-
-.readout dt {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.readout dd {
-  font-family: var(--font-mono);
-  font-size: 20px;
-}
-
-.unit {
-  margin-left: 4px;
-  font-size: 12px;
   color: var(--color-text-muted);
 }
 
