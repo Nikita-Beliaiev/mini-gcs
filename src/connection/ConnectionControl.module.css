@@ -20,7 +20,8 @@
   background: var(--color-danger);
 }
 
-.dot[data-status='connecting'] {
+.dot[data-status='connecting'],
+.dot[data-status='reconnecting'] {
   background: var(--color-warning);
 }
 

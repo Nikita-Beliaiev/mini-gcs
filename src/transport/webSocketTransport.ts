@@ -2,6 +2,7 @@ import type { CommandEnvelope } from '../protocol/commands'
 import { parseJson } from '../protocol/shared'
 import { parseTelemetryMessage, type TelemetryMessage } from '../protocol/telemetry'
 import { createEmitter } from '../shared/emitter'
+import { reconnectDelayMs } from './backoff'
 import type { ConnectionStatus, Transport } from './transport'
 
 export interface SocketLike {
@@ -12,6 +13,11 @@ export interface SocketLike {
   close: () => void
 }
 
+export interface WebSocketTransportOptions {
+  openSocket?: (url: string) => SocketLike
+  random?: () => number
+}
+
 const SOCKET_OPEN = 1
 
 function openBrowserSocket(url: string): SocketLike {
@@ -20,12 +26,15 @@ function openBrowserSocket(url: string): SocketLike {
 
 export function createWebSocketTransport(
   url: string,
-  openSocket: (url: string) => SocketLike = openBrowserSocket,
+  { openSocket = openBrowserSocket, random = Math.random }: WebSocketTransportOptions = {},
 ): Transport {
   const statusChanges = createEmitter()
   const messages = createEmitter<TelemetryMessage>()
   let socket: SocketLike | null = null
   let status: ConnectionStatus = 'disconnected'
+  let wantsConnection = false
+  let reconnectAttempt = 0
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
   function setStatus(next: ConnectionStatus): void {
     if (next === status) {
@@ -44,15 +53,25 @@ export function createWebSocketTransport(
       return
     }
     if (message.type === 'heartbeat') {
+      reconnectAttempt = 0
       setStatus('connected')
     }
     messages.emit(message)
   }
 
-  function connect(): void {
-    if (socket) {
-      return
-    }
+  function scheduleReconnect(): void {
+    reconnectAttempt += 1
+    setStatus('reconnecting')
+    reconnectTimer = setTimeout(
+      () => {
+        reconnectTimer = null
+        openNewSocket()
+      },
+      reconnectDelayMs(reconnectAttempt, random),
+    )
+  }
+
+  function openNewSocket(): void {
     const newSocket = openSocket(url)
     newSocket.onmessage = (event) => {
       if (socket === newSocket) {
@@ -62,14 +81,28 @@ export function createWebSocketTransport(
     newSocket.onclose = () => {
       if (socket === newSocket) {
         socket = null
-        setStatus('disconnected')
+        scheduleReconnect()
       }
     }
     socket = newSocket
+  }
+
+  function connect(): void {
+    if (wantsConnection) {
+      return
+    }
+    wantsConnection = true
+    reconnectAttempt = 0
     setStatus('connecting')
+    openNewSocket()
   }
 
   function disconnect(): void {
+    wantsConnection = false
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer)
+      reconnectTimer = null
+    }
     const closing = socket
     socket = null
     closing?.close()

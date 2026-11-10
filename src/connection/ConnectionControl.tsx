@@ -9,6 +9,7 @@ const STATUS_LABELS: Record<ConnectionStatus, string> = {
   disconnected: 'Disconnected',
   connecting: 'Connecting…',
   connected: 'Connected',
+  reconnecting: 'Reconnecting…',
 }
 
 export function ConnectionControl() {

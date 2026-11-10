@@ -43,3 +43,17 @@ describe('ConnectionControl latency', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Connected · 3 ms')
   })
 })
+
+describe('ConnectionControl reconnect', () => {
+  it('shows that the station is reconnecting and lets the user give up', async () => {
+    const { transport } = renderWithStation(<ConnectionControl />)
+
+    act(() => {
+      transport.setStatus('reconnecting')
+    })
+    expect(screen.getByRole('status')).toHaveTextContent('Reconnecting…')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Disconnect' }))
+    expect(transport.getStatus()).toBe('disconnected')
+  })
+})

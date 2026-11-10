@@ -1,7 +1,7 @@
 import type { CommandEnvelope } from '../protocol/commands'
 import type { TelemetryMessage } from '../protocol/telemetry'
 
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected'
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
 
 export interface Transport {
   connect: () => void

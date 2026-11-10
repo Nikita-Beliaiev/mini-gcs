@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeSocketFactory } from '../test/fakeSocket'
 import { heartbeatMessage, positionMessage } from '../test/messages'
 import { createWebSocketTransport } from './webSocketTransport'
@@ -7,7 +7,10 @@ const URL = 'ws://127.0.0.1:8787/'
 
 function setup() {
   const factory = fakeSocketFactory()
-  const transport = createWebSocketTransport(URL, factory.openSocket)
+  const transport = createWebSocketTransport(URL, {
+    openSocket: factory.openSocket,
+    random: () => 0.5,
+  })
   const listener = vi.fn()
   transport.subscribeMessages(listener)
   return { ...factory, transport, listener }
@@ -72,14 +75,73 @@ describe('createWebSocketTransport', () => {
     expect(transport.getStatus()).toBe('disconnected')
     expect(listener).not.toHaveBeenCalled()
   })
+})
 
-  it('reports a disconnect when the server closes the connection', () => {
-    const { transport, latest } = setup()
-    transport.connect()
-    latest().open()
+describe('createWebSocketTransport reconnect', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function connectAndDrop() {
+    const context = setup()
+    context.transport.connect()
+    context.latest().open()
+    context.latest().receiveJson(heartbeatMessage())
+    context.latest().dropConnection()
+    return context
+  }
+
+  it('reconnects after a growing pause when the server drops', () => {
+    const { transport, sockets, latest } = connectAndDrop()
+    expect(transport.getStatus()).toBe('reconnecting')
+
+    vi.advanceTimersByTime(999)
+    expect(sockets).toHaveLength(1)
+    vi.advanceTimersByTime(1)
+    expect(sockets).toHaveLength(2)
 
     latest().dropConnection()
+    vi.advanceTimersByTime(1999)
+    expect(sockets).toHaveLength(2)
+    vi.advanceTimersByTime(1)
+    expect(sockets).toHaveLength(3)
+  })
+
+  it('is connected again after the first heartbeat and starts over with short pauses', () => {
+    const { transport, sockets, latest } = connectAndDrop()
+    vi.advanceTimersByTime(1000)
+
+    latest().open()
+    latest().receiveJson(heartbeatMessage({ seq: 2 }))
+    expect(transport.getStatus()).toBe('connected')
+
+    latest().dropConnection()
+    vi.advanceTimersByTime(1000)
+    expect(sockets).toHaveLength(3)
+  })
+
+  it('keeps retrying at most every 10 s while the server is down', () => {
+    const { sockets, latest } = connectAndDrop()
+
+    for (const pauseMs of [1000, 2000, 4000, 8000, 10_000, 10_000]) {
+      vi.advanceTimersByTime(pauseMs)
+      latest().dropConnection()
+    }
+
+    expect(sockets).toHaveLength(7)
+  })
+
+  it('stops reconnecting after a manual disconnect', () => {
+    const { transport, sockets } = connectAndDrop()
+
+    transport.disconnect()
+    vi.advanceTimersByTime(30_000)
 
     expect(transport.getStatus()).toBe('disconnected')
+    expect(sockets).toHaveLength(1)
   })
 })
