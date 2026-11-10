@@ -28,23 +28,9 @@
   padding: var(--gap);
 }
 
-.map {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 12px;
-  min-height: 320px;
-}
-
-.placeholder {
-  display: grid;
-  place-items: center;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius);
-  color: var(--color-text-muted);
-}
-
 @media (max-width: 768px) {
   .main {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(360px, 60svh) auto;
   }
 }

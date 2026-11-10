@@ -4,6 +4,9 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   base: './',
   plugins: [react()],
+  build: {
+    chunkSizeWarningLimit: 1200,
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

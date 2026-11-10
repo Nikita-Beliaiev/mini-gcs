@@ -1,14 +1,12 @@
-import { useEffect, useId } from 'react'
+import { useEffect } from 'react'
 import { ConnectionControl } from '../connection/ConnectionControl'
+import { MapPanel } from '../map/MapPanel'
 import { useGroundStation } from '../station/stationContext'
 import { TelemetryPanel } from '../telemetry/TelemetryPanel'
-import { classNames } from '../ui/classNames'
-import panelStyles from '../ui/panel.module.css'
 import styles from './App.module.css'
 
 export function App() {
   const station = useGroundStation()
-  const mapTitleId = useId()
 
   useEffect(() => {
     station.connect()
@@ -24,12 +22,7 @@ export function App() {
         <ConnectionControl />
       </header>
       <main className={styles.main}>
-        <section className={classNames(panelStyles.panel, styles.map)} aria-labelledby={mapTitleId}>
-          <h2 id={mapTitleId} className={panelStyles.title}>
-            Map
-          </h2>
-          <p className={styles.placeholder}>Map view is coming next</p>
-        </section>
+        <MapPanel />
         <TelemetryPanel />
       </main>
     </div>
