@@ -97,11 +97,11 @@ The station checks a plan before upload so the operator sees problems early, but
 ```mermaid
 stateDiagram-v2
   [*] --> STANDBY
-  STANDBY --> TAKEOFF: 5 s on the ground and a 3D GPS fix
+  STANDBY --> TAKEOFF: 5 s on the ground<br/>and a 3D GPS fix
   TAKEOFF --> AUTO: 40 m reached
-  AUTO --> RTL: last waypoint, battery at 30% or outside the geofence
+  AUTO --> RTL: last waypoint,<br/>battery at 30%<br/>or outside the geofence
   RTL --> LAND: within 2 m of home
-  LAND --> STANDBY: on the ground, battery swapped
+  LAND --> STANDBY: on the ground,<br/>battery swapped
 ```
 
 - Guidance turns at most 60°/s, accelerates at 2 m/s² and brakes with `v = √(2·a·d)` so it stops at home.
