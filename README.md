@@ -1,73 +1,77 @@
-# React + TypeScript + Vite
+# Mini GCS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![CI](https://github.com/Nikita-Beliaiev/mini-gcs/actions/workflows/ci.yml/badge.svg)](https://github.com/Nikita-Beliaiev/mini-gcs/actions/workflows/ci.yml)
 
-Currently, two official plugins are available:
+A mini ground control station in the browser: a live map and telemetry dashboard for a simulated drone, built with React and TypeScript.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Live demo:** https://nikita-beliaiev.github.io/mini-gcs/
 
-## React Compiler
+> **Status:** early development. The toolchain, CI/CD and layout shell are in place; the simulator, map and telemetry come next (see [Roadmap](#roadmap)).
+>
+> All flight data is simulated. This project does not connect to or control real aircraft.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Planned features
 
-## Expanding the ESLint configuration
+- Live map with vehicle position, heading, flight trail and home point
+- Telemetry panel: altitude, ground speed, heading, battery, GPS, link quality, flight mode and an attitude indicator
+- Mission planning: add, drag and reorder waypoints on the map, then upload the route to the vehicle
+- Geofence with breach alerts, plus low battery and link loss alerts
+- Real-time charts for the last 60 seconds of flight
+- Connection status with automatic reconnect and latency readout
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Design goals
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Telemetry arrives at 10–50 Hz, and the UI has to stay smooth without re-rendering the React tree on every message:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- telemetry lives in an external store backed by a ring buffer, outside React state
+- updates are batched once per animation frame
+- components subscribe only to the slice they render, via `useSyncExternalStore`
+- the simulator runs in a Web Worker, so the demo works on static hosting; the same simulator can run in Node behind a WebSocket, and the client talks to both through one transport interface
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Tech stack
+
+| Area    | Choice                                                    |
+| ------- | --------------------------------------------------------- |
+| UI      | React 19, TypeScript (strict)                             |
+| Build   | Vite                                                      |
+| Map     | MapLibre GL JS _(planned)_                                |
+| State   | Zustand and a custom telemetry store _(planned)_          |
+| Charts  | uPlot _(planned)_                                         |
+| Testing | Vitest, React Testing Library, Playwright _(e2e planned)_ |
+| Quality | ESLint with type-aware rules, Prettier                    |
+| CI/CD   | GitHub Actions, deployed to GitHub Pages                  |
+
+## Getting started
+
+Requires Node.js 24 (see `.nvmrc`).
+
+```bash
+npm ci
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Command              | What it does                                     |
+| -------------------- | ------------------------------------------------ |
+| `npm run dev`        | Start the dev server                             |
+| `npm run build`      | Type-check and build for production              |
+| `npm run preview`    | Serve the production build locally               |
+| `npm run check`      | Type-check, lint, check formatting and run tests |
+| `npm test`           | Run unit tests once                              |
+| `npm run test:watch` | Run unit tests in watch mode                     |
+| `npm run format`     | Format all files with Prettier                   |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Roadmap
+
+- [x] **Phase 0:** toolchain, CI/CD, deployment, layout shell
+- [ ] **Phase 1:** telemetry protocol, simulator, map with vehicle and trail, telemetry panel
+- [ ] **Phase 2:** mission planning, geofence, alerts
+- [ ] **Phase 3:** charts, attitude indicator, reconnect, WebSocket simulator mode
+- [ ] **Phase 4:** demo GIF, architecture diagram, end-to-end tests
+
+Stretch goals: multiple vehicles, flight log replay, video feed, MAVLink via ArduPilot SITL.
+
+## License
+
+[MIT](LICENSE) © Mykyta Beliaiev
