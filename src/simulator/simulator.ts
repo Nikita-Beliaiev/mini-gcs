@@ -3,12 +3,13 @@ import {
   destinationPoint,
   distanceMeters,
   isPointInPolygon,
+  signedAngleDifference,
   type LatLon,
 } from '../geo/geo'
 import { validateGeofence, validateMission } from '../mission/missionRules'
 import type { CommandEnvelope, SimulatedFault } from '../protocol/commands'
 import type { FlightMode, GpsFix, TelemetryMessage } from '../protocol/telemetry'
-import { approach, clamp, turnToward } from './motion'
+import { approach, clamp, tiltForMotion, turnToward, type Tilt } from './motion'
 import { createRandom, randomBetween } from './random'
 
 export interface SimulatorConfig {
@@ -43,6 +44,10 @@ const GPS_JITTER_M = 0.3
 const LINK_RANGE_M = 5000
 const LINK_NOISE_PERCENT = 2
 
+const TILT_RATE_DEG_S = 90
+const VIBRATION_DEG = 0.3
+const LEVEL: Tilt = { rollDeg: 0, pitchDeg: 0 }
+
 const LINK_LOSS_DURATION_MS = 10_000
 const GPS_LOSS_DURATION_MS = 15_000
 const GPS_LOSS_SATELLITES = 2
@@ -58,6 +63,7 @@ const MESSAGE_SCHEDULE: readonly { type: ScheduledMessageType; intervalMs: numbe
   { type: 'geofence', intervalMs: 5000 },
   { type: 'systemStatus', intervalMs: 500 },
   { type: 'position', intervalMs: 100 },
+  { type: 'attitude', intervalMs: 20 },
 ]
 
 interface VehicleState {
@@ -68,6 +74,8 @@ interface VehicleState {
   altitudeM: number
   headingDeg: number
   groundSpeedMs: number
+  rollDeg: number
+  pitchDeg: number
   batteryPercent: number
   gpsSatellites: number
   waypointIndex: number
@@ -108,6 +116,8 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     altitudeM: 0,
     headingDeg: 0,
     groundSpeedMs: 0,
+    rollDeg: 0,
+    pitchDeg: 0,
     batteryPercent: 100,
     gpsSatellites: 0,
     waypointIndex: 0,
@@ -122,6 +132,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     geofence: 0,
     systemStatus: 0,
     position: 0,
+    attitude: 0,
   }
   let timeMs = 0
   let sequence = 0
@@ -237,6 +248,8 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
 
   function updateMotion(dtS: number): void {
     const { target, altitudeM, speedMs } = guidance()
+    const previousHeadingDeg = vehicle.headingDeg
+    const previousSpeedMs = vehicle.groundSpeedMs
 
     const verticalRate = altitudeM > vehicle.altitudeM ? CLIMB_RATE_MS : DESCENT_RATE_MS
     vehicle.altitudeM = approach(vehicle.altitudeM, altitudeM, verticalRate * dtS)
@@ -254,6 +267,21 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
       vehicle.headingDeg,
       vehicle.groundSpeedMs * dtS,
     )
+
+    const isFlying = vehicle.armed && vehicle.altitudeM > 0
+    const tilt = isFlying
+      ? tiltForMotion(
+          vehicle.groundSpeedMs,
+          signedAngleDifference(previousHeadingDeg, vehicle.headingDeg) / dtS,
+          (vehicle.groundSpeedMs - previousSpeedMs) / dtS,
+        )
+      : LEVEL
+    vehicle.rollDeg = approach(vehicle.rollDeg, tilt.rollDeg, TILT_RATE_DEG_S * dtS)
+    vehicle.pitchDeg = approach(vehicle.pitchDeg, tilt.pitchDeg, TILT_RATE_DEG_S * dtS)
+  }
+
+  function vibration(): number {
+    return vehicle.armed ? randomBetween(random, -VIBRATION_DEG, VIBRATION_DEG) : 0
   }
 
   function updateBattery(dtS: number): void {
@@ -298,6 +326,14 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
           headingDeg: vehicle.headingDeg,
         }
       }
+      case 'attitude':
+        return {
+          type,
+          ...header,
+          rollDeg: vehicle.rollDeg + vibration(),
+          pitchDeg: vehicle.pitchDeg + vibration(),
+          yawDeg: vehicle.headingDeg,
+        }
       case 'systemStatus':
         return {
           type,
@@ -396,6 +432,9 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
 
   return {
     step(dtMs) {
+      if (dtMs <= 0) {
+        return []
+      }
       const dtS = dtMs / 1000
       timeMs += dtMs
       updateGps()

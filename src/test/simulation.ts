@@ -4,7 +4,7 @@ import type { FlightMode, TelemetryMessage, TelemetryMessageType } from '../prot
 import { DEMO_HOME, DEMO_PATROL_ROUTE } from '../simulator/demoArea'
 import { createSimulator, type Simulator } from '../simulator/simulator'
 
-export const TICK_MS = 50
+export const TICK_MS = 20
 
 export type MessageOf<T extends TelemetryMessageType> = Extract<TelemetryMessage, { type: T }>
 

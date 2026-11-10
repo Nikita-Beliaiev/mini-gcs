@@ -1,4 +1,5 @@
 import type {
+  AttitudeMessage,
   GeofenceMessage,
   HeartbeatMessage,
   HomeMessage,
@@ -14,6 +15,7 @@ import { RingBuffer } from './ringBuffer'
 export interface TelemetryState {
   heartbeat: HeartbeatMessage | null
   position: PositionMessage | null
+  attitude: AttitudeMessage | null
   systemStatus: SystemStatusMessage | null
   home: HomeMessage | null
   mission: MissionMessage | null
@@ -36,9 +38,10 @@ export interface TelemetryStoreOptions {
 
 const DEFAULT_HISTORY_SIZE = 1200
 
-const EMPTY_STATE: TelemetryState = {
+export const EMPTY_TELEMETRY_STATE: TelemetryState = {
   heartbeat: null,
   position: null,
+  attitude: null,
   systemStatus: null,
   home: null,
   mission: null,
@@ -56,6 +59,8 @@ function applyMessage(state: TelemetryState, message: TelemetryMessage): Telemet
       return { ...state, heartbeat: message }
     case 'position':
       return { ...state, position: message }
+    case 'attitude':
+      return { ...state, attitude: message }
     case 'systemStatus':
       return { ...state, systemStatus: message }
     case 'home':
@@ -77,8 +82,8 @@ export function createTelemetryStore({
 }: TelemetryStoreOptions = {}): TelemetryStore {
   const changes = createEmitter()
   const positionHistory = new RingBuffer<PositionMessage>(historySize)
-  let latest = EMPTY_STATE
-  let published = EMPTY_STATE
+  let latest = EMPTY_TELEMETRY_STATE
+  let published = EMPTY_TELEMETRY_STATE
   let flushScheduled = false
 
   function flush(): void {
@@ -104,7 +109,7 @@ export function createTelemetryStore({
       scheduleFlush()
     },
     reset() {
-      latest = EMPTY_STATE
+      latest = EMPTY_TELEMETRY_STATE
       positionHistory.clear()
       scheduleFlush()
     },

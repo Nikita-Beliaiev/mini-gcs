@@ -1,17 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { TelemetryState } from '../telemetry/telemetryStore'
+import { EMPTY_TELEMETRY_STATE } from '../telemetry/telemetryStore'
 import { heartbeatMessage, systemStatusMessage } from '../test/messages'
 import { evaluateAlerts, type AlertInputs } from './alertRules'
 
-const EMPTY: TelemetryState = {
-  heartbeat: null,
-  position: null,
-  systemStatus: null,
-  home: null,
-  mission: null,
-  missionCurrent: null,
-  geofence: null,
-}
+const EMPTY = EMPTY_TELEMETRY_STATE
 
 function inputs(overrides: Partial<AlertInputs> = {}): AlertInputs {
   return {

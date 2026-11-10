@@ -3,7 +3,7 @@ import type { TelemetryMessage } from '../protocol/telemetry'
 import { DEMO_HOME, DEMO_PATROL_ROUTE } from './demoArea'
 import { createSimulator } from './simulator'
 
-const TICK_MS = 50
+const TICK_MS = 20
 
 const simulator = createSimulator({
   home: DEMO_HOME,

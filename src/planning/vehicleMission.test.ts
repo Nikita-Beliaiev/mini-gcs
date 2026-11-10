@@ -1,17 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { TelemetryState } from '../telemetry/telemetryStore'
+import { EMPTY_TELEMETRY_STATE } from '../telemetry/telemetryStore'
 import { heartbeatMessage, missionCurrentMessage, missionMessage } from '../test/messages'
 import { activeWaypointIndex, describeVehicleMission } from './vehicleMission'
 
-const EMPTY: TelemetryState = {
-  heartbeat: null,
-  position: null,
-  systemStatus: null,
-  home: null,
-  mission: null,
-  missionCurrent: null,
-  geofence: null,
-}
+const EMPTY = EMPTY_TELEMETRY_STATE
 
 describe('describeVehicleMission', () => {
   it('waits until the vehicle reports its mission', () => {

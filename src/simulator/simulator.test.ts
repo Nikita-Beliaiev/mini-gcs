@@ -43,6 +43,7 @@ describe('createSimulator', () => {
     expect(ofType(messages, 'geofence')).toHaveLength(2)
     expect(ofType(messages, 'systemStatus')).toHaveLength(20)
     expect(ofType(messages, 'position')).toHaveLength(100)
+    expect(ofType(messages, 'attitude')).toHaveLength(500)
   })
 
   it('numbers messages in order and stamps them with simulation time', () => {

@@ -25,6 +25,13 @@ export interface PositionMessage extends MessageHeader {
   headingDeg: number
 }
 
+export interface AttitudeMessage extends MessageHeader {
+  type: 'attitude'
+  rollDeg: number
+  pitchDeg: number
+  yawDeg: number
+}
+
 export interface SystemStatusMessage extends MessageHeader {
   type: 'systemStatus'
   batteryPercent: number
@@ -68,6 +75,7 @@ export interface CommandAckMessage extends MessageHeader {
 export type TelemetryMessage =
   | HeartbeatMessage
   | PositionMessage
+  | AttitudeMessage
   | SystemStatusMessage
   | HomeMessage
   | MissionMessage

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  attitudeMessage,
   commandAckMessage,
   geofenceMessage,
   heartbeatMessage,
@@ -36,6 +37,7 @@ describe('createTelemetryStore', () => {
     expect(store.getSnapshot()).toEqual({
       heartbeat: null,
       position: null,
+      attitude: null,
       systemStatus: null,
       home: null,
       mission: null,
@@ -48,6 +50,7 @@ describe('createTelemetryStore', () => {
   it('keeps the latest message of each type', () => {
     const { store, runFrame } = setup()
     const heartbeat = heartbeatMessage()
+    const attitude = attitudeMessage({ rollDeg: 5 })
     const systemStatus = systemStatusMessage()
     const home = homeMessage()
     const mission = missionMessage()
@@ -58,6 +61,7 @@ describe('createTelemetryStore', () => {
     for (const message of [
       heartbeat,
       positionMessage(),
+      attitude,
       systemStatus,
       home,
       mission,
@@ -72,6 +76,7 @@ describe('createTelemetryStore', () => {
     expect(store.getSnapshot()).toEqual({
       heartbeat,
       position: newerPosition,
+      attitude,
       systemStatus,
       home,
       mission,

@@ -1,4 +1,5 @@
 import type {
+  AttitudeMessage,
   CommandAckMessage,
   GeofenceMessage,
   HeartbeatMessage,
@@ -23,6 +24,18 @@ export function positionMessage(overrides: Partial<PositionMessage> = {}): Posit
     altitudeM: 40,
     groundSpeedMs: 12,
     headingDeg: 90,
+    ...overrides,
+  }
+}
+
+export function attitudeMessage(overrides: Partial<AttitudeMessage> = {}): AttitudeMessage {
+  return {
+    type: 'attitude',
+    seq: 1,
+    timeMs: 0,
+    rollDeg: 0,
+    pitchDeg: 0,
+    yawDeg: 90,
     ...overrides,
   }
 }
