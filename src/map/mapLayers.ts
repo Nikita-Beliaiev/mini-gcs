@@ -2,6 +2,8 @@ import type { GeoJSON } from 'geojson'
 import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl'
 
 export const SOURCES = {
+  vehicleGeofence: 'vehicle-geofence',
+  draftGeofence: 'draft-geofence',
   vehicleMissionLine: 'vehicle-mission-line',
   draftMissionLine: 'draft-mission-line',
   trail: 'trail',
@@ -15,6 +17,8 @@ const COLORS = {
   vehicleMission: '#94a3b8',
   activeWaypoint: '#38bdf8',
   draft: '#c084fc',
+  geofence: '#34d399',
+  breach: '#f87171',
   outline: '#0b0f14',
 }
 
@@ -23,6 +27,34 @@ export function addMapLayers(map: MapLibreMap): void {
     map.addSource(id, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
   }
 
+  const geofenceColor = ['case', ['get', 'breached'], COLORS.breach, COLORS.geofence] as [
+    'case',
+    ['get', string],
+    string,
+    string,
+  ]
+
+  map.addLayer({
+    id: `${SOURCES.vehicleGeofence}-fill`,
+    type: 'fill',
+    source: SOURCES.vehicleGeofence,
+    paint: {
+      'fill-color': geofenceColor,
+      'fill-opacity': ['case', ['get', 'breached'], 0.18, 0.08],
+    },
+  })
+  map.addLayer({
+    id: `${SOURCES.vehicleGeofence}-outline`,
+    type: 'line',
+    source: SOURCES.vehicleGeofence,
+    paint: { 'line-color': geofenceColor, 'line-width': 2 },
+  })
+  map.addLayer({
+    id: SOURCES.draftGeofence,
+    type: 'line',
+    source: SOURCES.draftGeofence,
+    paint: { 'line-color': COLORS.draft, 'line-width': 2, 'line-dasharray': [1, 2] },
+  })
   map.addLayer({
     id: SOURCES.vehicleMissionLine,
     type: 'line',

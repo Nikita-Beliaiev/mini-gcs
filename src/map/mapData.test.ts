@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { createLineData, createPointData, toLngLat } from './mapData'
+import {
+  createLineData,
+  createPointData,
+  createPolygonData,
+  createRingData,
+  toLngLat,
+} from './mapData'
 
 const POINTS = [
   { lat: 43.095, lon: 11.645 },
@@ -49,5 +55,36 @@ describe('createPointData', () => {
     const points = createPointData(POINTS, null)
 
     expect(points.features.some((feature) => feature.properties.highlighted)).toBe(false)
+  })
+})
+
+describe('createRingData', () => {
+  it('closes the line once there are three points', () => {
+    const coordinates = createRingData(POINTS).features[0]?.geometry.coordinates
+
+    expect(coordinates).toEqual([
+      [11.645, 43.095],
+      [11.646, 43.096],
+      [11.645, 43.097],
+      [11.645, 43.095],
+    ])
+  })
+
+  it('keeps an open line for two points', () => {
+    expect(createRingData(POINTS.slice(0, 2)).features[0]?.geometry.coordinates).toHaveLength(2)
+  })
+})
+
+describe('createPolygonData', () => {
+  it('builds a closed polygon with the breach flag', () => {
+    const polygon = createPolygonData(POINTS, true)
+
+    expect(polygon.features[0]?.properties.breached).toBe(true)
+    expect(polygon.features[0]?.geometry.coordinates[0]).toHaveLength(4)
+  })
+
+  it('is empty without a polygon', () => {
+    expect(createPolygonData(null, false).features).toEqual([])
+    expect(createPolygonData(POINTS.slice(0, 2), false).features).toEqual([])
   })
 })

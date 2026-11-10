@@ -1,4 +1,4 @@
-import type { FeatureCollection, LineString, Point } from 'geojson'
+import type { FeatureCollection, LineString, Point, Polygon } from 'geojson'
 import type { LatLon } from '../geo/geo'
 
 export type LngLat = [longitude: number, latitude: number]
@@ -34,5 +34,30 @@ export function createPointData(
       properties: { highlighted: index === highlightedIndex },
       geometry: { type: 'Point', coordinates: toLngLat(point) },
     })),
+  }
+}
+
+export function createRingData(points: readonly LatLon[]): FeatureCollection<LineString> {
+  const [first] = points
+  return createLineData(first && points.length >= 3 ? [...points, first] : points)
+}
+
+export function createPolygonData(
+  polygon: readonly LatLon[] | null,
+  breached: boolean,
+): FeatureCollection<Polygon, { breached: boolean }> {
+  const [first] = polygon ?? []
+  if (!polygon || !first || polygon.length < 3) {
+    return { type: 'FeatureCollection', features: [] }
+  }
+  return {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: { breached },
+        geometry: { type: 'Polygon', coordinates: [[...polygon, first].map(toLngLat)] },
+      },
+    ],
   }
 }

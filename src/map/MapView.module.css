@@ -45,3 +45,11 @@
   background: var(--color-plan);
   cursor: grab;
 }
+
+.draftVertex {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-bg);
+  background: var(--color-plan);
+  cursor: grab;
+}

@@ -3,11 +3,17 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useEffectEvent, useRef } from 'react'
 import type { LatLon } from '../geo/geo'
-import type { MissionMessage } from '../protocol/telemetry'
+import type { GeofenceMessage, MissionMessage } from '../protocol/telemetry'
 import { usePlanningStore, type PlanTarget } from '../planning/planningStore'
 import { activeWaypointIndex } from '../planning/vehicleMission'
 import { useGroundStation } from '../station/stationContext'
-import { createLineData, createPointData, toLngLat } from './mapData'
+import {
+  createLineData,
+  createPointData,
+  createPolygonData,
+  createRingData,
+  toLngLat,
+} from './mapData'
 import { addMapLayers, setSourceData, SOURCES } from './mapLayers'
 import { createDraftMarkers, createHomeMarker, createVehicleMarker, placeMarker } from './markers'
 import styles from './MapView.module.css'
@@ -55,10 +61,35 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
         usePlanningStore.getState().movePoint('mission', id, position)
       },
     })
+    const geofenceDraftMarkers = createDraftMarkers(map, {
+      className: styles.draftVertex,
+      label: (index) => `Draft geofence vertex ${String(index + 1)}`,
+      text: () => '',
+      onMove: (id, position) => {
+        usePlanningStore.getState().movePoint('geofence', id, position)
+      },
+    })
     const unsubscribers: (() => void)[] = []
     let centeredOnHome = false
     let shownMission: MissionMessage | null = null
     let shownActiveIndex: number | null = null
+    let shownGeofence: GeofenceMessage | null = null
+    let shownBreach = false
+
+    function renderVehicleGeofence(): void {
+      const { geofence, systemStatus } = telemetry.getSnapshot()
+      const breached = systemStatus?.fenceBreached ?? false
+      if (geofence === shownGeofence && breached === shownBreach) {
+        return
+      }
+      setSourceData(
+        map,
+        SOURCES.vehicleGeofence,
+        createPolygonData(geofence?.polygon ?? null, breached),
+      )
+      shownGeofence = geofence
+      shownBreach = breached
+    }
 
     function renderVehicleMission(): void {
       const state = telemetry.getSnapshot()
@@ -78,6 +109,7 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
 
       setSourceData(map, SOURCES.trail, createLineData(telemetry.getPositionHistory()))
       renderVehicleMission()
+      renderVehicleGeofence()
       placeMarker(homeMarker, map, home)
       placeMarker(vehicleMarker, map, position)
       if (position) {
@@ -98,6 +130,11 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
       missionDraftMarkers.update(points)
     }
 
+    function renderGeofenceDraft(points: readonly (LatLon & { id: string })[]): void {
+      setSourceData(map, SOURCES.draftGeofence, createRingData(points))
+      geofenceDraftMarkers.update(points)
+    }
+
     function applyEditMode(mode: PlanTarget | null): void {
       map.getCanvas().style.cursor = mode ? 'crosshair' : ''
       if (mode) {
@@ -112,6 +149,7 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
       const planning = usePlanningStore.getState()
       renderTelemetry()
       renderMissionDraft(planning.drafts.mission)
+      renderGeofenceDraft(planning.drafts.geofence)
       applyEditMode(planning.editMode)
 
       unsubscribers.push(telemetry.subscribe(renderTelemetry))
@@ -119,6 +157,9 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
         usePlanningStore.subscribe((state, previous) => {
           if (state.drafts.mission !== previous.drafts.mission) {
             renderMissionDraft(state.drafts.mission)
+          }
+          if (state.drafts.geofence !== previous.drafts.geofence) {
+            renderGeofenceDraft(state.drafts.geofence)
           }
           if (state.editMode !== previous.editMode) {
             applyEditMode(state.editMode)
@@ -141,6 +182,7 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
         unsubscribe()
       }
       missionDraftMarkers.remove()
+      geofenceDraftMarkers.remove()
       map.remove()
     }
   }, [telemetry])
