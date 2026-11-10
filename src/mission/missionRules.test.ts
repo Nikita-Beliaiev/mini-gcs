@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { destinationPoint } from '../geo/geo'
-import { MAX_MISSION_WAYPOINTS, validateMission } from './missionRules'
+import { MAX_MISSION_WAYPOINTS, validateGeofence, validateMission } from './missionRules'
 
 const HOME = { lat: 43.095, lon: 11.645 }
 const NEAR = destinationPoint(HOME, 90, 500)
@@ -42,6 +42,36 @@ describe('validateMission', () => {
 
     expect(validateMission([NEAR, outsideFence], HOME, FENCE)).toEqual([
       { pointIndex: 1, message: 'Waypoint 2 is outside the geofence' },
+    ])
+  })
+})
+
+describe('validateGeofence', () => {
+  it('accepts a polygon around home', () => {
+    expect(validateGeofence(FENCE, HOME)).toEqual([])
+  })
+
+  it('needs at least three vertices', () => {
+    expect(validateGeofence(FENCE.slice(0, 2), HOME)).toEqual([
+      { pointIndex: null, message: 'Add at least 3 vertices' },
+    ])
+  })
+
+  it('limits the number of vertices', () => {
+    const vertices = Array.from({ length: 21 }, (_, index) =>
+      destinationPoint(HOME, index * (360 / 21), 800),
+    )
+
+    expect(validateGeofence(vertices, HOME)).toEqual([
+      { pointIndex: null, message: 'Use at most 20 vertices' },
+    ])
+  })
+
+  it('keeps home inside the geofence', () => {
+    const elsewhere = FENCE.map((vertex) => destinationPoint(vertex, 90, 3000))
+
+    expect(validateGeofence(elsewhere, HOME)).toEqual([
+      { pointIndex: null, message: 'Home must be inside the geofence' },
     ])
   })
 })

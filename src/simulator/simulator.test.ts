@@ -40,6 +40,7 @@ describe('createSimulator', () => {
     expect(ofType(messages, 'home')).toHaveLength(2)
     expect(ofType(messages, 'mission')).toHaveLength(2)
     expect(ofType(messages, 'missionCurrent')).toHaveLength(10)
+    expect(ofType(messages, 'geofence')).toHaveLength(2)
     expect(ofType(messages, 'systemStatus')).toHaveLength(20)
     expect(ofType(messages, 'position')).toHaveLength(100)
   })

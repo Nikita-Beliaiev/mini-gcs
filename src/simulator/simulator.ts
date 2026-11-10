@@ -1,5 +1,11 @@
-import { bearingDegrees, destinationPoint, distanceMeters, type LatLon } from '../geo/geo'
-import { validateMission } from '../mission/missionRules'
+import {
+  bearingDegrees,
+  destinationPoint,
+  distanceMeters,
+  isPointInPolygon,
+  type LatLon,
+} from '../geo/geo'
+import { validateGeofence, validateMission } from '../mission/missionRules'
 import type { CommandEnvelope } from '../protocol/commands'
 import type { FlightMode, GpsFix, TelemetryMessage } from '../protocol/telemetry'
 import { approach, clamp, turnToward } from './motion'
@@ -37,14 +43,14 @@ const GPS_JITTER_M = 0.3
 const LINK_RANGE_M = 5000
 const LINK_NOISE_PERCENT = 2
 
-type ScheduledMessageType =
-  'heartbeat' | 'home' | 'mission' | 'missionCurrent' | 'systemStatus' | 'position'
+type ScheduledMessageType = Exclude<TelemetryMessage['type'], 'commandAck'>
 
 const MESSAGE_SCHEDULE: readonly { type: ScheduledMessageType; intervalMs: number }[] = [
   { type: 'heartbeat', intervalMs: 1000 },
   { type: 'home', intervalMs: 5000 },
   { type: 'mission', intervalMs: 5000 },
   { type: 'missionCurrent', intervalMs: 1000 },
+  { type: 'geofence', intervalMs: 5000 },
   { type: 'systemStatus', intervalMs: 500 },
   { type: 'position', intervalMs: 100 },
 ]
@@ -102,11 +108,13 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     waypointIndex: 0,
   }
   let mission: Mission = { id: 1, waypoints: defaultMission }
+  let geofence: readonly LatLon[] | null = null
   const nextMessageAtMs: Record<ScheduledMessageType, number> = {
     heartbeat: 0,
     home: 0,
     mission: 0,
     missionCurrent: 0,
+    geofence: 0,
     systemStatus: 0,
     position: 0,
   }
@@ -121,6 +129,10 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
 
   function currentWaypoint(): LatLon {
     return mission.waypoints[vehicle.waypointIndex] ?? home
+  }
+
+  function isOutsideGeofence(): boolean {
+    return geofence !== null && !isPointInPolygon(vehicle.position, geofence)
   }
 
   function updateGps(): void {
@@ -159,7 +171,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
         }
         break
       case 'AUTO':
-        if (vehicle.batteryPercent <= RTL_BATTERY_PERCENT) {
+        if (vehicle.batteryPercent <= RTL_BATTERY_PERCENT || isOutsideGeofence()) {
           setMode('RTL')
         } else if (distanceMeters(vehicle.position, currentWaypoint()) <= WAYPOINT_RADIUS_M) {
           advanceMission()
@@ -283,7 +295,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
           gpsSatellites: vehicle.gpsSatellites,
           gpsFix: gpsFixFor(vehicle.gpsSatellites),
           linkQualityPercent: linkQualityPercent(),
-          fenceBreached: false,
+          fenceBreached: isOutsideGeofence(),
         }
       case 'home':
         return { type, ...header, lat: home.lat, lon: home.lon }
@@ -296,6 +308,8 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
           missionId: mission.id,
           waypointIndex: vehicle.waypointIndex,
         }
+      case 'geofence':
+        return { type, ...header, polygon: geofence ? [...geofence] : null }
     }
   }
 
@@ -322,7 +336,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
   }
 
   function uploadMission(waypoints: readonly LatLon[]): string | null {
-    const [firstIssue] = validateMission(waypoints, home, null)
+    const [firstIssue] = validateMission(waypoints, home, geofence)
     if (firstIssue) {
       return firstIssue.message
     }
@@ -330,6 +344,22 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     vehicle.waypointIndex = 0
     nextMessageAtMs.mission = timeMs
     nextMessageAtMs.missionCurrent = timeMs
+    return null
+  }
+
+  function uploadGeofence(polygon: readonly LatLon[]): string | null {
+    const [firstIssue] = validateGeofence(polygon, home)
+    if (firstIssue) {
+      return firstIssue.message
+    }
+    geofence = [...polygon]
+    nextMessageAtMs.geofence = timeMs
+    return null
+  }
+
+  function clearGeofence(): null {
+    geofence = null
+    nextMessageAtMs.geofence = timeMs
     return null
   }
 
@@ -349,7 +379,9 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
         case 'uploadMission':
           return [acknowledge(envelope, uploadMission(command.waypoints))]
         case 'uploadGeofence':
+          return [acknowledge(envelope, uploadGeofence(command.polygon))]
         case 'clearGeofence':
+          return [acknowledge(envelope, clearGeofence())]
         case 'simulateFault':
           return [acknowledge(envelope, 'Command is not supported yet')]
       }
