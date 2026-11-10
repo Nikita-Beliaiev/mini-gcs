@@ -23,6 +23,19 @@ describe('simulator faults', () => {
     expect(after[0]?.seq).toBeGreaterThan((before.at(-1)?.seq ?? 0) + 1)
   })
 
+  it('answers pings unless the link is lost', () => {
+    const simulator = createDemoSimulator()
+
+    expect(sendCommand(simulator, { type: 'ping' })).toMatchObject({
+      command: 'ping',
+      accepted: true,
+    })
+
+    sendCommand(simulator, { type: 'simulateFault', fault: 'linkLoss' })
+    run(simulator, 1)
+    expect(simulator.handleCommand({ commandId: 1, command: { type: 'ping' } })).toEqual([])
+  })
+
   it('ignores vehicle commands during a link loss but keeps simulator controls', () => {
     const simulator = createDemoSimulator()
     sendCommand(simulator, { type: 'simulateFault', fault: 'linkLoss' })

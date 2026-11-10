@@ -21,8 +21,16 @@ export interface SimulateFaultCommand {
   fault: SimulatedFault
 }
 
+export interface PingCommand {
+  type: 'ping'
+}
+
 export type Command =
-  UploadMissionCommand | UploadGeofenceCommand | ClearGeofenceCommand | SimulateFaultCommand
+  | UploadMissionCommand
+  | UploadGeofenceCommand
+  | ClearGeofenceCommand
+  | SimulateFaultCommand
+  | PingCommand
 
 export type CommandType = Command['type']
 

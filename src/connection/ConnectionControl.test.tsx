@@ -2,6 +2,7 @@ import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { renderWithStation } from '../test/render'
+import { useLatencyStore } from './latencyStore'
 import { ConnectionControl } from './ConnectionControl'
 
 describe('ConnectionControl', () => {
@@ -27,5 +28,18 @@ describe('ConnectionControl', () => {
     await user.click(screen.getByRole('button', { name: 'Disconnect' }))
     expect(screen.getByRole('status')).toHaveTextContent('Disconnected')
     expect(transport.getStatus()).toBe('disconnected')
+  })
+})
+
+describe('ConnectionControl latency', () => {
+  it('shows the round-trip time while connected', () => {
+    const { transport } = renderWithStation(<ConnectionControl />)
+
+    act(() => {
+      transport.setStatus('connected')
+      useLatencyStore.getState().setLatency(3.4)
+    })
+
+    expect(screen.getByRole('status')).toHaveTextContent('Connected · 3 ms')
   })
 })

@@ -7,6 +7,7 @@ import {
   formatDistance,
   formatGps,
   formatHeading,
+  formatLatency,
   formatSignedAngle,
   NO_VALUE,
 } from './format'
@@ -51,6 +52,14 @@ describe('formatSignedAngle', () => {
 
   it('shows a placeholder without a value', () => {
     expect(formatSignedAngle(undefined)).toBe(NO_VALUE)
+  })
+})
+
+describe('formatLatency', () => {
+  it('rounds to whole milliseconds', () => {
+    expect(formatLatency(0.4)).toBe('<1 ms')
+    expect(formatLatency(3.6)).toBe('4 ms')
+    expect(formatLatency(120)).toBe('120 ms')
   })
 })
 

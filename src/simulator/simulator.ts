@@ -460,6 +460,8 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
           return [acknowledge(envelope, uploadGeofence(command.polygon))]
         case 'clearGeofence':
           return [acknowledge(envelope, clearGeofence())]
+        case 'ping':
+          return [acknowledge(envelope, null)]
       }
     },
   }

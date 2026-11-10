@@ -28,6 +28,10 @@ export function formatSignedAngle(degrees: number | undefined): string {
   return `${rounded > 0 ? '+' : ''}${String(rounded === 0 ? 0 : rounded)}°`
 }
 
+export function formatLatency(latencyMs: number): string {
+  return latencyMs < 1 ? '<1 ms' : `${String(Math.round(latencyMs))} ms`
+}
+
 export function formatArmed(armed: boolean | undefined): string {
   if (armed === undefined) {
     return NO_VALUE

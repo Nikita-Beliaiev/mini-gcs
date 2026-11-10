@@ -3,6 +3,7 @@ import { startAlertMonitor } from '../alerts/alertMonitor'
 import { AlertSummary } from '../alerts/AlertSummary'
 import { ChartsPanel } from '../charts/ChartsPanel'
 import { ConnectionControl } from '../connection/ConnectionControl'
+import { startLatencyMonitor } from '../connection/latencyMonitor'
 import { MapPanel } from '../map/MapPanel'
 import { ControlsPanel } from './ControlsPanel'
 import { useGroundStation } from '../station/stationContext'
@@ -20,6 +21,8 @@ export function App() {
   }, [station])
 
   useEffect(() => startAlertMonitor(station), [station])
+
+  useEffect(() => startLatencyMonitor(station), [station])
 
   return (
     <div className={styles.layout}>
