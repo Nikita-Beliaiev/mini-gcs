@@ -9,7 +9,8 @@ import {
 import { validateGeofence, validateMission } from '../mission/missionRules'
 import type { CommandEnvelope, SimulatedFault } from '../protocol/commands'
 import type { FlightMode, GpsFix, TelemetryMessage } from '../protocol/telemetry'
-import { approach, clamp, tiltForMotion, turnToward, type Tilt } from './motion'
+import { clamp } from '../shared/math'
+import { approach, tiltForMotion, turnToward, type Tilt } from './motion'
 import { createRandom, randomBetween } from './random'
 
 export interface SimulatorConfig {

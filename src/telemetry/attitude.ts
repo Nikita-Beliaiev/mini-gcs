@@ -1,4 +1,4 @@
-import { clamp } from '../simulator/motion'
+import { clamp } from '../shared/math'
 
 export const PITCH_PX_PER_DEG = 2
 export const MAX_SHOWN_PITCH_DEG = 40

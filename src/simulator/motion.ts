@@ -1,4 +1,5 @@
 import { normalizeDegrees, signedAngleDifference, toDegrees, toRadians } from '../geo/geo'
+import { clamp } from '../shared/math'
 
 export interface Tilt {
   rollDeg: number
@@ -8,10 +9,6 @@ export interface Tilt {
 export const MAX_TILT_DEG = 35
 const GRAVITY_MS2 = 9.81
 const DRAG_TILT_DEG_PER_MS = 0.8
-
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max)
-}
 
 export function approach(current: number, target: number, maxStep: number): number {
   if (Math.abs(target - current) <= maxStep) {
