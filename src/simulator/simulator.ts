@@ -6,7 +6,7 @@ import {
   type LatLon,
 } from '../geo/geo'
 import { validateGeofence, validateMission } from '../mission/missionRules'
-import type { CommandEnvelope } from '../protocol/commands'
+import type { CommandEnvelope, SimulatedFault } from '../protocol/commands'
 import type { FlightMode, GpsFix, TelemetryMessage } from '../protocol/telemetry'
 import { approach, clamp, turnToward } from './motion'
 import { createRandom, randomBetween } from './random'
@@ -42,6 +42,11 @@ const GPS_JITTER_M = 0.3
 
 const LINK_RANGE_M = 5000
 const LINK_NOISE_PERCENT = 2
+
+const LINK_LOSS_DURATION_MS = 10_000
+const GPS_LOSS_DURATION_MS = 15_000
+const GPS_LOSS_SATELLITES = 2
+const BATTERY_DROP_PERCENT = 32
 
 type ScheduledMessageType = Exclude<TelemetryMessage['type'], 'commandAck'>
 
@@ -121,6 +126,8 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
   let timeMs = 0
   let sequence = 0
   let nextGpsUpdateAtMs = GPS_UPDATE_INTERVAL_MS
+  let linkLostUntilMs = 0
+  let gpsLostUntilMs = 0
 
   function setMode(mode: FlightMode): void {
     vehicle.mode = mode
@@ -141,6 +148,10 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     }
     nextGpsUpdateAtMs += GPS_UPDATE_INTERVAL_MS
 
+    if (timeMs < gpsLostUntilMs) {
+      vehicle.gpsSatellites = GPS_LOSS_SATELLITES
+      return
+    }
     if (vehicle.gpsSatellites < GPS_MIN_SATELLITES) {
       vehicle.gpsSatellites += 1
       return
@@ -363,6 +374,26 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     return null
   }
 
+  function simulateFault(fault: SimulatedFault): null {
+    switch (fault) {
+      case 'linkLoss':
+        linkLostUntilMs = timeMs + LINK_LOSS_DURATION_MS
+        break
+      case 'gpsLoss':
+        gpsLostUntilMs = timeMs + GPS_LOSS_DURATION_MS
+        vehicle.gpsSatellites = GPS_LOSS_SATELLITES
+        break
+      case 'batteryDrop':
+        vehicle.batteryPercent = Math.min(vehicle.batteryPercent, BATTERY_DROP_PERCENT)
+        break
+    }
+    return null
+  }
+
+  function isLinkLost(): boolean {
+    return timeMs < linkLostUntilMs
+  }
+
   return {
     step(dtMs) {
       const dtS = dtMs / 1000
@@ -371,10 +402,17 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
       updateMode()
       updateMotion(dtS)
       updateBattery(dtS)
-      return collectDueMessages()
+      const messages = collectDueMessages()
+      return isLinkLost() ? [] : messages
     },
     handleCommand(envelope) {
       const { command } = envelope
+      if (command.type === 'simulateFault') {
+        return [acknowledge(envelope, simulateFault(command.fault))]
+      }
+      if (isLinkLost()) {
+        return []
+      }
       switch (command.type) {
         case 'uploadMission':
           return [acknowledge(envelope, uploadMission(command.waypoints))]
@@ -382,8 +420,6 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
           return [acknowledge(envelope, uploadGeofence(command.polygon))]
         case 'clearGeofence':
           return [acknowledge(envelope, clearGeofence())]
-        case 'simulateFault':
-          return [acknowledge(envelope, 'Command is not supported yet')]
       }
     },
   }
