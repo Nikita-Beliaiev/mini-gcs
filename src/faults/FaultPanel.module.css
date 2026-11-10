@@ -1,0 +1,19 @@
+.faults {
+  display: grid;
+  gap: 10px;
+}
+
+.note {
+  min-height: 1.45em;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.list {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

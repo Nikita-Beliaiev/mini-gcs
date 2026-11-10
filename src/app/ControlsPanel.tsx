@@ -1,26 +1,28 @@
 import { useId } from 'react'
+import { FaultPanel } from '../faults/FaultPanel'
+import { GeofencePanel } from '../planning/GeofencePanel'
+import { MissionPanel } from '../planning/MissionPanel'
+import { usePlanningStore } from '../planning/planningStore'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
 import { Tabs } from '../ui/Tabs'
-import { GeofencePanel } from './GeofencePanel'
-import { MissionPanel } from './MissionPanel'
-import styles from './PlanningPanel.module.css'
-import { usePlanningStore } from './planningStore'
+import styles from './ControlsPanel.module.css'
 
-export function PlanningPanel() {
+export function ControlsPanel() {
   const titleId = useId()
   const setEditMode = usePlanningStore((state) => state.setEditMode)
 
   return (
-    <section className={classNames(panelStyles.panel, styles.planning)} aria-labelledby={titleId}>
+    <section className={classNames(panelStyles.panel, styles.controls)} aria-labelledby={titleId}>
       <h2 id={titleId} className={panelStyles.title}>
-        Planning
+        Controls
       </h2>
       <Tabs
-        label="Planning"
+        label="Controls"
         items={[
           { id: 'mission', label: 'Mission', content: <MissionPanel /> },
           { id: 'geofence', label: 'Geofence', content: <GeofencePanel /> },
+          { id: 'simulator', label: 'Simulator', content: <FaultPanel /> },
         ]}
         onChange={() => {
           setEditMode(null)
