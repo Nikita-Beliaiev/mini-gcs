@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { startAlertMonitor } from '../alerts/alertMonitor'
 import { ConnectionControl } from '../connection/ConnectionControl'
 import { MapPanel } from '../map/MapPanel'
 import { PlanningPanel } from '../planning/PlanningPanel'
@@ -15,6 +16,8 @@ export function App() {
       station.disconnect()
     }
   }, [station])
+
+  useEffect(() => startAlertMonitor(station), [station])
 
   return (
     <div className={styles.layout}>
