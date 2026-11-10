@@ -19,3 +19,8 @@
   border-radius: var(--radius);
   color: var(--color-text-muted);
 }
+
+.mapArea {
+  position: relative;
+  display: grid;
+}

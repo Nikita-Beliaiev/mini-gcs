@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { startAlertMonitor } from '../alerts/alertMonitor'
+import { AlertSummary } from '../alerts/AlertSummary'
 import { ConnectionControl } from '../connection/ConnectionControl'
 import { MapPanel } from '../map/MapPanel'
 import { PlanningPanel } from '../planning/PlanningPanel'
@@ -23,7 +24,10 @@ export function App() {
     <div className={styles.layout}>
       <header className={styles.header}>
         <h1 className={styles.title}>Mini GCS</h1>
-        <ConnectionControl />
+        <div className={styles.headerStatus}>
+          <AlertSummary />
+          <ConnectionControl />
+        </div>
       </header>
       <main className={styles.main}>
         <MapPanel />

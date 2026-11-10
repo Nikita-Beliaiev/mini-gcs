@@ -1,4 +1,5 @@
 import { lazy, Suspense, useId, useState } from 'react'
+import { AlertList } from '../alerts/AlertList'
 import buttonStyles from '../ui/button.module.css'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
@@ -27,14 +28,17 @@ export function MapPanel() {
           Follow vehicle
         </button>
       </div>
-      <Suspense fallback={<p className={styles.placeholder}>Loading map…</p>}>
-        <MapView
-          followVehicle={followVehicle}
-          onUserPan={() => {
-            setFollowVehicle(false)
-          }}
-        />
-      </Suspense>
+      <div className={styles.mapArea}>
+        <Suspense fallback={<p className={styles.placeholder}>Loading map…</p>}>
+          <MapView
+            followVehicle={followVehicle}
+            onUserPan={() => {
+              setFollowVehicle(false)
+            }}
+          />
+        </Suspense>
+        <AlertList />
+      </div>
     </section>
   )
 }

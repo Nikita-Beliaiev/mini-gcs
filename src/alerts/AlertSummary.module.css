@@ -1,0 +1,13 @@
+.summary {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.summary[data-severity='warning'] {
+  color: var(--color-warning);
+}
+
+.summary[data-severity='critical'] {
+  color: var(--color-danger);
+}
