@@ -56,7 +56,7 @@ describe('App', () => {
       transport.receive(positionMessage({ altitudeM: 40 }))
     })
 
-    await user.click(screen.getByRole('button', { name: 'Українська' }))
+    await user.click(screen.getByRole('button', { name: 'УКР' }))
 
     expect(screen.getByRole('region', { name: 'Карта' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Останні 60 секунд' })).toBeInTheDocument()

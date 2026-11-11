@@ -9,21 +9,22 @@ describe('LanguageSwitcher', () => {
     render(<LanguageSwitcher />)
 
     const group = screen.getByRole('group', { name: 'Language' })
-    expect(group).toContainElement(screen.getByRole('button', { name: 'English', pressed: true }))
-    expect(screen.getByRole('button', { name: 'Українська', pressed: false })).toHaveAttribute(
-      'lang',
-      'uk',
+    expect(group).toContainElement(
+      screen.getByRole('button', { name: 'EN', description: 'English', pressed: true }),
     )
+    const ukrainian = screen.getByRole('button', { name: 'УКР', description: 'Українська' })
+    expect(ukrainian).toHaveAttribute('aria-pressed', 'false')
+    expect(ukrainian).toHaveAttribute('lang', 'uk')
   })
 
   it('switches the interface language', async () => {
     const user = userEvent.setup()
     render(<LanguageSwitcher />)
 
-    await user.click(screen.getByRole('button', { name: 'Українська' }))
+    await user.click(screen.getByRole('button', { name: 'УКР' }))
 
     expect(useLocaleStore.getState().locale).toBe('uk')
     expect(screen.getByRole('group', { name: 'Мова' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Українська', pressed: true })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'УКР', pressed: true })).toBeInTheDocument()
   })
 })

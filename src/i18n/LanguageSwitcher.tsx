@@ -21,7 +21,7 @@ export function LanguageSwitcher() {
           type="button"
           lang={option}
           className={buttonStyles.button}
-          aria-label={LANGUAGES[option].name}
+          title={LANGUAGES[option].name}
           aria-pressed={option === locale}
           onClick={() => {
             setLocale(option)

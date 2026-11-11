@@ -72,7 +72,7 @@ describe('Root', () => {
     act(() => {
       transport.receive(heartbeatMessage())
     })
-    await user.click(screen.getByRole('button', { name: 'Українська' }))
+    await user.click(screen.getByRole('button', { name: 'УКР' }))
 
     await user.click(screen.getByRole('tab', { name: 'Журнал польоту' }))
     await user.click(screen.getByRole('button', { name: 'Відтворити запис' }))
