@@ -65,6 +65,28 @@ describe('Root', () => {
     expect(transport.getStatus()).toBe('connecting')
   })
 
+  it('keeps the chosen language when switching to a replay and back', async () => {
+    const user = userEvent.setup()
+    const { transport } = setup()
+    await screen.findByText('Map view')
+    act(() => {
+      transport.receive(heartbeatMessage())
+    })
+    await user.click(screen.getByRole('button', { name: 'Українська' }))
+
+    await user.click(screen.getByRole('tab', { name: 'Журнал польоту' }))
+    await user.click(screen.getByRole('button', { name: 'Відтворити запис' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Відтворення')
+    expect(screen.getByRole('region', { name: 'Журнал польоту' })).toHaveTextContent(
+      'Запис цього сеансу',
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Повернутися до польоту' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Підключення…')
+  })
+
   it('stops editing on the map when a replay starts', async () => {
     const user = userEvent.setup()
     const { transport } = setup()

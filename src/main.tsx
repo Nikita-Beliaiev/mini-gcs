@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Root } from './app/Root'
+import { startLocaleSync } from './i18n/localeSync'
 import { createLiveSession } from './session/stationSession'
 import { simulatorServerUrl } from './transport/serverUrl'
 import type { Transport } from './transport/transport'
@@ -25,6 +26,7 @@ if (!rootElement) {
   throw new Error('Root element #root not found')
 }
 
+startLocaleSync()
 const live = createLiveSession(await createTransport())
 
 createRoot(rootElement).render(

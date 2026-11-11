@@ -1,7 +1,6 @@
 import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { useLocaleStore } from '../i18n/localeStore'
 import { heartbeatMessage, positionMessage } from '../test/messages'
 import { createTestLiveSession, createTestReplaySession, renderWithSession } from '../test/session'
 import { App } from './App'
@@ -47,17 +46,17 @@ describe('App', () => {
     expect(transport.getStatus()).toBe('disconnected')
   })
 
-  it('shows the whole station in Ukrainian', async () => {
+  it('switches the whole station to Ukrainian', async () => {
     const user = userEvent.setup()
-    useLocaleStore.getState().setLocale('uk')
     const { transport } = renderLive()
     await screen.findByText('Map view')
-
     act(() => {
       transport.setStatus('connected')
       transport.receive(heartbeatMessage({ armed: false }))
       transport.receive(positionMessage({ altitudeM: 40 }))
     })
+
+    await user.click(screen.getByRole('button', { name: 'Українська' }))
 
     expect(screen.getByRole('region', { name: 'Карта' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Останні 60 секунд' })).toBeInTheDocument()

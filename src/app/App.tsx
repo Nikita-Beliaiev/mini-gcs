@@ -4,6 +4,7 @@ import { AlertSummary } from '../alerts/AlertSummary'
 import { ChartsPanel } from '../charts/ChartsPanel'
 import { ConnectionControl } from '../connection/ConnectionControl'
 import { startLatencyMonitor } from '../connection/latencyMonitor'
+import { LanguageSwitcher } from '../i18n/LanguageSwitcher'
 import { MapPanel } from '../map/MapPanel'
 import { FlightLogPanel } from '../replay/FlightLogPanel'
 import { ReplayBar } from '../replay/ReplayBar'
@@ -45,6 +46,7 @@ export function App() {
         <div className={styles.headerStatus}>
           <AlertSummary />
           {isLive ? <ConnectionControl /> : <ReplayStatus />}
+          <LanguageSwitcher />
         </div>
       </header>
       <main className={styles.main}>
