@@ -8,7 +8,7 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 
 ![The station flying a patrol, uploading a new mission and raising a link loss alert](docs/demo.gif)
 
-> **Status:** the planned roadmap is complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, end-to-end and accessibility tests. Stretch goals are listed in the [Roadmap](#roadmap).
+> **Status:** the planned roadmap is complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, end-to-end and accessibility tests. Stretch goals are listed in the [Roadmap](#roadmap).
 >
 > All flight data is simulated. This project does not connect to or control real aircraft.
 
@@ -21,15 +21,16 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 - Geofence: draw a polygon, upload it, and the vehicle returns home when it crosses the border
 - Alerts for link loss, geofence breach, low and critical battery and GPS fix loss, with acknowledgement
 - Simulator controls that inject a link loss, a GPS loss or a battery drop, to see how the station reacts
+- Flight recorder that keeps the last 10 minutes of telemetry, with replay at up to 8×, a timeline of flight modes and link losses, and flight log download and upload
 - Two simulator modes: in a Web Worker for the static demo, or in Node behind a WebSocket, with automatic reconnect
 - Connection status with a latency readout
 - Simulated quadcopter that acquires GPS, takes off, flies its mission once, returns home, lands, swaps the battery and flies again
 
 ## How it is built
 
-Telemetry arrives at up to 50 Hz, and the UI stays smooth without re-rendering the React tree on every message: telemetry lives in an external store with ring buffers, updates are batched once per animation frame, readouts subscribe only to the text they show, and the map, charts and attitude indicator update the DOM directly. The same simulator runs in a Web Worker for the static demo or in Node behind a WebSocket, and the station talks to both through one transport interface.
+Telemetry arrives at up to 50 Hz, and the UI stays smooth without re-rendering the React tree on every message: telemetry lives in an external store with ring buffers, updates are batched once per animation frame, readouts subscribe only to the text they show, and the map, charts and attitude indicator update the DOM directly. The same simulator runs in a Web Worker for the static demo or in Node behind a WebSocket, and the station talks to both through one transport interface. A replay is a third transport with its own clock, so the map, charts and alerts work the same on a recorded flight.
 
-Read **[docs/architecture.md](docs/architecture.md)** for diagrams of the data flow, a command round trip and the vehicle's flight modes, plus the protocol, trust boundaries, testing strategy and the main trade-offs.
+Read **[docs/architecture.md](docs/architecture.md)** for diagrams of the data flow, a command round trip, seeking in a replay and the vehicle's flight modes, plus the protocol, trust boundaries, testing strategy and the main trade-offs.
 
 The demo flies over farmland in Val d'Orcia, Tuscany.
 
@@ -87,8 +88,9 @@ Then open http://localhost:5173/?server=ws://127.0.0.1:8787. The server listens 
 - [x] **Phase 2:** mission planning, geofence, alerts
 - [x] **Phase 3:** charts, attitude indicator, reconnect, WebSocket simulator mode
 - [x] **Phase 4:** demo GIF, architecture diagram, end-to-end tests
+- [x] **Phase 5:** flight recording and replay
 
-Stretch goals: multiple vehicles, flight log replay, video feed, MAVLink via ArduPilot SITL.
+Stretch goals: multiple vehicles, video feed, MAVLink via ArduPilot SITL.
 
 ## Credits
 
