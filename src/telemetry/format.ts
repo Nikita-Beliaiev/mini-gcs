@@ -59,3 +59,10 @@ export function formatDistance(meters: number | undefined): string {
 export function formatCoordinates(point: LatLon): string {
   return `${point.lat.toFixed(5)}, ${point.lon.toFixed(5)}`
 }
+
+export function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes)}:${String(seconds).padStart(2, '0')}`
+}

@@ -5,6 +5,7 @@ import {
   formatCoordinates,
   formatDecimal,
   formatDistance,
+  formatDuration,
   formatGps,
   formatHeading,
   formatLatency,
@@ -99,5 +100,18 @@ describe('formatDistance', () => {
 describe('formatCoordinates', () => {
   it('shows latitude and longitude with five decimals', () => {
     expect(formatCoordinates({ lat: 43.098211, lon: 11.6466 })).toBe('43.09821, 11.64660')
+  })
+})
+
+describe('formatDuration', () => {
+  it('shows minutes and seconds, rounding down', () => {
+    expect(formatDuration(0)).toBe('0:00')
+    expect(formatDuration(9_999)).toBe('0:09')
+    expect(formatDuration(252_000)).toBe('4:12')
+    expect(formatDuration(4_500_000)).toBe('75:00')
+  })
+
+  it('never shows a negative time', () => {
+    expect(formatDuration(-500)).toBe('0:00')
   })
 })
