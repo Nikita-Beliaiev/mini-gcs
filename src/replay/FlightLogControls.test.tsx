@@ -4,7 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { captureDownloads } from '../test/downloads'
 import { heartbeatMessage, positionMessage } from '../test/messages'
 import { createTestLiveSession, renderWithSession, TEST_LOG_SAVED_AT } from '../test/session'
-import { createFlightLog, FLIGHT_LOG_ERRORS, parseFlightLog, serializeFlightLog } from './flightLog'
+import { createFlightLog, serializeFlightLog } from './flightLog'
+import { FLIGHT_LOG_ERRORS, parseFlightLog } from './flightLogFile'
 import { FlightLogControls } from './FlightLogControls'
 
 function setup() {

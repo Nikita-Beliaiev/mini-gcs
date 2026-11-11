@@ -2,15 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { attitudeMessage, heartbeatMessage, positionMessage } from '../test/messages'
 import {
   createFlightLog,
-  FLIGHT_LOG_ERRORS,
+  FLIGHT_LOG_FORMAT,
+  FLIGHT_LOG_VERSION,
   flightLogDurationMs,
   flightLogFileName,
-  parseFlightLog,
-  readFlightLogFile,
   serializeFlightLog,
 } from './flightLog'
-
-const SAVED_AT = new Date('2026-11-11T10:15:30.000Z')
 
 const messages = [
   heartbeatMessage({ timeMs: 1000 }),
@@ -18,56 +15,15 @@ const messages = [
   attitudeMessage({ timeMs: 4000 }),
 ]
 
-function logText(overrides: Record<string, unknown> = {}): string {
-  return JSON.stringify({
-    ...(JSON.parse(serializeFlightLog(createFlightLog(messages, SAVED_AT))) as object),
-    ...overrides,
-  })
-}
+describe('flight logs', () => {
+  it('saves the format, the version, the save time and the messages', () => {
+    const log = createFlightLog(messages, new Date('2026-11-11T10:15:30.000Z'))
 
-describe('flight log files', () => {
-  it('reads back what it saved', () => {
-    const result = parseFlightLog(serializeFlightLog(createFlightLog(messages, SAVED_AT)))
-
-    expect(result).toEqual({
-      ok: true,
-      log: { savedAt: '2026-11-11T10:15:30.000Z', messages },
-    })
-  })
-
-  it('puts messages in time order', () => {
-    const result = parseFlightLog(logText({ messages: [...messages].reverse() }))
-
-    expect(result.ok && result.log.messages).toEqual(messages)
-  })
-
-  it('rejects text that is not JSON', () => {
-    expect(parseFlightLog('{ not json')).toEqual({ ok: false, error: FLIGHT_LOG_ERRORS.notJson })
-  })
-
-  it('rejects JSON that is not a flight log', () => {
-    expect(parseFlightLog('{"name":"mini-gcs"}')).toEqual({
-      ok: false,
-      error: FLIGHT_LOG_ERRORS.notFlightLog,
-    })
-    expect(parseFlightLog('null')).toEqual({ ok: false, error: FLIGHT_LOG_ERRORS.notFlightLog })
-  })
-
-  it('rejects a damaged log, another version and an empty log', () => {
-    const damaged = logText({ messages: [{ type: 'position', seq: 1, timeMs: 'soon' }] })
-
-    for (const text of [damaged, logText({ version: 2 }), logText({ messages: [] })]) {
-      expect(parseFlightLog(text)).toEqual({ ok: false, error: FLIGHT_LOG_ERRORS.invalid })
-    }
-  })
-
-  it('reads a file and refuses one that is too large', async () => {
-    const file = new Blob([logText()])
-
-    expect((await readFlightLogFile(file)).ok).toBe(true)
-    expect(await readFlightLogFile(file, file.size - 1)).toEqual({
-      ok: false,
-      error: FLIGHT_LOG_ERRORS.tooLarge,
+    expect(JSON.parse(serializeFlightLog(log))).toEqual({
+      format: FLIGHT_LOG_FORMAT,
+      version: FLIGHT_LOG_VERSION,
+      savedAt: '2026-11-11T10:15:30.000Z',
+      messages,
     })
   })
 

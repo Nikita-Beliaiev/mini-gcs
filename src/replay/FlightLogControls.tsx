@@ -3,12 +3,7 @@ import { useLiveSession, useSession } from '../session/sessionContext'
 import { formatDuration } from '../telemetry/format'
 import buttonStyles from '../ui/button.module.css'
 import { downloadTextFile } from './download'
-import {
-  createFlightLog,
-  flightLogFileName,
-  readFlightLogFile,
-  serializeFlightLog,
-} from './flightLog'
+import { createFlightLog, flightLogFileName, serializeFlightLog } from './flightLog'
 import { RECORDING_WINDOW_MS } from './flightRecorder'
 import styles from './FlightLogControls.module.css'
 
@@ -39,6 +34,7 @@ export function FlightLogControls() {
 
   async function openFile(file: File): Promise<void> {
     setFileError(null)
+    const { readFlightLogFile } = await import('./flightLogFile')
     const result = await readFlightLogFile(file)
     if (result.ok) {
       startReplay(result.log, file.name)
