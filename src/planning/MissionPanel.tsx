@@ -9,7 +9,7 @@ import { classNames } from '../ui/classNames'
 import styles from './PlanEditor.module.css'
 import { usePlanningStore } from './planningStore'
 import { DraftPointList } from './DraftPointList'
-import { EditOnMapToggle } from './EditOnMapToggle'
+import { DrawOnMapButton } from './DrawOnMapButton'
 import { describeUpload, uploadPlan } from './uploadPlan'
 import { describeVehicleMission } from './vehicleMission'
 
@@ -19,6 +19,7 @@ export function MissionPanel() {
   const station = useGroundStation()
   const isConnected = useConnectionStatus() === 'connected'
   const draft = usePlanningStore((state) => state.drafts.mission)
+  const isDrawing = usePlanningStore((state) => state.editMode === 'mission')
   const upload = usePlanningStore((state) => state.uploads.mission)
   const replacePoints = usePlanningStore((state) => state.replacePoints)
   const clearPoints = usePlanningStore((state) => state.clearPoints)
@@ -35,12 +36,13 @@ export function MissionPanel() {
   return (
     <div className={styles.editor}>
       <p className={styles.summary}>{vehicleSummary}</p>
-      <EditOnMapToggle target="mission" />
-      {draft.length === 0 ? (
-        <p className={styles.hint}>{text.mission.empty}</p>
-      ) : (
+      <DrawOnMapButton target="mission" isEmpty={draft.length === 0} />
+      {draft.length === 0 && !isDrawing ? (
+        <p className={styles.hint}>{text.mission.empty(text.mission.draw)}</p>
+      ) : null}
+      {draft.length > 0 ? (
         <DraftPointList target="mission" issues={issues} legOrigin={home} />
-      )}
+      ) : null}
       {home && draft.length > 0 ? (
         <p className={styles.summary}>
           {text.mission.route(
@@ -55,6 +57,7 @@ export function MissionPanel() {
           ))}
         </ul>
       ) : null}
+      {draft.length > 0 ? <p className={styles.hint}>{text.mission.uploadNote}</p> : null}
       <div className={styles.actions}>
         <button
           type="button"

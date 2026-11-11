@@ -5,7 +5,8 @@ test('plans a mission on the map and uploads it to the vehicle', async ({ page }
   await openStation(page)
   await waitForMapAtHome(page)
 
-  await page.getByRole('button', { name: 'Edit on map' }).click()
+  await page.getByRole('button', { name: 'Draw route on map' }).click()
+  await expect(page.getByText(/^Drawing the route: click the map/)).toBeVisible()
   await clickMapFromCenter(page, 150, -100)
   await clickMapFromCenter(page, -150, -120)
 

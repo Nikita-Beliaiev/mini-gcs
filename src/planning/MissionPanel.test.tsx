@@ -66,19 +66,28 @@ describe('MissionPanel', () => {
     expect(screen.getByText('Vehicle mission 1: 2 waypoints, flying to WP 2')).toBeInTheDocument()
   })
 
-  it('turns map editing on and off for waypoints', async () => {
+  it('invites drawing a route while there are no waypoints', () => {
+    renderPanel()
+
+    expect(screen.getByRole('button', { name: 'Draw route on map' })).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'No waypoints yet. Press “Draw route on map” and click the map, or load the vehicle mission.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('starts and finishes drawing the route on the map', async () => {
     const user = userEvent.setup()
     renderPanel()
-    const toggle = screen.getByRole('button', { name: 'Edit on map' })
 
-    await user.click(toggle)
-    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await user.click(screen.getByRole('button', { name: 'Draw route on map' }))
     expect(usePlanningStore.getState().editMode).toBe('mission')
-    expect(screen.getByText(/Click the map to add a waypoint/)).toBeInTheDocument()
+    expect(screen.queryByText(/^No waypoints yet/)).not.toBeInTheDocument()
 
-    await user.click(toggle)
-    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await user.click(screen.getByRole('button', { name: 'Finish drawing' }))
     expect(usePlanningStore.getState().editMode).toBeNull()
+    expect(screen.getByRole('button', { name: 'Draw route on map' })).toBeInTheDocument()
   })
 
   it('loads the vehicle mission into the draft', async () => {
@@ -90,6 +99,11 @@ describe('MissionPanel', () => {
     expect(waypoints()[0]).toHaveTextContent('WP 1')
     expect(waypoints()[0]).toHaveTextContent('43.09800, 11.64600')
     expect(screen.getByText(/^Route .* from home and back$/)).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'A vehicle flying its mission switches to the new route right after the upload.',
+      ),
+    ).toBeInTheDocument()
   })
 
   it('reorders and removes waypoints', async () => {

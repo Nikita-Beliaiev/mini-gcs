@@ -99,7 +99,8 @@ export const en = {
     },
   },
   planning: {
-    editOnMap: 'Edit on map',
+    finishDrawing: 'Finish drawing',
+    done: 'Done',
     loadFromVehicle: 'Load from vehicle',
     clear: 'Clear',
     uploadToVehicle: 'Upload to vehicle',
@@ -112,8 +113,11 @@ export const en = {
       noResponse: 'No response from the vehicle',
     },
     mission: {
-      editHint: 'Click the map to add a waypoint, drag a number to move it.',
-      empty: 'No waypoints yet. Load the vehicle mission or add points on the map.',
+      draw: 'Draw route on map',
+      drawingHint: 'Drawing the route: click the map to add a waypoint, drag a number to move it.',
+      empty: (button: string) =>
+        `No waypoints yet. Press “${button}” and click the map, or load the vehicle mission.`,
+      uploadNote: 'A vehicle flying its mission switches to the new route right after the upload.',
       listLabel: 'Mission waypoints',
       shortName: 'WP',
       moveUp: (number: number) => `Move waypoint ${String(number)} up`,
@@ -129,8 +133,10 @@ export const en = {
         }`,
     },
     geofence: {
-      editHint: 'Click the map to add a vertex, drag a square to move it.',
-      empty: 'No vertices yet. Load the vehicle geofence or add points on the map.',
+      draw: 'Draw geofence on map',
+      drawingHint: 'Drawing the geofence: click the map to add a vertex, drag a square to move it.',
+      empty: (button: string) =>
+        `No vertices yet. Press “${button}” and click the map, or load the vehicle geofence.`,
       listLabel: 'Geofence vertices',
       shortName: 'V',
       moveUp: (number: number) => `Move vertex ${String(number)} up`,

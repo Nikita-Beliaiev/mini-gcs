@@ -14,7 +14,7 @@ test('uploads a geofence and brings the vehicle home when it flies out', async (
   await waitForMapAtHome(page)
 
   await page.getByRole('tab', { name: 'Geofence' }).click()
-  await page.getByRole('button', { name: 'Edit on map' }).click()
+  await page.getByRole('button', { name: 'Draw geofence on map' }).click()
   for (const [dx, dy] of SQUARE_AROUND_HOME) {
     await clickMapFromCenter(page, dx, dy)
   }

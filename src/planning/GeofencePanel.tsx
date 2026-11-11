@@ -5,7 +5,7 @@ import { useConnectionStatus, useGroundStation, useTelemetry } from '../station/
 import buttonStyles from '../ui/button.module.css'
 import { classNames } from '../ui/classNames'
 import { DraftPointList } from './DraftPointList'
-import { EditOnMapToggle } from './EditOnMapToggle'
+import { DrawOnMapButton } from './DrawOnMapButton'
 import styles from './PlanEditor.module.css'
 import { usePlanningStore } from './planningStore'
 import { describeUpload, uploadPlan } from './uploadPlan'
@@ -17,6 +17,7 @@ export function GeofencePanel() {
   const station = useGroundStation()
   const isConnected = useConnectionStatus() === 'connected'
   const draft = usePlanningStore((state) => state.drafts.geofence)
+  const isDrawing = usePlanningStore((state) => state.editMode === 'geofence')
   const upload = usePlanningStore((state) => state.uploads.geofence)
   const replacePoints = usePlanningStore((state) => state.replacePoints)
   const clearPoints = usePlanningStore((state) => state.clearPoints)
@@ -37,12 +38,13 @@ export function GeofencePanel() {
   return (
     <div className={styles.editor}>
       <p className={styles.summary}>{vehicleSummary}</p>
-      <EditOnMapToggle target="geofence" />
-      {draft.length === 0 ? (
-        <p className={styles.hint}>{text.geofence.empty}</p>
-      ) : (
+      <DrawOnMapButton target="geofence" isEmpty={draft.length === 0} />
+      {draft.length === 0 && !isDrawing ? (
+        <p className={styles.hint}>{text.geofence.empty(text.geofence.draw)}</p>
+      ) : null}
+      {draft.length > 0 ? (
         <DraftPointList target="geofence" issues={issues} legOrigin={null} />
-      )}
+      ) : null}
       {generalIssues.length > 0 ? (
         <ul className={styles.issues} aria-label={text.geofence.problems}>
           {generalIssues.map((issue) => (

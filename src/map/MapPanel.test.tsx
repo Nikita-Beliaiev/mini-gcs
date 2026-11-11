@@ -1,6 +1,7 @@
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { usePlanningStore } from '../planning/planningStore'
 import { renderWithStation } from '../test/render'
 import { MapPanel } from './MapPanel'
 import type { MapViewProps } from './MapView'
@@ -60,5 +61,28 @@ describe('MapPanel', () => {
     renderWithStation(<MapPanel showPlanning={false} />)
 
     expect(await screen.findByText('Plans hidden')).toBeInTheDocument()
+  })
+
+  it('explains drawing on the map while a plan is being drawn', async () => {
+    renderWithStation(<MapPanel showPlanning />)
+    await screen.findByText('Map is free')
+
+    act(() => {
+      usePlanningStore.getState().setEditMode('mission')
+    })
+
+    expect(screen.getByText(/^Drawing the route/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument()
+  })
+
+  it('shows no drawing help when plans are hidden', async () => {
+    renderWithStation(<MapPanel showPlanning={false} />)
+    await screen.findByText('Plans hidden')
+
+    act(() => {
+      usePlanningStore.getState().setEditMode('mission')
+    })
+
+    expect(screen.queryByText(/^Drawing the route/)).not.toBeInTheDocument()
   })
 })

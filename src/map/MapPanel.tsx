@@ -1,6 +1,8 @@
 import { lazy, Suspense, useId, useState } from 'react'
 import { AlertList } from '../alerts/AlertList'
 import { useMessages } from '../i18n/localeStore'
+import { DrawingBanner } from '../planning/DrawingBanner'
+import { usePlanningStore } from '../planning/planningStore'
 import buttonStyles from '../ui/button.module.css'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
@@ -16,6 +18,7 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
   const text = useMessages().map
   const titleId = useId()
   const [followVehicle, setFollowVehicle] = useState(false)
+  const isDrawing = usePlanningStore((state) => showPlanning && state.editMode !== null)
 
   return (
     <section className={classNames(panelStyles.panel, styles.panel)} aria-labelledby={titleId}>
@@ -34,7 +37,7 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
           {text.followVehicle}
         </button>
       </div>
-      <div className={styles.mapArea}>
+      <div className={styles.mapArea} data-drawing={isDrawing}>
         <Suspense fallback={<p className={styles.placeholder}>{text.loading}</p>}>
           <MapView
             followVehicle={followVehicle}
@@ -45,6 +48,7 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
           />
         </Suspense>
         <AlertList />
+        {showPlanning ? <DrawingBanner /> : null}
       </div>
     </section>
   )

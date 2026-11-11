@@ -31,7 +31,18 @@
 
 .primary {
   border-color: var(--color-accent);
+  font-weight: 600;
+  color: var(--color-bg);
+  background: var(--color-accent);
+}
+
+.primary:hover {
+  border-color: var(--color-text);
+}
+
+.primary:disabled {
   color: var(--color-accent);
+  background: var(--color-surface-raised);
 }
 
 .icon {
