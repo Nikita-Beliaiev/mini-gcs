@@ -82,7 +82,7 @@ async function clickMap(page: Page, dx: number, dy: number): Promise<void> {
 async function playScenario(page: Page): Promise<void> {
   await delay(2500)
 
-  await clickLocator(page, page.getByRole('button', { name: 'Edit on map' }))
+  await clickLocator(page, page.getByRole('button', { name: 'Draw route on map' }))
   await delay(500)
   await clickMap(page, 170, -60)
   await clickMap(page, 230, 110)
@@ -106,7 +106,7 @@ const server = await preview({ preview: { port: PORT, strictPort: true, host: '1
 const browser = await chromium.launch({ channel: 'chrome', args: ['--enable-unsafe-swiftshader'] })
 
 try {
-  const page = await browser.newPage({ viewport: VIEWPORT })
+  const page = await browser.newPage({ viewport: VIEWPORT, locale: 'en-US' })
   await page.addInitScript(showCursor)
   await page.goto(`http://127.0.0.1:${String(PORT)}/`)
   await page
