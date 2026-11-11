@@ -10,6 +10,7 @@ interface AlertState {
   alerts: ActiveAlert[]
   applyEvaluation: (evaluated: readonly Alert[], nowMs: number) => void
   acknowledge: (id: AlertId) => void
+  clear: () => void
 }
 
 function isSameAlert(active: ActiveAlert | undefined, alert: Alert): boolean {
@@ -56,5 +57,8 @@ export const useAlertStore = create<AlertState>()((set) => ({
         alert.id === id ? { ...alert, acknowledged: true } : alert,
       ),
     }))
+  },
+  clear: () => {
+    set(initialAlertData)
   },
 }))

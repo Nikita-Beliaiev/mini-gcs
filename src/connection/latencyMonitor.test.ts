@@ -57,6 +57,15 @@ describe('startLatencyMonitor', () => {
     stop()
   })
 
+  it('forgets the latency when stopped', () => {
+    const { stop } = setup()
+    useLatencyStore.getState().setLatency(7)
+
+    stop()
+
+    expect(latency()).toBeNull()
+  })
+
   it('does not ping and shows no latency while disconnected', async () => {
     const { transport, stop } = setup()
     useLatencyStore.getState().setLatency(7)

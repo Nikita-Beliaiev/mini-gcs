@@ -60,6 +60,16 @@ describe('startAlertMonitor', () => {
     stop()
   })
 
+  it('clears its alerts when stopped', () => {
+    const { stop } = setup()
+    vi.advanceTimersByTime(4000)
+    expect(alertIds()).toEqual(['linkLost'])
+
+    stop()
+
+    expect(alertIds()).toEqual([])
+  })
+
   it('stops checking once stopped', () => {
     const { stop } = setup()
 

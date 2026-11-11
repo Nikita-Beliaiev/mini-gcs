@@ -47,5 +47,6 @@ export function startAlertMonitor(
     for (const unsubscribe of unsubscribers) {
       unsubscribe()
     }
+    useAlertStore.getState().clear()
   }
 }

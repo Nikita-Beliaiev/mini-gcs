@@ -55,4 +55,13 @@ describe('useAlertStore', () => {
       raisedAtMs: 3000,
     })
   })
+
+  it('clears every alert', () => {
+    const { applyEvaluation, clear } = useAlertStore.getState()
+    applyEvaluation([LINK_LOST, BATTERY_LOW], 1000)
+
+    clear()
+
+    expect(useAlertStore.getState().alerts).toEqual([])
+  })
 })

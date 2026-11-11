@@ -43,5 +43,6 @@ export function startLatencyMonitor(
     isStopped = true
     clearInterval(timer)
     unsubscribe()
+    setLatency(null)
   }
 }
