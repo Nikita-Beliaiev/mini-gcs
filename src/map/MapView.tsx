@@ -192,12 +192,14 @@ export default function MapView({ followVehicle, showPlanning, onUserPan }: MapV
     })
 
     return () => {
-      lastViewRef.current = {
-        center: map.getCenter(),
-        zoom: map.getZoom(),
-        bearing: map.getBearing(),
-        pitch: map.getPitch(),
-      }
+      lastViewRef.current = centeredOnHome
+        ? {
+            center: map.getCenter(),
+            zoom: map.getZoom(),
+            bearing: map.getBearing(),
+            pitch: map.getPitch(),
+          }
+        : null
       for (const unsubscribe of unsubscribers) {
         unsubscribe()
       }
