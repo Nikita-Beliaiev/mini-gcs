@@ -61,29 +61,35 @@ describe('formatSignedAngle', () => {
 
 describe('formatLatency', () => {
   it('rounds to whole milliseconds', () => {
-    expect(formatLatency(0.4)).toBe('<1 ms')
-    expect(formatLatency(3.6)).toBe('4 ms')
-    expect(formatLatency(120)).toBe('120 ms')
+    expect(formatLatency(0.4, 'ms')).toBe('<1 ms')
+    expect(formatLatency(3.6, 'ms')).toBe('4 ms')
+    expect(formatLatency(120, 'мс')).toBe('120 мс')
   })
 })
 
 describe('formatArmed', () => {
   it('names the arming state', () => {
-    expect(formatArmed(true)).toBe('Armed')
-    expect(formatArmed(false)).toBe('Disarmed')
-    expect(formatArmed(undefined)).toBe(NO_VALUE)
+    expect(formatArmed(true, en.telemetry)).toBe('Armed')
+    expect(formatArmed(false, en.telemetry)).toBe('Disarmed')
+    expect(formatArmed(false, uk.telemetry)).toBe('Заблоковано')
+    expect(formatArmed(undefined, en.telemetry)).toBe(NO_VALUE)
   })
 })
 
 describe('formatGps', () => {
   it('combines the fix type with the satellite count', () => {
-    expect(formatGps(systemStatusMessage({ gpsFix: '3d', gpsSatellites: 14 }))).toBe('3D · 14')
-    expect(formatGps(systemStatusMessage({ gpsFix: '2d', gpsSatellites: 4 }))).toBe('2D · 4')
-    expect(formatGps(systemStatusMessage({ gpsFix: 'none', gpsSatellites: 0 }))).toBe('No fix · 0')
+    const noFix = en.telemetry.noGpsFix
+    expect(formatGps(systemStatusMessage({ gpsFix: '3d', gpsSatellites: 14 }), noFix)).toBe(
+      '3D · 14',
+    )
+    expect(formatGps(systemStatusMessage({ gpsFix: '2d', gpsSatellites: 4 }), noFix)).toBe('2D · 4')
+    expect(formatGps(systemStatusMessage({ gpsFix: 'none', gpsSatellites: 0 }), noFix)).toBe(
+      'No fix · 0',
+    )
   })
 
   it('shows a placeholder without a status', () => {
-    expect(formatGps(null)).toBe(NO_VALUE)
+    expect(formatGps(null, en.telemetry.noGpsFix)).toBe(NO_VALUE)
   })
 })
 

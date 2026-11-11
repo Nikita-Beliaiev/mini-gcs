@@ -1,14 +1,15 @@
+import type { Messages } from '../i18n/en'
 import type { TelemetryState, TelemetryStore } from '../telemetry/telemetryStore'
 import { chartWindow, type ChartData } from './chartData'
 
 export interface ChartSeries {
-  label: string
+  id: keyof Messages['charts']['series']
   color: string
 }
 
 export interface ChartConfig {
-  title: string
-  unit: string
+  id: keyof Messages['charts']['titles']
+  unit: keyof Messages['units']
   source: keyof Pick<TelemetryState, 'position' | 'systemStatus'>
   series: readonly ChartSeries[]
   yRange: (dataMax: number) => [number, number]
@@ -24,30 +25,30 @@ const COLORS = {
 
 export const CHARTS: readonly ChartConfig[] = [
   {
-    title: 'Altitude',
-    unit: 'm',
+    id: 'altitude',
+    unit: 'meters',
     source: 'position',
-    series: [{ label: 'Altitude', color: COLORS.altitude }],
+    series: [{ id: 'altitude', color: COLORS.altitude }],
     yRange: (dataMax) => [0, Math.max(50, Math.ceil(dataMax * 1.2))],
     getData: (telemetry) =>
       chartWindow(telemetry.getPositionHistory(), [(position) => position.altitudeM]),
   },
   {
-    title: 'Ground speed',
-    unit: 'm/s',
+    id: 'groundSpeed',
+    unit: 'metersPerSecond',
     source: 'position',
-    series: [{ label: 'Ground speed', color: COLORS.speed }],
+    series: [{ id: 'groundSpeed', color: COLORS.speed }],
     yRange: (dataMax) => [0, Math.max(15, Math.ceil(dataMax * 1.2))],
     getData: (telemetry) =>
       chartWindow(telemetry.getPositionHistory(), [(position) => position.groundSpeedMs]),
   },
   {
-    title: 'Battery and link',
-    unit: '%',
+    id: 'batteryAndLink',
+    unit: 'percent',
     source: 'systemStatus',
     series: [
-      { label: 'Battery', color: COLORS.battery },
-      { label: 'Link quality', color: COLORS.link },
+      { id: 'battery', color: COLORS.battery },
+      { id: 'linkQuality', color: COLORS.link },
     ],
     yRange: () => [0, 100],
     getData: (telemetry) =>

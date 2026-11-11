@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import uPlot from 'uplot'
 import 'uplot/dist/uPlot.min.css'
+import { useMessages } from '../i18n/localeStore'
 import { useGroundStation } from '../station/stationContext'
 import { CHART_WINDOW_MS } from './chartData'
 import type { ChartConfig } from './chartConfigs'
@@ -11,7 +12,7 @@ const AXIS_COLOR = '#7d8a9c'
 const GRID_COLOR = '#243041'
 const AXIS_FONT = '11px system-ui, sans-serif'
 
-function chartOptions(config: ChartConfig, width: number): uPlot.Options {
+function chartOptions(config: ChartConfig, width: number, secondsUnit: string): uPlot.Options {
   const axis = {
     stroke: AXIS_COLOR,
     font: AXIS_FONT,
@@ -28,13 +29,15 @@ function chartOptions(config: ChartConfig, width: number): uPlot.Options {
       y: { range: (_plot, _min, max) => config.yRange(max) },
     },
     axes: [
-      { ...axis, values: (_plot, ticks) => ticks.map((tick) => `${String(tick)} s`) },
+      {
+        ...axis,
+        values: (_plot, ticks) => ticks.map((tick) => `${String(tick)} ${secondsUnit}`),
+      },
       { ...axis, size: 36 },
     ],
     series: [
       {},
       ...config.series.map((series) => ({
-        label: series.label,
         stroke: series.color,
         width: 1.5,
         points: { show: false },
@@ -49,6 +52,8 @@ interface TimeSeriesChartProps {
 
 export default function TimeSeriesChart({ config }: TimeSeriesChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const messages = useMessages()
+  const secondsUnit = messages.units.seconds
   const { telemetry } = useGroundStation()
 
   useEffect(() => {
@@ -58,7 +63,7 @@ export default function TimeSeriesChart({ config }: TimeSeriesChartProps) {
     }
 
     const plot = new uPlot(
-      chartOptions(config, container.clientWidth),
+      chartOptions(config, container.clientWidth, secondsUnit),
       config.getData(telemetry),
       container,
     )
@@ -84,19 +89,19 @@ export default function TimeSeriesChart({ config }: TimeSeriesChartProps) {
       resizeObserver.disconnect()
       plot.destroy()
     }
-  }, [telemetry, config])
+  }, [telemetry, config, secondsUnit])
 
   return (
     <figure className={styles.chart}>
       <figcaption className={styles.caption}>
         <span>
-          {config.title}, {config.unit}
+          {messages.charts.titles[config.id]}, {messages.units[config.unit]}
         </span>
         <span className={styles.legend}>
           {config.series.map((series) => (
-            <span key={series.label} className={styles.legendItem}>
+            <span key={series.id} className={styles.legendItem}>
               <span className={styles.swatch} style={{ background: series.color }} />
-              {series.label}
+              {messages.charts.series[series.id]}
             </span>
           ))}
         </span>

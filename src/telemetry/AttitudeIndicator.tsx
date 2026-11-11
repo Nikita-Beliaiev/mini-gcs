@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useMessages } from '../i18n/localeStore'
 import { useGroundStation } from '../station/stationContext'
 import { horizonTransform, PITCH_PX_PER_DEG, rollPointerTransform } from './attitude'
 import styles from './AttitudeIndicator.module.css'
@@ -8,6 +9,7 @@ const ROLL_MARKS = [-60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60]
 const LADDER_HALF_WIDTH = 16
 
 export function AttitudeIndicator() {
+  const text = useMessages().telemetry
   const { telemetry } = useGroundStation()
   const horizonRef = useRef<SVGGElement>(null)
   const pointerRef = useRef<SVGGElement>(null)
@@ -29,7 +31,7 @@ export function AttitudeIndicator() {
       className={styles.indicator}
       viewBox="-100 -100 200 200"
       role="img"
-      aria-label="Attitude indicator"
+      aria-label={text.attitudeIndicator}
     >
       <g ref={horizonRef} data-part="horizon">
         <rect className={styles.sky} x={-300} y={-300} width={600} height={300} />

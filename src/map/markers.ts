@@ -11,16 +11,16 @@ function createMarkerElement(className: string | undefined, label: string): HTML
   return element
 }
 
-export function createVehicleMarker(): Marker {
-  const element = createMarkerElement(styles.vehicle, 'Vehicle')
+export function createVehicleMarker(label: string): Marker {
+  const element = createMarkerElement(styles.vehicle, label)
   const arrow = document.createElement('div')
   arrow.className = styles.vehicleArrow ?? ''
   element.append(arrow)
   return new Marker({ element, rotationAlignment: 'map' })
 }
 
-export function createHomeMarker(): Marker {
-  const element = createMarkerElement(styles.home, 'Home')
+export function createHomeMarker(label: string): Marker {
+  const element = createMarkerElement(styles.home, label)
   element.textContent = 'H'
   return new Marker({ element })
 }

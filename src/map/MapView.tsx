@@ -1,8 +1,14 @@
-import { Map as MapLibreMap, NavigationControl, setWorkerUrl } from 'maplibre-gl'
+import {
+  Map as MapLibreMap,
+  NavigationControl,
+  setWorkerUrl,
+  type CameraOptions,
+} from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useEffectEvent, useRef } from 'react'
 import type { LatLon } from '../geo/geo'
+import { useMessages } from '../i18n/localeStore'
 import type { GeofenceMessage, MissionMessage } from '../protocol/telemetry'
 import { usePlanningStore, type PlanTarget } from '../planning/planningStore'
 import { activeWaypointIndex } from '../planning/vehicleMission'
@@ -26,11 +32,14 @@ export interface MapViewProps {
 
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark'
 const HOME_ZOOM = 15.5
+const WORLD_VIEW: CameraOptions = { center: [0, 20], zoom: 1.5 }
 
 setWorkerUrl(maplibreWorkerUrl)
 
 export default function MapView({ followVehicle, showPlanning, onUserPan }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const lastViewRef = useRef<CameraOptions | null>(null)
+  const messages = useMessages()
   const { telemetry } = useGroundStation()
   const isFollowingVehicle = useEffectEvent(() => followVehicle)
   const handleUserPan = useEffectEvent(() => {
@@ -43,20 +52,21 @@ export default function MapView({ followVehicle, showPlanning, onUserPan }: MapV
       return
     }
 
+    const lastView = lastViewRef.current
     const map = new MapLibreMap({
       container,
       style: MAP_STYLE_URL,
-      center: [0, 20],
-      zoom: 1.5,
+      ...(lastView ?? WORLD_VIEW),
+      locale: messages.map.controls,
       attributionControl: { compact: true },
     })
     map.addControl(new NavigationControl(), 'top-right')
 
-    const vehicleMarker = createVehicleMarker()
-    const homeMarker = createHomeMarker()
+    const vehicleMarker = createVehicleMarker(messages.map.vehicle)
+    const homeMarker = createHomeMarker(messages.map.home)
     const missionDraftMarkers = createDraftMarkers(map, {
       className: styles.draftWaypoint,
-      label: (index) => `Draft waypoint ${String(index + 1)}`,
+      label: (index) => messages.planning.mission.draftMarker(index + 1),
       text: (index) => String(index + 1),
       onMove: (id, position) => {
         usePlanningStore.getState().movePoint('mission', id, position)
@@ -64,14 +74,14 @@ export default function MapView({ followVehicle, showPlanning, onUserPan }: MapV
     })
     const geofenceDraftMarkers = createDraftMarkers(map, {
       className: styles.draftVertex,
-      label: (index) => `Draft geofence vertex ${String(index + 1)}`,
+      label: (index) => messages.planning.geofence.draftMarker(index + 1),
       text: () => '',
       onMove: (id, position) => {
         usePlanningStore.getState().movePoint('geofence', id, position)
       },
     })
     const unsubscribers: (() => void)[] = []
-    let centeredOnHome = false
+    let centeredOnHome = lastView !== null
     let shownMission: MissionMessage | null = null
     let shownActiveIndex: number | null = null
     let shownGeofence: GeofenceMessage | null = null
@@ -182,6 +192,12 @@ export default function MapView({ followVehicle, showPlanning, onUserPan }: MapV
     })
 
     return () => {
+      lastViewRef.current = {
+        center: map.getCenter(),
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+      }
       for (const unsubscribe of unsubscribers) {
         unsubscribe()
       }
@@ -189,7 +205,7 @@ export default function MapView({ followVehicle, showPlanning, onUserPan }: MapV
       geofenceDraftMarkers.remove()
       map.remove()
     }
-  }, [telemetry, showPlanning])
+  }, [telemetry, showPlanning, messages])
 
   return <div ref={containerRef} className={styles.map} />
 }

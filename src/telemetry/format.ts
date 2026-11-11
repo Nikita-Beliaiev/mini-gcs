@@ -4,8 +4,7 @@ import type { GpsFix, SystemStatusMessage } from '../protocol/telemetry'
 
 export const NO_VALUE = '—'
 
-const GPS_FIX_LABELS: Record<GpsFix, string> = {
-  none: 'No fix',
+const GPS_FIX_LABELS: Record<Exclude<GpsFix, 'none'>, string> = {
   '2d': '2D',
   '3d': '3D',
 }
@@ -29,22 +28,26 @@ export function formatSignedAngle(degrees: number | undefined): string {
   return `${rounded > 0 ? '+' : ''}${String(rounded === 0 ? 0 : rounded)}°`
 }
 
-export function formatLatency(latencyMs: number): string {
-  return latencyMs < 1 ? '<1 ms' : `${String(Math.round(latencyMs))} ms`
+export function formatLatency(latencyMs: number, unit: string): string {
+  return latencyMs < 1 ? `<1 ${unit}` : `${String(Math.round(latencyMs))} ${unit}`
 }
 
-export function formatArmed(armed: boolean | undefined): string {
+export function formatArmed(
+  armed: boolean | undefined,
+  labels: Pick<Messages['telemetry'], 'armed' | 'disarmed'>,
+): string {
   if (armed === undefined) {
     return NO_VALUE
   }
-  return armed ? 'Armed' : 'Disarmed'
+  return armed ? labels.armed : labels.disarmed
 }
 
-export function formatGps(status: SystemStatusMessage | null): string {
+export function formatGps(status: SystemStatusMessage | null, noFixLabel: string): string {
   if (!status) {
     return NO_VALUE
   }
-  return `${GPS_FIX_LABELS[status.gpsFix]} · ${String(status.gpsSatellites)}`
+  const fix = status.gpsFix === 'none' ? noFixLabel : GPS_FIX_LABELS[status.gpsFix]
+  return `${fix} · ${String(status.gpsSatellites)}`
 }
 
 export function formatDistance(meters: number | undefined, units: Messages['units']): string {

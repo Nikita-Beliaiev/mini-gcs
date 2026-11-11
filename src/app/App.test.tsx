@@ -1,7 +1,8 @@
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { heartbeatMessage } from '../test/messages'
+import { useLocaleStore } from '../i18n/localeStore'
+import { heartbeatMessage, positionMessage } from '../test/messages'
 import { createTestLiveSession, createTestReplaySession, renderWithSession } from '../test/session'
 import { App } from './App'
 
@@ -44,6 +45,34 @@ describe('App', () => {
     unmount()
 
     expect(transport.getStatus()).toBe('disconnected')
+  })
+
+  it('shows the whole station in Ukrainian', async () => {
+    const user = userEvent.setup()
+    useLocaleStore.getState().setLocale('uk')
+    const { transport } = renderLive()
+    await screen.findByText('Map view')
+
+    act(() => {
+      transport.setStatus('connected')
+      transport.receive(heartbeatMessage({ armed: false }))
+      transport.receive(positionMessage({ altitudeM: 40 }))
+    })
+
+    expect(screen.getByRole('region', { name: 'Карта' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Останні 60 секунд' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Двигуни' })).toHaveTextContent('Заблоковано')
+    expect(screen.getByRole('group', { name: 'Висота' })).toHaveTextContent('40.0 м')
+    expect(screen.getByRole('status')).toHaveTextContent('Підключено')
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Місія',
+      'Геозона',
+      'Симулятор',
+      'Журнал польоту',
+    ])
+
+    await user.click(screen.getByRole('tab', { name: 'Симулятор' }))
+    expect(screen.getByRole('button', { name: 'Розірвати зв’язок на 10 с' })).toBeEnabled()
   })
 
   it('shows a replay without the vehicle controls', async () => {

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useId, useState } from 'react'
 import { AlertList } from '../alerts/AlertList'
+import { useMessages } from '../i18n/localeStore'
 import buttonStyles from '../ui/button.module.css'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
@@ -12,6 +13,7 @@ interface MapPanelProps {
 }
 
 export function MapPanel({ showPlanning }: MapPanelProps) {
+  const text = useMessages().map
   const titleId = useId()
   const [followVehicle, setFollowVehicle] = useState(false)
 
@@ -19,7 +21,7 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
     <section className={classNames(panelStyles.panel, styles.panel)} aria-labelledby={titleId}>
       <div className={styles.header}>
         <h2 id={titleId} className={panelStyles.title}>
-          Map
+          {text.title}
         </h2>
         <button
           type="button"
@@ -29,11 +31,11 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
             setFollowVehicle((following) => !following)
           }}
         >
-          Follow vehicle
+          {text.followVehicle}
         </button>
       </div>
       <div className={styles.mapArea}>
-        <Suspense fallback={<p className={styles.placeholder}>Loading map…</p>}>
+        <Suspense fallback={<p className={styles.placeholder}>{text.loading}</p>}>
           <MapView
             followVehicle={followVehicle}
             showPlanning={showPlanning}
