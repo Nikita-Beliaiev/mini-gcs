@@ -1,0 +1,66 @@
+.modes {
+  display: grid;
+  gap: 6px;
+}
+
+.strip {
+  position: relative;
+  height: 6px;
+  margin: 0 8px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--color-surface-raised);
+}
+
+.segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 10px;
+  height: 6px;
+  border-radius: 2px;
+}
+
+.kind[data-kind='STANDBY'] {
+  background: var(--color-text-muted);
+}
+
+.kind[data-kind='TAKEOFF'] {
+  background: var(--color-ok);
+}
+
+.kind[data-kind='AUTO'] {
+  background: var(--color-accent);
+}
+
+.kind[data-kind='RTL'] {
+  background: var(--color-warning);
+}
+
+.kind[data-kind='LAND'] {
+  background: var(--color-plan);
+}
+
+.kind[data-kind='noLink'] {
+  background: var(--color-danger);
+}

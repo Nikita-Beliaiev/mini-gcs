@@ -4,6 +4,7 @@ import { formatDuration } from '../telemetry/format'
 import buttonStyles from '../ui/button.module.css'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
+import { FlightModeStrip } from './FlightModeStrip'
 import { PLAYBACK_SPEEDS } from './replayPlayer'
 import styles from './ReplayBar.module.css'
 import { usePlayback } from './usePlayback'
@@ -91,6 +92,7 @@ export function ReplayBar() {
           player.seek(event.currentTarget.valueAsNumber * 1000)
         }}
       />
+      <FlightModeStrip />
     </section>
   )
 }
