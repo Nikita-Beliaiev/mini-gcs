@@ -30,6 +30,17 @@ test('meets WCAG 2.2 AA checks on every control tab and with an alert raised', a
   expect(await violations(page)).toEqual([])
 })
 
+test('meets WCAG 2.2 AA checks in Ukrainian while drawing a route', async ({ page }) => {
+  await page.goto('./?lang=uk')
+  await expect(page.getByRole('status')).toContainText('Підключено', { timeout: 20_000 })
+  await expect(page.getByRole('img', { name: 'Точка старту' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Намалювати маршрут на карті' }).click()
+  await expect(page.getByText(/^Малювання маршруту/)).toBeVisible()
+
+  expect(await violations(page)).toEqual([])
+})
+
 test('meets WCAG 2.2 AA checks on the flight log tab and during a replay', async ({ page }) => {
   await openStation(page)
   await waitForMapAtHome(page)

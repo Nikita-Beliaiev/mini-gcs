@@ -13,6 +13,7 @@ export default defineConfig({
   reporter: isCi ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://127.0.0.1:${String(PORT)}/`,
+    locale: 'en-US',
     trace: 'retain-on-failure',
   },
   projects: [
