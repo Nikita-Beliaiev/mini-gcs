@@ -29,3 +29,15 @@ test('meets WCAG 2.2 AA checks on every control tab and with an alert raised', a
   await expect(page.getByRole('region', { name: 'Alerts' })).toContainText('Link lost')
   expect(await violations(page)).toEqual([])
 })
+
+test('meets WCAG 2.2 AA checks on the flight log tab and during a replay', async ({ page }) => {
+  await openStation(page)
+  await waitForMapAtHome(page)
+  await page.getByRole('tab', { name: 'Flight log' }).click()
+  expect(await violations(page)).toEqual([])
+
+  await page.getByRole('button', { name: 'Replay recording' }).click()
+  await expect(page.getByRole('status')).toHaveText('Replay')
+  await waitForMapAtHome(page)
+  expect(await violations(page)).toEqual([])
+})
