@@ -3,6 +3,7 @@ import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
 import { initialAlertData, useAlertStore } from '../alerts/alertStore'
 import { initialLatencyData, useLatencyStore } from '../connection/latencyStore'
+import { initialLocaleData, useLocaleStore } from '../i18n/localeStore'
 import { initialPlanningData, usePlanningStore } from '../planning/planningStore'
 
 afterEach(() => {
@@ -10,4 +11,5 @@ afterEach(() => {
   usePlanningStore.setState(initialPlanningData)
   useAlertStore.setState(initialAlertData)
   useLatencyStore.setState(initialLatencyData)
+  useLocaleStore.setState(initialLocaleData)
 })
