@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { usePlanningStore } from '../planning/planningStore'
-import type { FlightLog } from '../replay/flightLog'
+import type { FlightLog, FlightLogSource } from '../replay/flightLog'
 import { heartbeatMessage } from '../test/messages'
 import { createTestLiveSession, createTestReplaySession } from '../test/session'
 import { Root } from './Root'
@@ -20,7 +20,7 @@ function setup() {
   render(
     <Root
       live={session}
-      createReplay={(log: FlightLog, source: string) =>
+      createReplay={(log: FlightLog, source: FlightLogSource) =>
         createTestReplaySession(log.messages, source).session
       }
     />,

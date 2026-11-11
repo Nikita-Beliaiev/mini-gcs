@@ -2,11 +2,16 @@ import type { TelemetryMessage } from '../protocol/telemetry'
 
 export const FLIGHT_LOG_FORMAT = 'mini-gcs-flight-log'
 export const FLIGHT_LOG_VERSION = 1
+export const MAX_FLIGHT_LOG_BYTES = 50_000_000
 
 export interface FlightLog {
   savedAt: string
   messages: readonly TelemetryMessage[]
 }
+
+export type FlightLogSource = { kind: 'recording' } | { kind: 'file'; name: string }
+
+export type FlightLogError = 'tooLarge' | 'notJson' | 'notFlightLog' | 'invalid'
 
 export function createFlightLog(messages: readonly TelemetryMessage[], savedAt: Date): FlightLog {
   return { savedAt: savedAt.toISOString(), messages }

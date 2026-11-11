@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { attitudeMessage, heartbeatMessage, positionMessage } from '../test/messages'
 import { createFlightLog, serializeFlightLog } from './flightLog'
-import { FLIGHT_LOG_ERRORS, parseFlightLog, readFlightLogFile } from './flightLogFile'
+import { parseFlightLog, readFlightLogFile } from './flightLogFile'
 
 const SAVED_AT = new Date('2026-11-11T10:15:30.000Z')
 
@@ -35,22 +35,22 @@ describe('flight log files', () => {
   })
 
   it('rejects text that is not JSON', () => {
-    expect(parseFlightLog('{ not json')).toEqual({ ok: false, error: FLIGHT_LOG_ERRORS.notJson })
+    expect(parseFlightLog('{ not json')).toEqual({ ok: false, error: 'notJson' })
   })
 
   it('rejects JSON that is not a flight log', () => {
     expect(parseFlightLog('{"name":"mini-gcs"}')).toEqual({
       ok: false,
-      error: FLIGHT_LOG_ERRORS.notFlightLog,
+      error: 'notFlightLog',
     })
-    expect(parseFlightLog('null')).toEqual({ ok: false, error: FLIGHT_LOG_ERRORS.notFlightLog })
+    expect(parseFlightLog('null')).toEqual({ ok: false, error: 'notFlightLog' })
   })
 
   it('rejects a damaged log, another version and an empty log', () => {
     const damaged = logText({ messages: [{ type: 'position', seq: 1, timeMs: 'soon' }] })
 
     for (const text of [damaged, logText({ version: 2 }), logText({ messages: [] })]) {
-      expect(parseFlightLog(text)).toEqual({ ok: false, error: FLIGHT_LOG_ERRORS.invalid })
+      expect(parseFlightLog(text)).toEqual({ ok: false, error: 'invalid' })
     }
   })
 
@@ -60,7 +60,7 @@ describe('flight log files', () => {
     expect((await readFlightLogFile(file)).ok).toBe(true)
     expect(await readFlightLogFile(file, file.size - 1)).toEqual({
       ok: false,
-      error: FLIGHT_LOG_ERRORS.tooLarge,
+      error: 'tooLarge',
     })
   })
 })

@@ -7,13 +7,13 @@ import {
   type ReplaySession,
   type StationSession,
 } from '../session/stationSession'
-import type { FlightLog } from '../replay/flightLog'
+import type { FlightLog, FlightLogSource } from '../replay/flightLog'
 import { GroundStationContext } from '../station/stationContext'
 import { App } from './App'
 
 interface RootProps {
   live: LiveSession
-  createReplay?: (log: FlightLog, source: string) => ReplaySession
+  createReplay?: (log: FlightLog, source: FlightLogSource) => ReplaySession
 }
 
 interface ShownSession {

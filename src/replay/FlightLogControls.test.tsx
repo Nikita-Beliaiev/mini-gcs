@@ -5,7 +5,7 @@ import { captureDownloads } from '../test/downloads'
 import { heartbeatMessage, positionMessage } from '../test/messages'
 import { createTestLiveSession, renderWithSession, TEST_LOG_SAVED_AT } from '../test/session'
 import { createFlightLog, serializeFlightLog } from './flightLog'
-import { FLIGHT_LOG_ERRORS, parseFlightLog } from './flightLogFile'
+import { parseFlightLog } from './flightLogFile'
 import { FlightLogControls } from './FlightLogControls'
 
 function setup() {
@@ -44,10 +44,9 @@ describe('FlightLogControls', () => {
 
     await user.click(screen.getByRole('button', { name: 'Replay recording' }))
 
-    expect(startReplay).toHaveBeenCalledWith(
-      expect.objectContaining({ messages: recorded }),
-      'Recording from this session',
-    )
+    expect(startReplay).toHaveBeenCalledWith(expect.objectContaining({ messages: recorded }), {
+      kind: 'recording',
+    })
   })
 
   it('downloads the recording as a flight log file', async () => {
@@ -80,7 +79,7 @@ describe('FlightLogControls', () => {
     await user.upload(screen.getByLabelText('Open a flight log'), file)
 
     await waitFor(() => {
-      expect(startReplay).toHaveBeenCalledWith(log, 'patrol.json')
+      expect(startReplay).toHaveBeenCalledWith(log, { kind: 'file', name: 'patrol.json' })
     })
   })
 
@@ -91,7 +90,7 @@ describe('FlightLogControls', () => {
 
     await user.upload(screen.getByLabelText('Open a flight log'), file)
 
-    expect(await screen.findByText(`notes.json: ${FLIGHT_LOG_ERRORS.notJson}`)).toBeInTheDocument()
+    expect(await screen.findByText('notes.json: The file is not valid JSON.')).toBeInTheDocument()
     expect(startReplay).not.toHaveBeenCalled()
   })
 })

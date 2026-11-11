@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { useMessages } from '../i18n/localeStore'
 import { useReplaySession } from '../session/sessionContext'
 import { formatDuration } from '../telemetry/format'
 import buttonStyles from '../ui/button.module.css'
@@ -10,8 +11,10 @@ import styles from './ReplayBar.module.css'
 import { usePlayback } from './usePlayback'
 
 const SKIP_MS = 10_000
+const SKIP_SECONDS = SKIP_MS / 1000
 
 export function ReplayBar() {
+  const text = useMessages().replay
   const titleId = useId()
   const speedLabelId = useId()
   const { player } = useReplaySession()
@@ -29,7 +32,7 @@ export function ReplayBar() {
   return (
     <section className={classNames(panelStyles.panel, styles.replay)} aria-labelledby={titleId}>
       <h2 id={titleId} className={panelStyles.title}>
-        Flight replay
+        {text.title}
       </h2>
       <div className={styles.controls}>
         <button
@@ -37,7 +40,7 @@ export function ReplayBar() {
           className={classNames(buttonStyles.button, styles.playButton)}
           onClick={isPlaying ? player.pause : player.play}
         >
-          {isPlaying ? 'Pause' : 'Play'}
+          {isPlaying ? text.pause : text.play}
         </button>
         <button
           type="button"
@@ -46,7 +49,7 @@ export function ReplayBar() {
             skip(-SKIP_MS)
           }}
         >
-          Back 10 s
+          {text.back(SKIP_SECONDS)}
         </button>
         <button
           type="button"
@@ -55,14 +58,14 @@ export function ReplayBar() {
             skip(SKIP_MS)
           }}
         >
-          Forward 10 s
+          {text.forward(SKIP_SECONDS)}
         </button>
         <p className={styles.time}>
           {positionText} / {durationText}
         </p>
         <div className={styles.speeds} role="group" aria-labelledby={speedLabelId}>
           <span id={speedLabelId} className={styles.speedLabel}>
-            Speed
+            {text.speed}
           </span>
           {PLAYBACK_SPEEDS.map((option) => (
             <button
@@ -82,8 +85,8 @@ export function ReplayBar() {
       <input
         type="range"
         className={styles.timeline}
-        aria-label="Replay position"
-        aria-valuetext={`${positionText} of ${durationText}`}
+        aria-label={text.position}
+        aria-valuetext={text.positionOf(positionText, durationText)}
         min={0}
         max={Math.floor(durationMs / 1000)}
         step={1}

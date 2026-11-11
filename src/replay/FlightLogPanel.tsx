@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { useLocale, useMessages } from '../i18n/localeStore'
 import { useReplaySession } from '../session/sessionContext'
 import { formatDuration, formatUtcTime } from '../telemetry/format'
 import { classNames } from '../ui/classNames'
@@ -8,18 +9,20 @@ import styles from './FlightLogPanel.module.css'
 
 export function FlightLogPanel() {
   const titleId = useId()
+  const locale = useLocale()
+  const text = useMessages().flightLog
   const { log, source } = useReplaySession()
   const details = [
-    { term: 'Source', value: source },
-    { term: 'Saved', value: formatUtcTime(log.savedAt) },
-    { term: 'Length', value: formatDuration(flightLogDurationMs(log.messages)) },
-    { term: 'Messages', value: log.messages.length.toLocaleString('en-US') },
+    { term: text.source, value: source.kind === 'recording' ? text.recordingSource : source.name },
+    { term: text.saved, value: formatUtcTime(log.savedAt) },
+    { term: text.length, value: formatDuration(flightLogDurationMs(log.messages)) },
+    { term: text.messages, value: log.messages.length.toLocaleString(locale) },
   ]
 
   return (
     <section className={classNames(panelStyles.panel, styles.flightLog)} aria-labelledby={titleId}>
       <h2 id={titleId} className={panelStyles.title}>
-        Flight log
+        {text.title}
       </h2>
       <dl className={styles.details}>
         {details.map(({ term, value }) => (
@@ -29,7 +32,7 @@ export function FlightLogPanel() {
           </div>
         ))}
       </dl>
-      <p className={styles.note}>Commands are not available while replaying a flight.</p>
+      <p className={styles.note}>{text.commandsUnavailable}</p>
     </section>
   )
 }

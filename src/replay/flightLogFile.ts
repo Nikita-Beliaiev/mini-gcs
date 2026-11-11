@@ -1,19 +1,17 @@
 import { z } from 'zod'
 import { parseJson } from '../protocol/shared'
 import { telemetryMessageSchema } from '../protocol/telemetry'
-import { FLIGHT_LOG_FORMAT, FLIGHT_LOG_VERSION, type FlightLog } from './flightLog'
+import {
+  FLIGHT_LOG_FORMAT,
+  FLIGHT_LOG_VERSION,
+  MAX_FLIGHT_LOG_BYTES,
+  type FlightLog,
+  type FlightLogError,
+} from './flightLog'
 
 export const MAX_FLIGHT_LOG_MESSAGES = 200_000
-export const MAX_FLIGHT_LOG_BYTES = 50_000_000
 
-export type FlightLogResult = { ok: true; log: FlightLog } | { ok: false; error: string }
-
-export const FLIGHT_LOG_ERRORS = {
-  tooLarge: `The file is larger than ${String(MAX_FLIGHT_LOG_BYTES / 1_000_000)} MB.`,
-  notJson: 'The file is not valid JSON.',
-  notFlightLog: 'This file is not a Mini GCS flight log.',
-  invalid: 'The flight log is damaged or was saved by an unsupported version.',
-}
+export type FlightLogResult = { ok: true; log: FlightLog } | { ok: false; error: FlightLogError }
 
 const formatSchema = z.object({ format: z.literal(FLIGHT_LOG_FORMAT) })
 
@@ -24,21 +22,21 @@ const flightLogSchema = z.object({
   messages: z.array(telemetryMessageSchema).min(1).max(MAX_FLIGHT_LOG_MESSAGES),
 })
 
-function failure(error: string): FlightLogResult {
+function failure(error: FlightLogError): FlightLogResult {
   return { ok: false, error }
 }
 
 export function parseFlightLog(text: string): FlightLogResult {
   const data = parseJson(text)
   if (data === undefined) {
-    return failure(FLIGHT_LOG_ERRORS.notJson)
+    return failure('notJson')
   }
   if (!formatSchema.safeParse(data).success) {
-    return failure(FLIGHT_LOG_ERRORS.notFlightLog)
+    return failure('notFlightLog')
   }
   const result = flightLogSchema.safeParse(data)
   if (!result.success) {
-    return failure(FLIGHT_LOG_ERRORS.invalid)
+    return failure('invalid')
   }
   return {
     ok: true,
@@ -54,7 +52,7 @@ export async function readFlightLogFile(
   maxBytes = MAX_FLIGHT_LOG_BYTES,
 ): Promise<FlightLogResult> {
   if (file.size > maxBytes) {
-    return failure(FLIGHT_LOG_ERRORS.tooLarge)
+    return failure('tooLarge')
   }
   return parseFlightLog(await file.text())
 }

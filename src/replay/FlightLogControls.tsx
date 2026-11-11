@@ -1,20 +1,32 @@
 import { useState, useSyncExternalStore, type ChangeEvent } from 'react'
+import { useMessages } from '../i18n/localeStore'
 import { useLiveSession, useSession } from '../session/sessionContext'
 import { formatDuration } from '../telemetry/format'
 import buttonStyles from '../ui/button.module.css'
 import { downloadTextFile } from './download'
-import { createFlightLog, flightLogFileName, serializeFlightLog } from './flightLog'
+import {
+  createFlightLog,
+  flightLogFileName,
+  serializeFlightLog,
+  type FlightLogError,
+} from './flightLog'
+import { describeFlightLogError } from './flightLogErrorText'
 import { RECORDING_WINDOW_MS } from './flightRecorder'
 import styles from './FlightLogControls.module.css'
 
-const RECORDING_SOURCE = 'Recording from this session'
-
 const RECORDING_WINDOW_MINUTES = RECORDING_WINDOW_MS / 60_000
 
+interface FileError {
+  fileName: string
+  error: FlightLogError
+}
+
 export function FlightLogControls() {
+  const messages = useMessages()
+  const text = messages.flightLog
   const { startReplay } = useSession()
   const { recorder } = useLiveSession()
-  const [fileError, setFileError] = useState<string | null>(null)
+  const [fileError, setFileError] = useState<FileError | null>(null)
   const recorded = useSyncExternalStore(recorder.subscribe, () =>
     formatDuration(recorder.getDurationMs()),
   )
@@ -37,9 +49,9 @@ export function FlightLogControls() {
     const { readFlightLogFile } = await import('./flightLogFile')
     const result = await readFlightLogFile(file)
     if (result.ok) {
-      startReplay(result.log, file.name)
+      startReplay(result.log, { kind: 'file', name: file.name })
     } else {
-      setFileError(`${file.name}: ${result.error}`)
+      setFileError({ fileName: file.name, error: result.error })
     }
   }
 
@@ -53,21 +65,18 @@ export function FlightLogControls() {
 
   return (
     <div className={styles.flightLog}>
-      <p className={styles.note}>
-        The station records the last {RECORDING_WINDOW_MINUTES} minutes of telemetry, like a flight
-        recorder.
-      </p>
-      <p className={styles.recorded}>Recorded {recorded}</p>
+      <p className={styles.note}>{text.note(RECORDING_WINDOW_MINUTES)}</p>
+      <p className={styles.recorded}>{text.recorded(recorded)}</p>
       <div className={styles.actions}>
         <button
           type="button"
           className={buttonStyles.button}
           disabled={!hasRecording}
           onClick={() => {
-            startReplay(recordingLog(), RECORDING_SOURCE)
+            startReplay(recordingLog(), { kind: 'recording' })
           }}
         >
-          Replay recording
+          {text.replayRecording}
         </button>
         <button
           type="button"
@@ -75,11 +84,11 @@ export function FlightLogControls() {
           disabled={!hasRecording}
           onClick={download}
         >
-          Download log
+          {text.download}
         </button>
       </div>
       <label className={styles.open}>
-        Open a flight log
+        {text.open}
         <input
           type="file"
           accept=".json,application/json"
@@ -88,7 +97,9 @@ export function FlightLogControls() {
         />
       </label>
       <p className={styles.error} aria-live="polite">
-        {fileError}
+        {fileError
+          ? text.fileError(fileError.fileName, describeFlightLogError(fileError.error, messages))
+          : null}
       </p>
     </div>
   )

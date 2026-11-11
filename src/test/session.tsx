@@ -2,7 +2,7 @@ import { render } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { vi } from 'vitest'
 import type { TelemetryMessage } from '../protocol/telemetry'
-import { createFlightLog } from '../replay/flightLog'
+import { createFlightLog, type FlightLogSource } from '../replay/flightLog'
 import { SessionContext, type SessionControls } from '../session/sessionContext'
 import {
   createLiveSession,
@@ -24,7 +24,7 @@ export function createTestLiveSession() {
 
 export function createTestReplaySession(
   messages: readonly TelemetryMessage[],
-  source = 'flight.json',
+  source: FlightLogSource = { kind: 'file', name: 'flight.json' },
 ) {
   const frames = createFakeFrames()
   const session = createReplaySession(createFlightLog(messages, TEST_LOG_SAVED_AT), source, {

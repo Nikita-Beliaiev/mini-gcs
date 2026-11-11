@@ -1,10 +1,10 @@
 import { createContext, useContext } from 'react'
-import type { FlightLog } from '../replay/flightLog'
+import type { FlightLog, FlightLogSource } from '../replay/flightLog'
 import type { LiveSession, ReplaySession, StationSession } from './stationSession'
 
 export interface SessionControls {
   session: StationSession
-  startReplay: (log: FlightLog, source: string) => void
+  startReplay: (log: FlightLog, source: FlightLogSource) => void
   returnToLive: () => void
 }
 

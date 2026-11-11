@@ -1,4 +1,4 @@
-import type { FlightLog } from '../replay/flightLog'
+import type { FlightLog, FlightLogSource } from '../replay/flightLog'
 import { createFlightRecorder, type FlightRecorder } from '../replay/flightRecorder'
 import {
   createReplayPlayer,
@@ -20,7 +20,7 @@ export interface ReplaySession {
   station: GroundStation
   player: ReplayPlayer
   log: FlightLog
-  source: string
+  source: FlightLogSource
 }
 
 export type StationSession = LiveSession | ReplaySession
@@ -47,7 +47,7 @@ export function createLiveSession(
 
 export function createReplaySession(
   log: FlightLog,
-  source: string,
+  source: FlightLogSource,
   { telemetry = createTelemetryStore(), ...playerOptions }: ReplaySessionOptions = {},
 ): ReplaySession {
   const player = createReplayPlayer(log, { ...playerOptions, onRewind: telemetry.reset })
