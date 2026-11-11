@@ -1,8 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { App } from './app/App'
-import { createGroundStation } from './station/groundStation'
-import { GroundStationContext } from './station/stationContext'
+import { Root } from './app/Root'
+import { createLiveSession } from './session/stationSession'
 import { simulatorServerUrl } from './transport/serverUrl'
 import type { Transport } from './transport/transport'
 import { createWorkerTransport } from './transport/workerTransport'
@@ -26,12 +25,10 @@ if (!rootElement) {
   throw new Error('Root element #root not found')
 }
 
-const station = createGroundStation(await createTransport())
+const live = createLiveSession(await createTransport())
 
 createRoot(rootElement).render(
   <StrictMode>
-    <GroundStationContext value={station}>
-      <App />
-    </GroundStationContext>
+    <Root live={live} />
   </StrictMode>,
 )

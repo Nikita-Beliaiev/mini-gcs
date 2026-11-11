@@ -5,24 +5,36 @@ import { ChartsPanel } from '../charts/ChartsPanel'
 import { ConnectionControl } from '../connection/ConnectionControl'
 import { startLatencyMonitor } from '../connection/latencyMonitor'
 import { MapPanel } from '../map/MapPanel'
-import { ControlsPanel } from './ControlsPanel'
-import { useGroundStation } from '../station/stationContext'
+import { ReplayStatus } from '../replay/ReplayStatus'
+import { useSession } from '../session/sessionContext'
 import { TelemetryPanel } from '../telemetry/TelemetryPanel'
+import { ControlsPanel } from './ControlsPanel'
 import styles from './App.module.css'
 
 export function App() {
-  const station = useGroundStation()
+  const { session } = useSession()
+  const isLive = session.kind === 'live'
 
   useEffect(() => {
-    station.connect()
+    session.station.connect()
     return () => {
-      station.disconnect()
+      session.station.disconnect()
     }
-  }, [station])
+  }, [session])
 
-  useEffect(() => startAlertMonitor(station), [station])
+  useEffect(
+    () =>
+      startAlertMonitor(
+        session.station,
+        session.kind === 'replay' ? { now: session.player.now } : undefined,
+      ),
+    [session],
+  )
 
-  useEffect(() => startLatencyMonitor(station), [station])
+  useEffect(
+    () => (session.kind === 'live' ? startLatencyMonitor(session.station) : undefined),
+    [session],
+  )
 
   return (
     <div className={styles.layout}>
@@ -30,17 +42,17 @@ export function App() {
         <h1 className={styles.title}>Mini GCS</h1>
         <div className={styles.headerStatus}>
           <AlertSummary />
-          <ConnectionControl />
+          {isLive ? <ConnectionControl /> : <ReplayStatus />}
         </div>
       </header>
       <main className={styles.main}>
         <div className={styles.primary}>
-          <MapPanel />
+          <MapPanel showPlanning={isLive} />
           <ChartsPanel />
         </div>
         <div className={styles.sidebar}>
           <TelemetryPanel />
-          <ControlsPanel />
+          {isLive ? <ControlsPanel /> : null}
         </div>
       </main>
     </div>

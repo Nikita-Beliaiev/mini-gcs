@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { TelemetryMessage } from '../protocol/telemetry'
+import { createFakeFrames } from '../test/frames'
 import { heartbeatMessage, positionMessage } from '../test/messages'
 import { createFlightLog } from './flightLog'
 import { createReplayPlayer, MAX_FRAME_STEP_MS, REPLAY_COMMAND_REASON } from './replayPlayer'
@@ -15,35 +16,23 @@ const messages = [
 ]
 
 function setup() {
-  let clockMs = 0
-  let frames: (() => void)[] = []
+  const frames = createFakeFrames()
   const onRewind = vi.fn()
   const player = createReplayPlayer(createFlightLog(messages, new Date()), {
     onRewind,
-    now: () => clockMs,
-    scheduleFrame: (callback) => {
-      frames.push(callback)
-    },
+    now: frames.now,
+    scheduleFrame: frames.scheduleFrame,
   })
   const delivered: TelemetryMessage[] = []
   player.transport.subscribeMessages((message) => {
     delivered.push(message)
   })
 
-  function runFrameAfter(elapsedMs: number): void {
-    clockMs += elapsedMs
-    const pending = frames
-    frames = []
-    for (const frame of pending) {
-      frame()
-    }
-  }
-
   function deliveredTimes(): number[] {
     return delivered.map((message) => message.timeMs - START_MS)
   }
 
-  return { player, delivered, deliveredTimes, runFrameAfter, onRewind }
+  return { player, delivered, deliveredTimes, runFrameAfter: frames.runFrameAfter, onRewind }
 }
 
 describe('replay player', () => {

@@ -7,7 +7,11 @@ import styles from './MapPanel.module.css'
 
 const MapView = lazy(() => import('./MapView'))
 
-export function MapPanel() {
+interface MapPanelProps {
+  showPlanning: boolean
+}
+
+export function MapPanel({ showPlanning }: MapPanelProps) {
   const titleId = useId()
   const [followVehicle, setFollowVehicle] = useState(false)
 
@@ -32,6 +36,7 @@ export function MapPanel() {
         <Suspense fallback={<p className={styles.placeholder}>Loading map…</p>}>
           <MapView
             followVehicle={followVehicle}
+            showPlanning={showPlanning}
             onUserPan={() => {
               setFollowVehicle(false)
             }}

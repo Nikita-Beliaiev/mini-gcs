@@ -20,6 +20,7 @@ import styles from './MapView.module.css'
 
 export interface MapViewProps {
   followVehicle: boolean
+  showPlanning: boolean
   onUserPan: () => void
 }
 
@@ -28,7 +29,7 @@ const HOME_ZOOM = 15.5
 
 setWorkerUrl(maplibreWorkerUrl)
 
-export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
+export default function MapView({ followVehicle, showPlanning, onUserPan }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { telemetry } = useGroundStation()
   const isFollowingVehicle = useEffectEvent(() => followVehicle)
@@ -146,13 +147,16 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
 
     map.on('load', () => {
       addMapLayers(map)
-      const planning = usePlanningStore.getState()
       renderTelemetry()
+      unsubscribers.push(telemetry.subscribe(renderTelemetry))
+      if (!showPlanning) {
+        return
+      }
+
+      const planning = usePlanningStore.getState()
       renderMissionDraft(planning.drafts.mission)
       renderGeofenceDraft(planning.drafts.geofence)
       applyEditMode(planning.editMode)
-
-      unsubscribers.push(telemetry.subscribe(renderTelemetry))
       unsubscribers.push(
         usePlanningStore.subscribe((state, previous) => {
           if (state.drafts.mission !== previous.drafts.mission) {
@@ -169,7 +173,7 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
     })
     map.on('click', (event) => {
       const { editMode, addPoint } = usePlanningStore.getState()
-      if (editMode) {
+      if (showPlanning && editMode) {
         addPoint(editMode, { lat: event.lngLat.lat, lon: event.lngLat.lng })
       }
     })
@@ -185,7 +189,7 @@ export default function MapView({ followVehicle, onUserPan }: MapViewProps) {
       geofenceDraftMarkers.remove()
       map.remove()
     }
-  }, [telemetry])
+  }, [telemetry, showPlanning])
 
   return <div ref={containerRef} className={styles.map} />
 }

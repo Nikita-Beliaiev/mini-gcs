@@ -6,9 +6,10 @@ import { MapPanel } from './MapPanel'
 import type { MapViewProps } from './MapView'
 
 vi.mock('./MapView', () => ({
-  default: ({ followVehicle, onUserPan }: MapViewProps) => (
+  default: ({ followVehicle, showPlanning, onUserPan }: MapViewProps) => (
     <div>
       <p>{followVehicle ? 'Map follows the vehicle' : 'Map is free'}</p>
+      <p>{showPlanning ? 'Plans shown' : 'Plans hidden'}</p>
       <button type="button" onClick={onUserPan}>
         Drag map
       </button>
@@ -18,7 +19,7 @@ vi.mock('./MapView', () => ({
 
 describe('MapPanel', () => {
   it('shows the map once it has loaded', async () => {
-    renderWithStation(<MapPanel />)
+    renderWithStation(<MapPanel showPlanning />)
 
     expect(screen.getByRole('region', { name: 'Map' })).toBeInTheDocument()
     expect(await screen.findByText('Map is free')).toBeInTheDocument()
@@ -26,7 +27,7 @@ describe('MapPanel', () => {
 
   it('toggles following the vehicle', async () => {
     const user = userEvent.setup()
-    renderWithStation(<MapPanel />)
+    renderWithStation(<MapPanel showPlanning />)
     const follow = screen.getByRole('button', { name: 'Follow vehicle' })
     await screen.findByText('Map is free')
 
@@ -42,7 +43,7 @@ describe('MapPanel', () => {
 
   it('stops following when the user drags the map', async () => {
     const user = userEvent.setup()
-    renderWithStation(<MapPanel />)
+    renderWithStation(<MapPanel showPlanning />)
     await screen.findByText('Map is free')
 
     await user.click(screen.getByRole('button', { name: 'Follow vehicle' }))
@@ -53,5 +54,11 @@ describe('MapPanel', () => {
       'false',
     )
     expect(screen.getByText('Map is free')).toBeInTheDocument()
+  })
+
+  it('tells the map whether to show the plans', async () => {
+    renderWithStation(<MapPanel showPlanning={false} />)
+
+    expect(await screen.findByText('Plans hidden')).toBeInTheDocument()
   })
 })
