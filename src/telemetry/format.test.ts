@@ -10,6 +10,7 @@ import {
   formatHeading,
   formatLatency,
   formatSignedAngle,
+  formatUtcTime,
   NO_VALUE,
 } from './format'
 
@@ -113,5 +114,11 @@ describe('formatDuration', () => {
 
   it('never shows a negative time', () => {
     expect(formatDuration(-500)).toBe('0:00')
+  })
+})
+
+describe('formatUtcTime', () => {
+  it('shows the date and the minute in UTC', () => {
+    expect(formatUtcTime('2026-11-11T10:15:30.000Z')).toBe('2026-11-11 10:15 UTC')
   })
 })

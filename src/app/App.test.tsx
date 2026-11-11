@@ -55,6 +55,8 @@ describe('App', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Replay')
     expect(screen.getByRole('group', { name: 'Flight mode' })).toHaveTextContent('LAND')
     expect(screen.queryByRole('region', { name: 'Controls' })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Flight replay' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Flight log' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Back to live' }))
     expect(returnToLive).toHaveBeenCalledOnce()

@@ -1,0 +1,45 @@
+.replay {
+  display: grid;
+  gap: 10px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.playButton {
+  min-width: 64px;
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.speeds {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.speedLabel {
+  margin-right: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.timeline {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.timeline:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

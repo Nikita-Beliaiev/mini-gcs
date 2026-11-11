@@ -1,0 +1,32 @@
+.flightLog {
+  display: grid;
+  gap: 10px;
+}
+
+.details {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.term {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.value {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.note {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}

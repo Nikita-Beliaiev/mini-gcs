@@ -5,6 +5,8 @@ import { ChartsPanel } from '../charts/ChartsPanel'
 import { ConnectionControl } from '../connection/ConnectionControl'
 import { startLatencyMonitor } from '../connection/latencyMonitor'
 import { MapPanel } from '../map/MapPanel'
+import { FlightLogPanel } from '../replay/FlightLogPanel'
+import { ReplayBar } from '../replay/ReplayBar'
 import { ReplayStatus } from '../replay/ReplayStatus'
 import { useSession } from '../session/sessionContext'
 import { TelemetryPanel } from '../telemetry/TelemetryPanel'
@@ -48,11 +50,12 @@ export function App() {
       <main className={styles.main}>
         <div className={styles.primary}>
           <MapPanel showPlanning={isLive} />
+          {isLive ? null : <ReplayBar />}
           <ChartsPanel />
         </div>
         <div className={styles.sidebar}>
           <TelemetryPanel />
-          {isLive ? <ControlsPanel /> : null}
+          {isLive ? <ControlsPanel /> : <FlightLogPanel />}
         </div>
       </main>
     </div>
