@@ -69,7 +69,7 @@ export const uk: Messages = {
     },
     armed: 'Розблоковано',
     disarmed: 'Заблоковано',
-    noGpsFix: 'Без фіксації',
+    noGpsFix: 'Немає',
   },
   map: {
     title: 'Карта',
