@@ -4,11 +4,11 @@
 
 A mini ground control station in the browser: a live map and telemetry dashboard for a simulated drone, built with React and TypeScript.
 
-**Live demo:** https://nikita-beliaiev.github.io/mini-gcs/
+**Live demo:** https://nikita-beliaiev.github.io/mini-gcs/ ([in Ukrainian](https://nikita-beliaiev.github.io/mini-gcs/?lang=uk))
 
 ![The station flying a patrol, uploading a new mission and raising a link loss alert](docs/demo.gif)
 
-> **Status:** the planned roadmap is complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, end-to-end and accessibility tests. Stretch goals are listed in the [Roadmap](#roadmap).
+> **Status:** the planned roadmap is complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, an English and Ukrainian interface, end-to-end and accessibility tests. Stretch goals are listed in the [Roadmap](#roadmap).
 >
 > All flight data is simulated. This project does not connect to or control real aircraft.
 
@@ -17,13 +17,14 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 - Live map with vehicle position and heading, flight trail, home point and a follow-vehicle mode
 - Telemetry panel with an attitude indicator: flight mode, arming state, altitude, ground speed, heading, roll, pitch, battery, GPS fix and satellites, link quality
 - Charts for the last 60 seconds of altitude, ground speed, battery and link quality
-- Mission planning: add waypoints on the map, drag them, reorder or remove them in a list, check them against the rules and upload the route to the vehicle
+- Mission planning: press "Draw route on map", click waypoints on the map, drag them, reorder or remove them in a list, check them against the rules and upload the route to the vehicle, which switches to it in flight
 - Geofence: draw a polygon, upload it, and the vehicle returns home when it crosses the border
 - Alerts for link loss, geofence breach, low and critical battery and GPS fix loss, with acknowledgement
 - Simulator controls that inject a link loss, a GPS loss or a battery drop, to see how the station reacts
 - Flight recorder that keeps the last 10 minutes of telemetry, with replay at up to 8×, a timeline of flight modes and link losses, and flight log download and upload
 - Two simulator modes: in a Web Worker for the static demo, or in Node behind a WebSocket, with automatic reconnect
 - Connection status with a latency readout
+- Interface in English and Ukrainian, picked from the link, the last choice or the browser language
 - Simulated quadcopter that acquires GPS, takes off, flies its mission once, returns home, lands, swaps the battery and flies again
 
 ## How it is built
@@ -44,6 +45,7 @@ The demo flies over farmland in Val d'Orcia, Tuscany.
 | Charts           | uPlot                                                   |
 | State            | Custom telemetry store, Zustand for planning and alerts |
 | Validation       | Zod                                                     |
+| Languages        | Typed dictionaries, `Intl.PluralRules`                  |
 | Simulator server | Node.js, ws, tsx                                        |
 | Testing          | Vitest, React Testing Library, Playwright, axe          |
 | Quality          | ESLint with type-aware rules, Prettier                  |
@@ -89,6 +91,7 @@ Then open http://localhost:5173/?server=ws://127.0.0.1:8787. The server listens 
 - [x] **Phase 3:** charts, attitude indicator, reconnect, WebSocket simulator mode
 - [x] **Phase 4:** demo GIF, architecture diagram, end-to-end tests
 - [x] **Phase 5:** flight recording and replay
+- [x] **Phase 6:** Ukrainian interface, clearer route drawing
 
 Stretch goals: multiple vehicles, video feed, MAVLink via ArduPilot SITL.
 

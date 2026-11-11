@@ -39,6 +39,7 @@ flowchart LR
 | Alerts                  | `src/alerts`                             | Alert rules, reconciliation and the watchdog.                                    |
 | Recording and replay    | `src/replay`                             | Flight recorder, log files, the replay player and its controls.                  |
 | Sessions                | `src/session`                            | Whether the screen shows the live vehicle or a replay, and switching between.    |
+| Languages               | `src/i18n`                               | English and Ukrainian dictionaries, the chosen language and how it is picked.    |
 | Map, charts, instrument | `src/map`, `src/charts`, `src/telemetry` | Rendering that bypasses React for high-rate data.                                |
 
 ## Protocol
@@ -150,6 +151,16 @@ sequenceDiagram
 - **Log files** hold a format name, a version, the save time and the messages. The parser, with Zod, loads only when a file is opened.
 - **The timeline** shows flight modes from heartbeats and marks gaps longer than the link loss timeout as a lost link.
 
+## Languages
+
+The interface is available in English and Ukrainian.
+
+- **The English dictionary is the contract.** `en.ts` is a plain object whose type becomes `Messages`, and `uk.ts` must have the same shape, so a missing key fails type-checking. Phrases with numbers are functions, and Ukrainian plural forms such as "1 точка, 2 точки, 5 точок" come from `Intl.PluralRules`.
+- **Logic returns codes, the interface chooses the words.** Mission rules, alert rules, upload results and flight log errors return codes such as `waypointOutsideGeofence`, and components describe them with the current dictionary. The simulator describes its rejections in English, like a real autopilot, and the station shows them as received.
+- **Picking the language.** The `?lang=` parameter comes first, then the saved choice, then the browser languages, then English. A choice is saved in local storage, sets `<html lang>` and keeps an existing `lang` parameter in step, so a reload or a shared link shows the same language.
+- **Imperative views follow along.** MapLibre reads its control labels only when a map is created, so the map is recreated on a switch and keeps its camera; charts rebuild from the telemetry history.
+- **What stays the same.** Flight modes such as AUTO and RTL are autopilot mode names and are not translated. Numbers keep a decimal point in both languages, so coordinates stay unambiguous; units are translated.
+
 ## Trust boundaries
 
 | Source                          | Trusted? | What happens                                                          |
@@ -159,6 +170,7 @@ sequenceDiagram
 | Commands arriving at the server | No       | Checked the same way; malformed commands are ignored.                 |
 | Opened flight log files         | No       | Up to 50 MB and 200,000 messages, checked against the Zod schemas.    |
 | `?server=` parameter            | No       | Only `ws:` and `wss:` addresses are used.                             |
+| `?lang=` and the saved language | No       | Only `en` and `uk` are used; anything else falls back.                |
 
 The simulator server listens on `127.0.0.1` only. It does not check the `Origin` header, so any page open in the same browser could connect to it; that is acceptable for a local simulator and would need fixing before exposing it anywhere else.
 
@@ -167,10 +179,10 @@ The simulator server listens on `127.0.0.1` only. It does not check the `Origin`
 | Layer         | Tool                              | What it covers                                                                  |
 | ------------- | --------------------------------- | ------------------------------------------------------------------------------- |
 | Logic         | Vitest                            | Geometry, simulator flights with fixed seeds, stores, rules, backoff, protocol. |
-| Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names.                         |
+| Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names, in both languages.      |
 | Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                     |
-| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, log files.    |
-| Accessibility | axe with Playwright               | WCAG 2.2 AA checks on every control tab, with an alert raised and in a replay.  |
+| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages.    |
+| Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, and drawing in Ukrainian. |
 
 MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrappers are mocked in component tests and exercised in Playwright instead. The logic they rely on, such as GeoJSON builders and chart windows, has its own unit tests.
 
@@ -182,6 +194,7 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - **Lazy loading.** MapLibre, uPlot, and Zod with the WebSocket transport or the flight log parser load only when needed; the initial bundle is about 80 KB gzipped.
 - **Replay as a transport.** Replay reuses the whole station instead of a second set of components, and the player is tested on its own with a fake clock and fake frames.
 - **Rebuilding instead of snapshots.** Seeking back replays the log from the start. Periodic snapshots of the telemetry store would make long logs faster to seek, at the cost of more code and memory; 10 minutes does not need them.
+- **Own dictionaries instead of an i18n library.** For two languages and about 150 strings, typed objects give compile-time checks with no dependency. With translators, many languages or ICU message files, i18next or FormatJS would pay off.
 - **Mermaid instead of images.** Diagrams live as text next to the code, so they show up in diffs and are easy to keep current.
 
 ## Known limitations
@@ -193,3 +206,4 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - After the server restarts, the trail is not cleared, so it jumps to the new flight.
 - The recording lives in memory only. Reloading the page loses it unless it was downloaded, and in worker mode going back to live starts a new flight and a new recording.
 - Seeking back in a log much longer than 10 minutes gets slower, because it replays from the start.
+- The file picker button is drawn by the browser, so it follows the browser's language rather than the station's.
