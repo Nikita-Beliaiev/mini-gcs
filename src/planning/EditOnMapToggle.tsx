@@ -1,13 +1,14 @@
+import { useMessages } from '../i18n/localeStore'
 import buttonStyles from '../ui/button.module.css'
 import styles from './PlanEditor.module.css'
 import { usePlanningStore, type PlanTarget } from './planningStore'
 
 interface EditOnMapToggleProps {
   target: PlanTarget
-  hint: string
 }
 
-export function EditOnMapToggle({ target, hint }: EditOnMapToggleProps) {
+export function EditOnMapToggle({ target }: EditOnMapToggleProps) {
+  const text = useMessages().planning
   const isEditing = usePlanningStore((state) => state.editMode === target)
   const setEditMode = usePlanningStore((state) => state.setEditMode)
 
@@ -21,9 +22,9 @@ export function EditOnMapToggle({ target, hint }: EditOnMapToggleProps) {
           setEditMode(isEditing ? null : target)
         }}
       >
-        Edit on map
+        {text.editOnMap}
       </button>
-      {isEditing ? <p className={styles.hint}>{hint}</p> : null}
+      {isEditing ? <p className={styles.hint}>{text[target].editHint}</p> : null}
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import type { Messages } from '../i18n/en'
 import type { Command } from '../protocol/commands'
 import type { SendCommand } from '../station/commandSender'
 import { usePlanningStore, type PlanTarget, type UploadState } from './planningStore'
@@ -12,17 +13,18 @@ export async function uploadPlan(
   usePlanningStore.getState().finishUpload(target, uploadId, result)
 }
 
-export function describeUpload(upload: UploadState): string | null {
+export function describeUpload(upload: UploadState, messages: Messages): string | null {
+  const text = messages.planning.upload
   switch (upload.status) {
     case 'idle':
       return null
     case 'pending':
-      return 'Uploading…'
+      return text.pending
     case 'accepted':
-      return 'Accepted by the vehicle'
+      return text.accepted
     case 'rejected':
-      return `Rejected: ${upload.reason}`
+      return upload.reason === null ? text.rejectedByVehicle : text.rejected(upload.reason)
     case 'noResponse':
-      return 'No response from the vehicle'
+      return text.noResponse
   }
 }

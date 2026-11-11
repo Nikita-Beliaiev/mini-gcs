@@ -6,7 +6,9 @@ import {
   signedAngleDifference,
   type LatLon,
 } from '../geo/geo'
+import { en } from '../i18n/en'
 import { validateGeofence, validateMission } from '../mission/missionRules'
+import { describePlanIssue } from '../mission/planIssueText'
 import type { CommandEnvelope, SimulatedFault } from '../protocol/commands'
 import type { FlightMode, GpsFix, TelemetryMessage } from '../protocol/telemetry'
 import { clamp } from '../shared/math'
@@ -386,7 +388,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
   function uploadMission(waypoints: readonly LatLon[]): string | null {
     const [firstIssue] = validateMission(waypoints, home, geofence)
     if (firstIssue) {
-      return firstIssue.message
+      return describePlanIssue(firstIssue, en)
     }
     mission = { id: mission.id + 1, waypoints: [...waypoints] }
     vehicle.waypointIndex = 0
@@ -398,7 +400,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
   function uploadGeofence(polygon: readonly LatLon[]): string | null {
     const [firstIssue] = validateGeofence(polygon, home)
     if (firstIssue) {
-      return firstIssue.message
+      return describePlanIssue(firstIssue, en)
     }
     geofence = [...polygon]
     nextMessageAtMs.geofence = timeMs

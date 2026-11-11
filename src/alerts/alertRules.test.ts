@@ -45,22 +45,22 @@ describe('evaluateAlerts', () => {
   it('reports a lost link after 3 s without a heartbeat', () => {
     expect(alertIds(inputs({ msSinceHeartbeat: 3000 }))).toEqual([])
     expect(evaluateAlerts(inputs({ msSinceHeartbeat: 3001 }))).toEqual([
-      { id: 'linkLost', severity: 'critical', message: 'Link lost: no heartbeat for over 3 s' },
+      { id: 'linkLost', severity: 'critical' },
     ])
   })
 
   it('reports a geofence breach', () => {
     expect(evaluateAlerts(withStatus({ fenceBreached: true }))).toEqual([
-      { id: 'geofenceBreach', severity: 'critical', message: 'Vehicle is outside the geofence' },
+      { id: 'geofenceBreach', severity: 'critical' },
     ])
   })
 
   it('escalates the battery alert from warning to critical', () => {
     expect(evaluateAlerts(withStatus({ batteryPercent: 35 }))).toEqual([
-      { id: 'batteryLow', severity: 'warning', message: 'Battery below 35%' },
+      { id: 'batteryLow', severity: 'warning' },
     ])
     expect(evaluateAlerts(withStatus({ batteryPercent: 20 }))).toEqual([
-      { id: 'batteryCritical', severity: 'critical', message: 'Battery below 20%' },
+      { id: 'batteryCritical', severity: 'critical' },
     ])
   })
 

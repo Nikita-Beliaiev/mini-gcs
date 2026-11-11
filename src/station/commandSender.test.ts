@@ -42,6 +42,15 @@ describe('createCommandSender', () => {
     await expect(second).resolves.toEqual({ status: 'rejected', reason: 'Busy' })
   })
 
+  it('keeps a rejection without a reason for the station to describe', async () => {
+    const { transport, sendCommand } = setup()
+    const result = sendCommand({ type: 'clearGeofence' })
+
+    transport.receive(commandAckMessage({ commandId: 1, accepted: false, reason: null }))
+
+    await expect(result).resolves.toEqual({ status: 'rejected', reason: null })
+  })
+
   it('reports no response when the vehicle stays silent', async () => {
     const { sendCommand } = setup()
     const result = sendCommand({ type: 'clearGeofence' })

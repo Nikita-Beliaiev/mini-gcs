@@ -5,10 +5,20 @@ export const MAX_DISTANCE_FROM_HOME_M = 2000
 export const MIN_GEOFENCE_VERTICES = 3
 export const MAX_GEOFENCE_VERTICES = 20
 
-export interface PlanIssue {
-  pointIndex: number | null
-  message: string
-}
+export type GeneralIssueCode =
+  | 'noWaypoints'
+  | 'tooManyWaypoints'
+  | 'tooFewVertices'
+  | 'tooManyVertices'
+  | 'homeOutsideGeofence'
+  | 'waitingForHome'
+
+export type WaypointIssueCode = 'waypointTooFar' | 'waypointOutsideGeofence'
+
+export type PlanIssue =
+  { code: GeneralIssueCode; pointIndex: null } | { code: WaypointIssueCode; pointIndex: number }
+
+export const WAITING_FOR_HOME: PlanIssue = { code: 'waitingForHome', pointIndex: null }
 
 export function validateMission(
   waypoints: readonly LatLon[],
@@ -18,25 +28,18 @@ export function validateMission(
   const issues: PlanIssue[] = []
 
   if (waypoints.length === 0) {
-    issues.push({ pointIndex: null, message: 'Add at least one waypoint' })
+    issues.push({ code: 'noWaypoints', pointIndex: null })
   }
   if (waypoints.length > MAX_MISSION_WAYPOINTS) {
-    issues.push({
-      pointIndex: null,
-      message: `Use at most ${String(MAX_MISSION_WAYPOINTS)} waypoints`,
-    })
+    issues.push({ code: 'tooManyWaypoints', pointIndex: null })
   }
 
   waypoints.forEach((waypoint, index) => {
-    const label = `Waypoint ${String(index + 1)}`
     if (distanceMeters(home, waypoint) > MAX_DISTANCE_FROM_HOME_M) {
-      issues.push({
-        pointIndex: index,
-        message: `${label} is more than ${String(MAX_DISTANCE_FROM_HOME_M / 1000)} km from home`,
-      })
+      issues.push({ code: 'waypointTooFar', pointIndex: index })
     }
     if (geofence && !isPointInPolygon(waypoint, geofence)) {
-      issues.push({ pointIndex: index, message: `${label} is outside the geofence` })
+      issues.push({ code: 'waypointOutsideGeofence', pointIndex: index })
     }
   })
 
@@ -47,19 +50,13 @@ export function validateGeofence(polygon: readonly LatLon[], home: LatLon): Plan
   const issues: PlanIssue[] = []
 
   if (polygon.length < MIN_GEOFENCE_VERTICES) {
-    issues.push({
-      pointIndex: null,
-      message: `Add at least ${String(MIN_GEOFENCE_VERTICES)} vertices`,
-    })
+    issues.push({ code: 'tooFewVertices', pointIndex: null })
   }
   if (polygon.length > MAX_GEOFENCE_VERTICES) {
-    issues.push({
-      pointIndex: null,
-      message: `Use at most ${String(MAX_GEOFENCE_VERTICES)} vertices`,
-    })
+    issues.push({ code: 'tooManyVertices', pointIndex: null })
   }
   if (polygon.length >= MIN_GEOFENCE_VERTICES && !isPointInPolygon(home, polygon)) {
-    issues.push({ pointIndex: null, message: 'Home must be inside the geofence' })
+    issues.push({ code: 'homeOutsideGeofence', pointIndex: null })
   }
 
   return issues

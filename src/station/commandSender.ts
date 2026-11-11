@@ -2,7 +2,7 @@ import type { Command } from '../protocol/commands'
 import type { Transport } from '../transport/transport'
 
 export type CommandResult =
-  { status: 'accepted' } | { status: 'rejected'; reason: string } | { status: 'noResponse' }
+  { status: 'accepted' } | { status: 'rejected'; reason: string | null } | { status: 'noResponse' }
 
 export type SendCommand = (command: Command) => Promise<CommandResult>
 
@@ -21,9 +21,7 @@ export function createCommandSender(
     }
     const settle = pending.get(message.commandId)
     settle?.(
-      message.accepted
-        ? { status: 'accepted' }
-        : { status: 'rejected', reason: message.reason ?? 'Rejected by the vehicle' },
+      message.accepted ? { status: 'accepted' } : { status: 'rejected', reason: message.reason },
     )
   })
 

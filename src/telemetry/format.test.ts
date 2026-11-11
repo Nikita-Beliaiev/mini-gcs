@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { en } from '../i18n/en'
+import { uk } from '../i18n/uk'
 import { systemStatusMessage } from '../test/messages'
 import {
   formatArmed,
@@ -87,14 +89,15 @@ describe('formatGps', () => {
 
 describe('formatDistance', () => {
   it('uses metres below a kilometre and kilometres above', () => {
-    expect(formatDistance(0)).toBe('0 m')
-    expect(formatDistance(382.6)).toBe('383 m')
-    expect(formatDistance(1000)).toBe('1.0 km')
-    expect(formatDistance(2372)).toBe('2.4 km')
+    expect(formatDistance(0, en.units)).toBe('0 m')
+    expect(formatDistance(382.6, en.units)).toBe('383 m')
+    expect(formatDistance(1000, en.units)).toBe('1.0 km')
+    expect(formatDistance(2372, en.units)).toBe('2.4 km')
+    expect(formatDistance(2372, uk.units)).toBe('2.4 км')
   })
 
   it('shows a placeholder without a value', () => {
-    expect(formatDistance(undefined)).toBe(NO_VALUE)
+    expect(formatDistance(undefined, en.units)).toBe(NO_VALUE)
   })
 })
 

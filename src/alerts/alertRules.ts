@@ -9,7 +9,6 @@ export type AlertId =
 export interface Alert {
   id: AlertId
   severity: AlertSeverity
-  message: string
 }
 
 export interface AlertInputs {
@@ -32,34 +31,18 @@ export function evaluateAlerts({ telemetry, connection, msSinceHeartbeat }: Aler
   const isArmed = telemetry.heartbeat?.armed ?? false
 
   if (msSinceHeartbeat !== null && msSinceHeartbeat > LINK_LOSS_TIMEOUT_MS) {
-    alerts.push({
-      id: 'linkLost',
-      severity: 'critical',
-      message: `Link lost: no heartbeat for over ${String(LINK_LOSS_TIMEOUT_MS / 1000)} s`,
-    })
+    alerts.push({ id: 'linkLost', severity: 'critical' })
   }
   if (status?.fenceBreached) {
-    alerts.push({
-      id: 'geofenceBreach',
-      severity: 'critical',
-      message: 'Vehicle is outside the geofence',
-    })
+    alerts.push({ id: 'geofenceBreach', severity: 'critical' })
   }
   if (status && status.batteryPercent <= BATTERY_CRITICAL_PERCENT) {
-    alerts.push({
-      id: 'batteryCritical',
-      severity: 'critical',
-      message: `Battery below ${String(BATTERY_CRITICAL_PERCENT)}%`,
-    })
+    alerts.push({ id: 'batteryCritical', severity: 'critical' })
   } else if (status && status.batteryPercent <= BATTERY_LOW_PERCENT) {
-    alerts.push({
-      id: 'batteryLow',
-      severity: 'warning',
-      message: `Battery below ${String(BATTERY_LOW_PERCENT)}%`,
-    })
+    alerts.push({ id: 'batteryLow', severity: 'warning' })
   }
   if (status && isArmed && status.gpsFix !== '3d') {
-    alerts.push({ id: 'gpsFixLost', severity: 'warning', message: 'GPS fix lost in flight' })
+    alerts.push({ id: 'gpsFixLost', severity: 'warning' })
   }
 
   return alerts

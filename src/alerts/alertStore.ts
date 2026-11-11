@@ -14,11 +14,7 @@ interface AlertState {
 }
 
 function isSameAlert(active: ActiveAlert | undefined, alert: Alert): boolean {
-  return (
-    active?.id === alert.id &&
-    active.severity === alert.severity &&
-    active.message === alert.message
-  )
+  return active?.id === alert.id && active.severity === alert.severity
 }
 
 export function reconcileAlerts(
@@ -36,7 +32,7 @@ export function reconcileAlerts(
   return evaluated.map((alert) => {
     const existing = previous.find((active) => active.id === alert.id)
     return existing
-      ? { ...existing, severity: alert.severity, message: alert.message }
+      ? { ...existing, severity: alert.severity }
       : { ...alert, raisedAtMs: nowMs, acknowledged: false }
   })
 }

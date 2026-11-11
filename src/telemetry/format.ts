@@ -1,4 +1,5 @@
 import { normalizeDegrees, type LatLon } from '../geo/geo'
+import type { Messages } from '../i18n/en'
 import type { GpsFix, SystemStatusMessage } from '../protocol/telemetry'
 
 export const NO_VALUE = '—'
@@ -46,14 +47,14 @@ export function formatGps(status: SystemStatusMessage | null): string {
   return `${GPS_FIX_LABELS[status.gpsFix]} · ${String(status.gpsSatellites)}`
 }
 
-export function formatDistance(meters: number | undefined): string {
+export function formatDistance(meters: number | undefined, units: Messages['units']): string {
   if (meters === undefined) {
     return NO_VALUE
   }
   if (meters < 1000) {
-    return `${String(Math.round(meters))} m`
+    return `${String(Math.round(meters))} ${units.meters}`
   }
-  return `${(meters / 1000).toFixed(1)} km`
+  return `${(meters / 1000).toFixed(1)} ${units.kilometers}`
 }
 
 export function formatCoordinates(point: LatLon): string {

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import type { Alert } from './alertRules'
 import { reconcileAlerts, useAlertStore } from './alertStore'
 
-const LINK_LOST: Alert = { id: 'linkLost', severity: 'critical', message: 'Link lost' }
-const BATTERY_LOW: Alert = { id: 'batteryLow', severity: 'warning', message: 'Battery low' }
+const LINK_LOST: Alert = { id: 'linkLost', severity: 'critical' }
+const BATTERY_LOW: Alert = { id: 'batteryLow', severity: 'warning' }
 
 describe('reconcileAlerts', () => {
   it('raises new alerts unacknowledged at the current time', () => {

@@ -1,3 +1,4 @@
+import type { Messages } from '../i18n/en'
 import type { TelemetryState } from '../telemetry/telemetryStore'
 
 export function activeWaypointIndex(state: TelemetryState): number | null {
@@ -9,17 +10,17 @@ export function activeWaypointIndex(state: TelemetryState): number | null {
   return isFlyingThisMission ? missionCurrent.waypointIndex : null
 }
 
-export function describeVehicleMission(state: TelemetryState): string {
+export function describeVehicleMission(state: TelemetryState, messages: Messages): string {
+  const text = messages.planning.mission
   const { mission } = state
   if (!mission) {
-    return 'Waiting for the vehicle mission'
+    return text.waitingForVehicle
   }
 
-  const count = mission.waypoints.length
-  const summary = `Vehicle mission ${String(mission.missionId)}: ${String(count)} ${count === 1 ? 'waypoint' : 'waypoints'}`
   const activeIndex = activeWaypointIndex(state)
-  if (activeIndex === null) {
-    return summary
-  }
-  return `${summary}, flying to WP ${String(activeIndex + 1)}`
+  return text.onVehicle(
+    mission.missionId,
+    mission.waypoints.length,
+    activeIndex === null ? null : activeIndex + 1,
+  )
 }

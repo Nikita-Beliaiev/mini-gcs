@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { en } from '../i18n/en'
 import { EMPTY_TELEMETRY_STATE } from '../telemetry/telemetryStore'
 import { heartbeatMessage, missionCurrentMessage, missionMessage } from '../test/messages'
 import { activeWaypointIndex, describeVehicleMission } from './vehicleMission'
@@ -7,13 +8,13 @@ const EMPTY = EMPTY_TELEMETRY_STATE
 
 describe('describeVehicleMission', () => {
   it('waits until the vehicle reports its mission', () => {
-    expect(describeVehicleMission(EMPTY)).toBe('Waiting for the vehicle mission')
+    expect(describeVehicleMission(EMPTY, en)).toBe('Waiting for the vehicle mission')
   })
 
   it('summarises the mission on the vehicle', () => {
     const state = { ...EMPTY, mission: missionMessage({ missionId: 3 }) }
 
-    expect(describeVehicleMission(state)).toBe('Vehicle mission 3: 2 waypoints')
+    expect(describeVehicleMission(state, en)).toBe('Vehicle mission 3: 2 waypoints')
   })
 
   it('names the waypoint the vehicle is flying to in AUTO', () => {
@@ -24,7 +25,7 @@ describe('describeVehicleMission', () => {
       missionCurrent: missionCurrentMessage({ missionId: 3, waypointIndex: 1 }),
     }
 
-    expect(describeVehicleMission(state)).toBe('Vehicle mission 3: 2 waypoints, flying to WP 2')
+    expect(describeVehicleMission(state, en)).toBe('Vehicle mission 3: 2 waypoints, flying to WP 2')
   })
 
   it('leaves out progress outside AUTO', () => {
@@ -35,7 +36,7 @@ describe('describeVehicleMission', () => {
       missionCurrent: missionCurrentMessage({ missionId: 3, waypointIndex: 0 }),
     }
 
-    expect(describeVehicleMission(state)).toBe('Vehicle mission 3: 1 waypoint')
+    expect(describeVehicleMission(state, en)).toBe('Vehicle mission 3: 1 waypoint')
   })
 })
 

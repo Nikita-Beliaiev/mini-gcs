@@ -18,22 +18,20 @@ describe('validateMission', () => {
   })
 
   it('needs at least one waypoint', () => {
-    expect(validateMission([], HOME, null)).toEqual([
-      { pointIndex: null, message: 'Add at least one waypoint' },
-    ])
+    expect(validateMission([], HOME, null)).toEqual([{ code: 'noWaypoints', pointIndex: null }])
   })
 
   it('limits the number of waypoints', () => {
     const waypoints = Array.from({ length: MAX_MISSION_WAYPOINTS + 1 }, () => NEAR)
 
     expect(validateMission(waypoints, HOME, null)).toEqual([
-      { pointIndex: null, message: 'Use at most 20 waypoints' },
+      { code: 'tooManyWaypoints', pointIndex: null },
     ])
   })
 
   it('flags waypoints too far from home', () => {
     expect(validateMission([NEAR, FAR], HOME, null)).toEqual([
-      { pointIndex: 1, message: 'Waypoint 2 is more than 2 km from home' },
+      { code: 'waypointTooFar', pointIndex: 1 },
     ])
   })
 
@@ -41,7 +39,7 @@ describe('validateMission', () => {
     const outsideFence = destinationPoint(HOME, 0, 1200)
 
     expect(validateMission([NEAR, outsideFence], HOME, FENCE)).toEqual([
-      { pointIndex: 1, message: 'Waypoint 2 is outside the geofence' },
+      { code: 'waypointOutsideGeofence', pointIndex: 1 },
     ])
   })
 })
@@ -53,7 +51,7 @@ describe('validateGeofence', () => {
 
   it('needs at least three vertices', () => {
     expect(validateGeofence(FENCE.slice(0, 2), HOME)).toEqual([
-      { pointIndex: null, message: 'Add at least 3 vertices' },
+      { code: 'tooFewVertices', pointIndex: null },
     ])
   })
 
@@ -63,7 +61,7 @@ describe('validateGeofence', () => {
     )
 
     expect(validateGeofence(vertices, HOME)).toEqual([
-      { pointIndex: null, message: 'Use at most 20 vertices' },
+      { code: 'tooManyVertices', pointIndex: null },
     ])
   })
 
@@ -71,7 +69,7 @@ describe('validateGeofence', () => {
     const elsewhere = FENCE.map((vertex) => destinationPoint(vertex, 90, 3000))
 
     expect(validateGeofence(elsewhere, HOME)).toEqual([
-      { pointIndex: null, message: 'Home must be inside the geofence' },
+      { code: 'homeOutsideGeofence', pointIndex: null },
     ])
   })
 })

@@ -1,5 +1,7 @@
 import { routeLengthMeters } from '../geo/geo'
-import { validateMission, type PlanIssue } from '../mission/missionRules'
+import { useMessages } from '../i18n/localeStore'
+import { validateMission, WAITING_FOR_HOME } from '../mission/missionRules'
+import { describePlanIssue } from '../mission/planIssueText'
 import { useConnectionStatus, useGroundStation, useTelemetry } from '../station/stationContext'
 import { formatDistance } from '../telemetry/format'
 import buttonStyles from '../ui/button.module.css'
@@ -11,9 +13,9 @@ import { EditOnMapToggle } from './EditOnMapToggle'
 import { describeUpload, uploadPlan } from './uploadPlan'
 import { describeVehicleMission } from './vehicleMission'
 
-const WAITING_FOR_HOME: PlanIssue = { pointIndex: null, message: 'Waiting for the home position' }
-
 export function MissionPanel() {
+  const messages = useMessages()
+  const text = messages.planning
   const station = useGroundStation()
   const isConnected = useConnectionStatus() === 'connected'
   const draft = usePlanningStore((state) => state.drafts.mission)
@@ -23,7 +25,7 @@ export function MissionPanel() {
   const home = useTelemetry((state) => state.home)
   const vehicleMission = useTelemetry((state) => state.mission)
   const vehicleGeofence = useTelemetry((state) => state.geofence?.polygon ?? null)
-  const vehicleSummary = useTelemetry(describeVehicleMission)
+  const vehicleSummary = useTelemetry((state) => describeVehicleMission(state, messages))
 
   const issues = home ? validateMission(draft, home, vehicleGeofence) : [WAITING_FOR_HOME]
   const generalIssues =
@@ -33,33 +35,23 @@ export function MissionPanel() {
   return (
     <div className={styles.editor}>
       <p className={styles.summary}>{vehicleSummary}</p>
-      <EditOnMapToggle
-        target="mission"
-        hint="Click the map to add a waypoint, drag a number to move it."
-      />
+      <EditOnMapToggle target="mission" />
       {draft.length === 0 ? (
-        <p className={styles.hint}>
-          No waypoints yet. Load the vehicle mission or add points on the map.
-        </p>
+        <p className={styles.hint}>{text.mission.empty}</p>
       ) : (
-        <DraftPointList
-          target="mission"
-          listLabel="Mission waypoints"
-          shortName="WP"
-          itemName="waypoint"
-          issues={issues}
-          legOrigin={home}
-        />
+        <DraftPointList target="mission" issues={issues} legOrigin={home} />
       )}
       {home && draft.length > 0 ? (
         <p className={styles.summary}>
-          Route {formatDistance(routeLengthMeters([home, ...draft, home]))} from home and back
+          {text.mission.route(
+            formatDistance(routeLengthMeters([home, ...draft, home]), messages.units),
+          )}
         </p>
       ) : null}
       {generalIssues.length > 0 ? (
-        <ul className={styles.issues} aria-label="Mission problems">
+        <ul className={styles.issues} aria-label={text.mission.problems}>
           {generalIssues.map((issue) => (
-            <li key={issue.message}>{issue.message}</li>
+            <li key={issue.code}>{describePlanIssue(issue, messages)}</li>
           ))}
         </ul>
       ) : null}
@@ -74,7 +66,7 @@ export function MissionPanel() {
             }
           }}
         >
-          Load from vehicle
+          {text.loadFromVehicle}
         </button>
         <button
           type="button"
@@ -84,7 +76,7 @@ export function MissionPanel() {
             clearPoints('mission')
           }}
         >
-          Clear
+          {text.clear}
         </button>
         <button
           type="button"
@@ -97,11 +89,11 @@ export function MissionPanel() {
             })
           }}
         >
-          Upload to vehicle
+          {text.uploadToVehicle}
         </button>
       </div>
       <p className={styles.uploadStatus} aria-live="polite">
-        {describeUpload(upload)}
+        {describeUpload(upload, messages)}
       </p>
     </div>
   )

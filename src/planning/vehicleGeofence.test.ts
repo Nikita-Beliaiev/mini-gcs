@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { en } from '../i18n/en'
 import { EMPTY_TELEMETRY_STATE } from '../telemetry/telemetryStore'
 import { geofenceMessage } from '../test/messages'
-import { countOutside, describeVehicleGeofence, describeWaypointsOutside } from './vehicleGeofence'
+import { countOutside, describeVehicleGeofence } from './vehicleGeofence'
 
 const EMPTY = EMPTY_TELEMETRY_STATE
 
@@ -14,19 +15,19 @@ const SQUARE = [
 
 describe('describeVehicleGeofence', () => {
   it('waits for the vehicle to report its geofence', () => {
-    expect(describeVehicleGeofence(EMPTY)).toBe('Waiting for the vehicle geofence')
+    expect(describeVehicleGeofence(EMPTY, en)).toBe('Waiting for the vehicle geofence')
   })
 
   it('says when the vehicle has no geofence', () => {
     const state = { ...EMPTY, geofence: geofenceMessage({ polygon: null }) }
 
-    expect(describeVehicleGeofence(state)).toBe('No geofence on the vehicle')
+    expect(describeVehicleGeofence(state, en)).toBe('No geofence on the vehicle')
   })
 
   it('counts the vertices of the vehicle geofence', () => {
     const state = { ...EMPTY, geofence: geofenceMessage({ polygon: SQUARE }) }
 
-    expect(describeVehicleGeofence(state)).toBe('Vehicle geofence: 4 vertices')
+    expect(describeVehicleGeofence(state, en)).toBe('Vehicle geofence: 4 vertices')
   })
 })
 
@@ -39,12 +40,5 @@ describe('countOutside', () => {
     ]
 
     expect(countOutside(points, SQUARE)).toBe(2)
-  })
-})
-
-describe('describeWaypointsOutside', () => {
-  it('agrees with the number of waypoints', () => {
-    expect(describeWaypointsOutside(1)).toMatch(/^1 waypoint of the vehicle mission is outside/)
-    expect(describeWaypointsOutside(3)).toMatch(/^3 waypoints of the vehicle mission are outside/)
   })
 })

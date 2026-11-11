@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { en } from '../i18n/en'
 import type { CommandResult } from '../station/commandSender'
 import { usePlanningStore } from './planningStore'
 import { describeUpload, uploadPlan } from './uploadPlan'
@@ -30,8 +31,9 @@ describe('describeUpload', () => {
     [{ status: 'pending', uploadId: 1 } as const, 'Uploading…'],
     [{ status: 'accepted' } as const, 'Accepted by the vehicle'],
     [{ status: 'rejected', reason: 'Too far' } as const, 'Rejected: Too far'],
+    [{ status: 'rejected', reason: null } as const, 'Rejected by the vehicle'],
     [{ status: 'noResponse' } as const, 'No response from the vehicle'],
   ])('describes %o', (upload, text) => {
-    expect(describeUpload(upload)).toBe(text)
+    expect(describeUpload(upload, en)).toBe(text)
   })
 })
