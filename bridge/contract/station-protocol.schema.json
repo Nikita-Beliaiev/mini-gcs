@@ -1,0 +1,577 @@
+{
+  "$comment": "Generated from the Zod schemas in src/protocol by npm run protocol:schema. Do not edit by hand.",
+  "telemetryMessage": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "oneOf": [
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "heartbeat"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "STANDBY",
+              "TAKEOFF",
+              "STABILIZE",
+              "ACRO",
+              "ALT_HOLD",
+              "AUTO",
+              "GUIDED",
+              "LOITER",
+              "RTL",
+              "CIRCLE",
+              "LAND",
+              "DRIFT",
+              "SPORT",
+              "FLIP",
+              "AUTOTUNE",
+              "POSHOLD",
+              "BRAKE",
+              "THROW",
+              "AVOID_ADSB",
+              "GUIDED_NOGPS",
+              "SMART_RTL",
+              "FLOWHOLD",
+              "FOLLOW",
+              "ZIGZAG",
+              "SYSTEMID",
+              "AUTOROTATE",
+              "AUTO_RTL",
+              "TURTLE",
+              "RATE_ACRO",
+              "UNKNOWN"
+            ]
+          },
+          "armed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "mode",
+          "armed"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "position"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "lon": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "altitudeM": {
+            "type": "number"
+          },
+          "groundSpeedMs": {
+            "type": "number"
+          },
+          "headingDeg": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "lat",
+          "lon",
+          "altitudeM",
+          "groundSpeedMs",
+          "headingDeg"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "attitude"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "rollDeg": {
+            "type": "number"
+          },
+          "pitchDeg": {
+            "type": "number"
+          },
+          "yawDeg": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "rollDeg",
+          "pitchDeg",
+          "yawDeg"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "systemStatus"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "batteryPercent": {
+            "type": "number"
+          },
+          "gpsSatellites": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "gpsFix": {
+            "type": "string",
+            "enum": [
+              "none",
+              "2d",
+              "3d"
+            ]
+          },
+          "linkQualityPercent": {
+            "type": "number"
+          },
+          "fenceBreached": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "batteryPercent",
+          "gpsSatellites",
+          "gpsFix",
+          "linkQualityPercent",
+          "fenceBreached"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "home"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "lon": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "lat",
+          "lon"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "mission"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "missionId": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "waypoints": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "lat": {
+                  "type": "number",
+                  "minimum": -90,
+                  "maximum": 90
+                },
+                "lon": {
+                  "type": "number",
+                  "minimum": -180,
+                  "maximum": 180
+                }
+              },
+              "required": [
+                "lat",
+                "lon"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "missionId",
+          "waypoints"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "missionCurrent"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "missionId": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "waypointIndex": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "missionId",
+          "waypointIndex"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "geofence"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "polygon": {
+            "anyOf": [
+              {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "lat": {
+                      "type": "number",
+                      "minimum": -90,
+                      "maximum": 90
+                    },
+                    "lon": {
+                      "type": "number",
+                      "minimum": -180,
+                      "maximum": 180
+                    }
+                  },
+                  "required": [
+                    "lat",
+                    "lon"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "polygon"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "commandAck"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "timeMs": {
+            "type": "number"
+          },
+          "commandId": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "command": {
+            "type": "string",
+            "enum": [
+              "uploadMission",
+              "uploadGeofence",
+              "clearGeofence",
+              "simulateFault",
+              "ping"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "seq",
+          "timeMs",
+          "commandId",
+          "command",
+          "accepted",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    ]
+  },
+  "commandEnvelope": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "commandId": {
+        "type": "integer",
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991
+      },
+      "command": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "uploadMission"
+              },
+              "waypoints": {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "lat": {
+                      "type": "number",
+                      "minimum": -90,
+                      "maximum": 90
+                    },
+                    "lon": {
+                      "type": "number",
+                      "minimum": -180,
+                      "maximum": 180
+                    }
+                  },
+                  "required": [
+                    "lat",
+                    "lon"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "type",
+              "waypoints"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "uploadGeofence"
+              },
+              "polygon": {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "lat": {
+                      "type": "number",
+                      "minimum": -90,
+                      "maximum": 90
+                    },
+                    "lon": {
+                      "type": "number",
+                      "minimum": -180,
+                      "maximum": 180
+                    }
+                  },
+                  "required": [
+                    "lat",
+                    "lon"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "type",
+              "polygon"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "clearGeofence"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "simulateFault"
+              },
+              "fault": {
+                "type": "string",
+                "enum": [
+                  "linkLoss",
+                  "gpsLoss",
+                  "batteryDrop"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "fault"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "ping"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "required": [
+      "commandId",
+      "command"
+    ],
+    "additionalProperties": false
+  }
+}
