@@ -25,6 +25,7 @@ class VehicleState:
     armed: bool = False
     relative_altitude_m: float = 0.0
     ready_to_arm: bool = False
+    has_position: bool = False
     home: LatLon | None = None
     mission_id: int = 0
     mission_sequences: list[int] = field(default_factory=list)
@@ -161,6 +162,7 @@ class TelemetryTranslator:
         location = to_lat_lon(message.lat, message.lon)
         if location is None:
             return []
+        self.state.has_position = True
         self.state.relative_altitude_m = message.relative_alt / 1000
         heading = self._yaw_deg if message.hdg == UNKNOWN_HEADING else message.hdg / 100
         return [

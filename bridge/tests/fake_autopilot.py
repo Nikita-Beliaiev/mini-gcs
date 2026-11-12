@@ -31,6 +31,8 @@ class FakeAutopilotOptions:
     command_results: dict[int, int] = field(default_factory=dict)
     answer_timesync: bool = True
     initial_mission: list[LatLon] = field(default_factory=list)
+    has_position: bool = True
+    arm_refusals: int = 0
 
 
 class _Protocol(asyncio.DatagramProtocol):
@@ -125,8 +127,8 @@ class FakeAutopilot:
             self.send(
                 self._mav.global_position_int_encode(
                     0,
-                    degrees_e7(HOME.lat),
-                    degrees_e7(HOME.lon),
+                    degrees_e7(HOME.lat) if self.options.has_position else 0,
+                    degrees_e7(HOME.lon) if self.options.has_position else 0,
                     400_000,
                     round(self.relative_alt_m * 1000),
                     300,
@@ -229,6 +231,9 @@ class FakeAutopilot:
 
     def _on_command_long(self, message: Any) -> None:
         result = self.options.command_results.get(message.command, mavlink.MAV_RESULT_ACCEPTED)
+        if message.command == mavlink.MAV_CMD_COMPONENT_ARM_DISARM and self.options.arm_refusals:
+            self.options.arm_refusals -= 1
+            result = mavlink.MAV_RESULT_FAILED
         if result == mavlink.MAV_RESULT_ACCEPTED:
             self._apply_command(message)
         self.send(self._mav.command_ack_encode(message.command, result, 0, 0, 255, 190))

@@ -31,6 +31,7 @@ def bridge_config(**overrides: Any) -> BridgeConfig:
         "station_port": 0,
         "retry": Retry(timeout_s=0.2, attempts=3),
         "launch_timeout_s": 5.0,
+        "arm_retry_s": 0.05,
         "link_loss_s": 0.6,
         "gps_loss_s": 0.3,
         "heartbeat_interval_s": 0.1,
@@ -70,9 +71,15 @@ class System:
     def __init__(self, bridge: Bridge, autopilot: FakeAutopilot) -> None:
         self.bridge = bridge
         self.autopilot = autopilot
+        self.stations: list[Station] = []
+
+    async def connect(self) -> Station:
+        station = Station(await connect(self.bridge.station_url, max_queue=None))
+        self.stations.append(station)
+        return station
 
     async def station(self) -> Station:
-        station = Station(await connect(self.bridge.station_url))
+        station = await self.connect()
         await station.next(lambda message: message["type"] == "heartbeat")
         await station.next(lambda message: message["type"] == "mission")
         return station
@@ -95,7 +102,10 @@ async def system(autopilot_options: FakeAutopilotOptions) -> AsyncIterator[Syste
     await bridge.start()
     autopilot = FakeAutopilot(bridge.vehicle_port, autopilot_options)
     await autopilot.start()
-    yield System(bridge, autopilot)
+    system = System(bridge, autopilot)
+    yield system
+    for station in system.stations:
+        await station.connection.close()
     await autopilot.stop()
     await bridge.close()
 
@@ -125,7 +135,7 @@ async def test_asks_for_telemetry_rates_when_the_vehicle_connects(system: System
     [FakeAutopilotOptions(initial_mission=[LatLon(lat=43.097, lon=11.647)])],
 )
 async def test_shows_the_mission_already_on_the_vehicle(system: System) -> None:
-    station = Station(await connect(system.bridge.station_url))
+    station = await system.connect()
 
     mission = await station.next(
         lambda message: message["type"] == "mission" and len(message["waypoints"]) == 1
@@ -189,6 +199,31 @@ async def test_waits_until_the_vehicle_is_ready_to_arm(system: System) -> None:
 
     system.autopilot.options.ready_to_arm = True
     await eventually(lambda: system.autopilot.custom_mode == MODE_AUTO)
+
+
+@pytest.mark.parametrize("autopilot_options", [FakeAutopilotOptions(arm_refusals=2)])
+async def test_keeps_trying_to_arm_until_the_autopilot_agrees(system: System) -> None:
+    station = await system.station()
+
+    await station.command({"type": "uploadMission", "waypoints": ROUTE})
+
+    await eventually(lambda: system.autopilot.custom_mode == MODE_AUTO)
+    arm = mavlink.MAV_CMD_COMPONENT_ARM_DISARM
+    assert system.autopilot.received_commands().count(arm) == 3
+
+
+@pytest.mark.parametrize("autopilot_options", [FakeAutopilotOptions(has_position=False)])
+async def test_waits_for_a_position_estimate(system: System) -> None:
+    station = await system.station()
+
+    fence = await station.command({"type": "uploadGeofence", "polygon": FENCE})
+    mission = await station.command({"type": "uploadMission", "waypoints": ROUTE})
+    await asyncio.sleep(0.3)
+
+    assert fence["accepted"] is False
+    assert fence["reason"] == "Waiting for the vehicle position"
+    assert mission["accepted"] is True
+    assert mavlink.MAV_CMD_DO_SET_MODE not in system.autopilot.received_commands()
 
 
 async def test_switches_to_a_new_mission_in_flight(system: System) -> None:
@@ -276,8 +311,9 @@ async def test_rejects_commands_until_a_vehicle_connects() -> None:
     bridge = Bridge(bridge_config())
     await bridge.start()
     try:
-        station = Station(await connect(bridge.station_url))
+        station = Station(await connect(bridge.station_url, max_queue=None))
         ack = await station.command({"type": "ping"})
+        await station.connection.close()
     finally:
         await bridge.close()
 

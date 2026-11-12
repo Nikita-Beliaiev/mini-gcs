@@ -54,6 +54,7 @@ TELEMETRY_RATES_HZ = {
 FENCE_TYPE_POLYGON = 4
 DEFAULT_RETRY = Retry(timeout_s=0.8, attempts=3)
 TAKEOFF_ALTITUDE_SHARE = 0.9
+CLOSE_TIMEOUT_S = 2.0
 
 
 class NotReadyError(Exception):
@@ -69,7 +70,8 @@ class BridgeConfig:
     allowed_origins: tuple[str, ...] = DEFAULT_ALLOWED_ORIGINS
     takeoff_altitude_m: float = 40.0
     retry: Retry = DEFAULT_RETRY
-    launch_timeout_s: float = 120.0
+    launch_timeout_s: float = 180.0
+    arm_retry_s: float = 2.0
     link_loss_s: float = 10.0
     gps_loss_s: float = 15.0
     battery_drop_percent: float = 32.0
@@ -102,6 +104,7 @@ class Bridge:
             self._config.station_host,
             self._config.station_port,
             origins=[*origins, None],
+            close_timeout=CLOSE_TIMEOUT_S,
         )
         self._spawn(self._heartbeat_loop())
         self._spawn(self._state_loop())
@@ -265,12 +268,14 @@ class Bridge:
         altitude_m = self._config.takeoff_altitude_m
         state = self._translator.state
         try:
-            await self._wait_until(lambda: state.ready_to_arm, self._config.launch_timeout_s)
+            await self._wait_until(
+                lambda: state.ready_to_arm and state.has_position, self._config.launch_timeout_s
+            )
             async with self._vehicle_lock:
-                control = self._control()
-                await control.set_mode(MODE_GUIDED)
-                await control.arm()
-                await control.takeoff(altitude_m)
+                await self._control().set_mode(MODE_GUIDED)
+            await self._arm_when_ready()
+            async with self._vehicle_lock:
+                await self._control().takeoff(altitude_m)
             await self._wait_until(
                 lambda: state.relative_altitude_m >= altitude_m * TAKEOFF_ALTITUDE_SHARE,
                 self._config.launch_timeout_s,
@@ -281,6 +286,20 @@ class Bridge:
         except (TimeoutError, NotReadyError, CommandRejectedError) as error:
             log.warning("Launch failed: %s", str(error) or "timed out")
 
+    async def _arm_when_ready(self) -> None:
+        state = self._translator.state
+        async with asyncio.timeout(self._config.launch_timeout_s):
+            while True:
+                await self._wait_until(lambda: state.ready_to_arm, self._config.launch_timeout_s)
+                try:
+                    async with self._vehicle_lock:
+                        await self._control().arm()
+                except CommandRejectedError as error:
+                    log.info("The vehicle is not ready to arm yet: %s", error)
+                    await asyncio.sleep(self._config.arm_retry_s)
+                else:
+                    return
+
     async def _wait_until(self, condition: Callable[[], bool], timeout_s: float) -> None:
         async with asyncio.timeout(timeout_s):
             while not condition():
@@ -289,6 +308,8 @@ class Bridge:
 
     async def _upload_geofence(self, polygon: list[LatLon]) -> None:
         control = self._control()
+        if not self._translator.state.has_position:
+            raise NotReadyError("Waiting for the vehicle position")
         async with self._vehicle_lock:
             await control.set_param("FENCE_TYPE", FENCE_TYPE_POLYGON)
             await upload(
