@@ -50,6 +50,7 @@ TELEMETRY_RATES_HZ = {
     mavlink.MAVLINK_MSG_ID_MISSION_CURRENT: 1.0,
     mavlink.MAVLINK_MSG_ID_HOME_POSITION: 0.2,
     mavlink.MAVLINK_MSG_ID_FENCE_STATUS: 2.0,
+    mavlink.MAVLINK_MSG_ID_EKF_STATUS_REPORT: 1.0,
 }
 FENCE_TYPE_POLYGON = 4
 DEFAULT_RETRY = Retry(timeout_s=0.8, attempts=3)
@@ -156,6 +157,8 @@ class Bridge:
     def _on_vehicle_message(self, message: Message) -> None:
         translation = self._translator.translate(message)
         self._vehicle_update.set()
+        if message.get_type() == "STATUSTEXT":
+            log.info("Autopilot: %s", message.text)
         if translation.vehicle_appeared:
             log.info("Vehicle %d is connected", message.get_srcSystem())
             self._spawn(self._prepare_vehicle())

@@ -188,3 +188,17 @@ def test_keeps_the_latest_state_for_new_stations(
 
     assert [body["type"] for body in translator.snapshot()] == ["heartbeat", "home", "geofence"]
     assert translator.state.home == LatLon(lat=43.095, lon=11.645)
+
+
+def test_knows_the_position_estimate_only_when_the_ekf_has_one(
+    translator: TelemetryTranslator, vehicle: Sender
+) -> None:
+    connect(translator, vehicle)
+    origin_set = mavlink.EKF_POS_HORIZ_ABS | mavlink.EKF_CONST_POS_MODE
+
+    translate(translator, vehicle(vehicle.mav.ekf_status_report_encode(origin_set, 0, 0, 0, 0, 0)))
+    assert not translator.state.has_position
+
+    using_gps = mavlink.EKF_POS_HORIZ_ABS | mavlink.EKF_ATTITUDE
+    translate(translator, vehicle(vehicle.mav.ekf_status_report_encode(using_gps, 0, 0, 0, 0, 0)))
+    assert translator.state.has_position

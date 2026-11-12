@@ -155,6 +155,12 @@ class TelemetryTranslator:
                 return [protocol.home(location)]
             case "MISSION_CURRENT":
                 return self._mission_current(message.seq)
+            case "EKF_STATUS_REPORT":
+                self.state.has_position = bool(
+                    message.flags & mavlink.EKF_POS_HORIZ_ABS
+                    and not message.flags & mavlink.EKF_CONST_POS_MODE
+                )
+                return []
             case _:
                 return []
 
@@ -162,7 +168,6 @@ class TelemetryTranslator:
         location = to_lat_lon(message.lat, message.lon)
         if location is None:
             return []
-        self.state.has_position = True
         self.state.relative_altitude_m = message.relative_alt / 1000
         heading = self._yaw_deg if message.hdg == UNKNOWN_HEADING else message.hdg / 100
         return [

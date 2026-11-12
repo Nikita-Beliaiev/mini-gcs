@@ -127,8 +127,8 @@ class FakeAutopilot:
             self.send(
                 self._mav.global_position_int_encode(
                     0,
-                    degrees_e7(HOME.lat) if self.options.has_position else 0,
-                    degrees_e7(HOME.lon) if self.options.has_position else 0,
+                    degrees_e7(HOME.lat),
+                    degrees_e7(HOME.lon),
                     400_000,
                     round(self.relative_alt_m * 1000),
                     300,
@@ -155,6 +155,8 @@ class FakeAutopilot:
                 )
             )
             self.send(self._mav.gps_raw_int_encode(0, 3, 0, 0, 0, 0, 0, 0, 0, 10))
+            position_flags = mavlink.EKF_POS_HORIZ_ABS if self.options.has_position else 0
+            self.send(self._mav.ekf_status_report_encode(position_flags, 0, 0, 0, 0, 0))
             self.send(
                 self._mav.home_position_encode(
                     degrees_e7(HOME.lat),
@@ -234,6 +236,7 @@ class FakeAutopilot:
         if message.command == mavlink.MAV_CMD_COMPONENT_ARM_DISARM and self.options.arm_refusals:
             self.options.arm_refusals -= 1
             result = mavlink.MAV_RESULT_FAILED
+            self.send(self._mav.statustext_encode(mavlink.MAV_SEVERITY_CRITICAL, b"Arm: Not ready"))
         if result == mavlink.MAV_RESULT_ACCEPTED:
             self._apply_command(message)
         self.send(self._mav.command_ack_encode(message.command, result, 0, 0, 255, 190))
