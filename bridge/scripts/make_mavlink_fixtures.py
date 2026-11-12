@@ -1,12 +1,3 @@
-"""Write MAVLink test fixtures for the station's TypeScript decoder.
-
-The frames are encoded by pymavlink, so the decoder is checked against the
-reference implementation instead of against itself.
-
-Run from the repository root:
-    bridge/.venv/Scripts/python bridge/scripts/make_mavlink_fixtures.py
-"""
-
 import json
 import struct
 from datetime import UTC, datetime
@@ -59,16 +50,33 @@ def decoded(frame: bytes) -> dict[str, Any]:
 def frame_fixtures() -> dict[str, Any]:
     mav = vehicle()
     messages: list[tuple[str, Any]] = [
-        ("HEARTBEAT", mav.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, ARMED, AUTO, 4)),
-        ("HEARTBEAT plane", mav.heartbeat_encode(MAV_TYPE_FIXED_WING, MAV_AUTOPILOT_ARDUPILOTMEGA, ARMED, AUTO, 4)),
+        (
+            "HEARTBEAT",
+            mav.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, ARMED, AUTO, 4),
+        ),
+        (
+            "HEARTBEAT plane",
+            mav.heartbeat_encode(MAV_TYPE_FIXED_WING, MAV_AUTOPILOT_ARDUPILOTMEGA, ARMED, AUTO, 4),
+        ),
         ("SYS_STATUS", mav.sys_status_encode(0, 0, 0, 0, 12600, 2810, 87, 0, 0, 0, 0, 0, 0)),
-        ("SYS_STATUS unknown battery", mav.sys_status_encode(1, 1, 1, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0)),
+        (
+            "SYS_STATUS unknown battery",
+            mav.sys_status_encode(1, 1, 1, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0),
+        ),
         ("GPS_RAW_INT", mav.gps_raw_int_encode(1, 6, 1, 2, 3, 121, 200, 0, 0, 10)),
         ("ATTITUDE", mav.attitude_encode(1000, 0.1, -0.2, -1.5, 0, 0, 0)),
         (
             "GLOBAL_POSITION_INT",
             mav.global_position_int_encode(
-                1000, degrees_e7(43.0951234), degrees_e7(11.6451234), 440070, 39996, -250, 300, 0, 12345
+                1000,
+                degrees_e7(43.0951234),
+                degrees_e7(11.6451234),
+                440070,
+                39996,
+                -250,
+                300,
+                0,
+                12345,
             ),
         ),
         ("MISSION_CURRENT", mav.mission_current_encode(3, 7, 2, 1)),
@@ -78,8 +86,21 @@ def frame_fixtures() -> dict[str, Any]:
         (
             "MISSION_ITEM_INT",
             mav.mission_item_int_encode(
-                1, 1, 2, FRAME_GLOBAL_RELATIVE_ALT_INT, NAV_WAYPOINT, 0, 1, 3, 0, 0, 0,
-                degrees_e7(43.098211), degrees_e7(11.646601), 40, MISSION,
+                1,
+                1,
+                2,
+                FRAME_GLOBAL_RELATIVE_ALT_INT,
+                NAV_WAYPOINT,
+                0,
+                1,
+                3,
+                0,
+                0,
+                0,
+                degrees_e7(43.098211),
+                degrees_e7(11.646601),
+                40,
+                MISSION,
             ),
         ),
         ("FENCE_STATUS", mav.fence_status_encode(1, 2, 1, 1000, 0)),
@@ -98,7 +119,9 @@ def frame_fixtures() -> dict[str, Any]:
 
     v1 = mavlink1.MAVLink(None, srcSystem=1, srcComponent=1)
     v1_frame = bytes(
-        v1.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, DISARMED, GUIDED, 3).pack(v1)
+        v1.heartbeat_encode(
+            MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, DISARMED, GUIDED, 3
+        ).pack(v1)
     )
 
     signer = vehicle()
@@ -150,17 +173,24 @@ def flight_tlog() -> bytes:
     fence = [(43.1, 11.64), (43.1, 11.655), (43.09, 11.655)]
 
     log.from_station(0, s.heartbeat_encode(MAV_TYPE_GCS, MAV_AUTOPILOT_INVALID, 0, 0, 0))
-    log.from_vehicle(10, v.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, DISARMED, STABILIZE, 3))
+    log.from_vehicle(
+        10,
+        v.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, DISARMED, STABILIZE, 3),
+    )
     log.from_vehicle(20, v.global_position_int_encode(1, 0, 0, 0, 0, 0, 0, 0, 65535))
     log.from_vehicle(
         30,
-        v.home_position_encode(degrees_e7(home[0]), degrees_e7(home[1]), 400100, 0, 0, 0, [1, 0, 0, 0], 0, 0, 0),
+        v.home_position_encode(
+            degrees_e7(home[0]), degrees_e7(home[1]), 400100, 0, 0, 0, [1, 0, 0, 0], 0, 0, 0
+        ),
     )
     log.from_vehicle(40, v.gps_raw_int_encode(1, 3, 1, 1, 1, 0, 0, 0, 0, 9))
     log.from_vehicle(50, v.sys_status_encode(0, 0, 0, 0, 12600, 0, 95, 0, 0, 0, 0, 0, 0))
     log.data += bytes([0xFD, 0x09, 0x00, 0x13, 0x37, 0xFE, 0x42])
 
-    log.from_vehicle(1000, v.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, ARMED, GUIDED, 4))
+    log.from_vehicle(
+        1000, v.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, ARMED, GUIDED, 4)
+    )
     log.from_vehicle(
         1010,
         v.global_position_int_encode(
@@ -170,13 +200,44 @@ def flight_tlog() -> bytes:
     log.from_vehicle(1020, v.attitude_encode(1020, 0.1, -0.05, -1.5707963, 0, 0, 0))
 
     items = [
-        s.mission_item_int_encode(1, 1, 0, FRAME_GLOBAL, NAV_WAYPOINT, 0, 1, 0, 0, 0, 0,
-                                  degrees_e7(home[0]), degrees_e7(home[1]), 0, MISSION),
-        s.mission_item_int_encode(1, 1, 1, FRAME_GLOBAL_RELATIVE_ALT_INT, NAV_TAKEOFF, 0, 1, 0, 0, 0, 0,
-                                  0, 0, 40, MISSION),
+        s.mission_item_int_encode(
+            1,
+            1,
+            0,
+            FRAME_GLOBAL,
+            NAV_WAYPOINT,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            degrees_e7(home[0]),
+            degrees_e7(home[1]),
+            0,
+            MISSION,
+        ),
+        s.mission_item_int_encode(
+            1, 1, 1, FRAME_GLOBAL_RELATIVE_ALT_INT, NAV_TAKEOFF, 0, 1, 0, 0, 0, 0, 0, 0, 40, MISSION
+        ),
     ] + [
-        s.mission_item_int_encode(1, 1, 2 + index, FRAME_GLOBAL_RELATIVE_ALT_INT, NAV_WAYPOINT, 0, 1, 0, 0, 0, 0,
-                                  degrees_e7(lat), degrees_e7(lon), 40, MISSION)
+        s.mission_item_int_encode(
+            1,
+            1,
+            2 + index,
+            FRAME_GLOBAL_RELATIVE_ALT_INT,
+            NAV_WAYPOINT,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            degrees_e7(lat),
+            degrees_e7(lon),
+            40,
+            MISSION,
+        )
         for index, (lat, lon) in enumerate(route)
     ]
     log.from_station(1100, s.mission_count_encode(1, 1, len(items), MISSION))
@@ -189,12 +250,29 @@ def flight_tlog() -> bytes:
     for index, (lat, lon) in enumerate(fence):
         log.from_station(
             1310 + index * 10,
-            s.mission_item_int_encode(1, 1, index, FRAME_GLOBAL, FENCE_POLYGON_VERTEX_INCLUSION, 0, 1,
-                                      len(fence), 0, 0, 0, degrees_e7(lat), degrees_e7(lon), 0, FENCE),
+            s.mission_item_int_encode(
+                1,
+                1,
+                index,
+                FRAME_GLOBAL,
+                FENCE_POLYGON_VERTEX_INCLUSION,
+                0,
+                1,
+                len(fence),
+                0,
+                0,
+                0,
+                degrees_e7(lat),
+                degrees_e7(lon),
+                0,
+                FENCE,
+            ),
         )
     log.from_vehicle(1400, v.mission_ack_encode(255, 190, 0, FENCE))
 
-    log.from_vehicle(2000, v.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, ARMED, AUTO, 4))
+    log.from_vehicle(
+        2000, v.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, ARMED, AUTO, 4)
+    )
     log.from_vehicle(2010, v.mission_current_encode(1, len(items), 2, 1))
     log.from_vehicle(2020, v.mission_current_encode(3, len(items), 2, 1))
     log.from_vehicle(2030, v.fence_status_encode(1, 1, 1, 2000, 0))
@@ -210,8 +288,23 @@ def flight_tlog() -> bytes:
 
 
 def waypoint(mav: mavlink2.MAVLink, target: int, seq: int, lat: float, lon: float) -> Any:
-    return mav.mission_item_int_encode(target, 1, seq, FRAME_GLOBAL_RELATIVE_ALT_INT, NAV_WAYPOINT, 0, 1,
-                                       0, 0, 0, 0, degrees_e7(lat), degrees_e7(lon), 40, MISSION)
+    return mav.mission_item_int_encode(
+        target,
+        1,
+        seq,
+        FRAME_GLOBAL_RELATIVE_ALT_INT,
+        NAV_WAYPOINT,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        degrees_e7(lat),
+        degrees_e7(lon),
+        40,
+        MISSION,
+    )
 
 
 def transfers_tlog() -> bytes:
@@ -219,7 +312,10 @@ def transfers_tlog() -> bytes:
     v = log.vehicle
     s = log.station
 
-    log.from_vehicle(0, v.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, DISARMED, STABILIZE, 3))
+    log.from_vehicle(
+        0,
+        v.heartbeat_encode(MAV_TYPE_QUADROTOR, MAV_AUTOPILOT_ARDUPILOTMEGA, DISARMED, STABILIZE, 3),
+    )
 
     log.from_station(100, s.mission_request_list_encode(1, 1, MISSION))
     log.from_vehicle(110, v.mission_count_encode(255, 190, 2, MISSION))
@@ -241,7 +337,9 @@ def transfers_tlog() -> bytes:
 
 def main() -> None:
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    (OUTPUT / "frames.json").write_text(json.dumps(frame_fixtures(), indent=2) + "\n", encoding="utf-8")
+    (OUTPUT / "frames.json").write_text(
+        json.dumps(frame_fixtures(), indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     (OUTPUT / "flight.tlog").write_bytes(flight_tlog())
     (OUTPUT / "transfers.tlog").write_bytes(transfers_tlog())
     print(f"Wrote fixtures to {OUTPUT}")
