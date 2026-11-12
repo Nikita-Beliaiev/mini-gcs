@@ -18,4 +18,19 @@ describe('FlightModeStrip', () => {
     const labels = screen.getAllByRole('listitem', { hidden: true }).map((item) => item.textContent)
     expect(labels).toEqual(['TAKEOFF', 'AUTO', 'No link'])
   })
+
+  it('shows ArduCopter flight modes from a real autopilot', () => {
+    const { session } = createTestReplaySession([
+      heartbeatMessage({ mode: 'STABILIZE', timeMs: 0 }),
+      heartbeatMessage({ mode: 'GUIDED', timeMs: 1000 }),
+      heartbeatMessage({ mode: 'AUTO', timeMs: 2000 }),
+      heartbeatMessage({ mode: 'LOITER', timeMs: 3000 }),
+      heartbeatMessage({ mode: 'LOITER', timeMs: 4000 }),
+    ])
+
+    renderWithSession(<FlightModeStrip />, session)
+
+    const labels = screen.getAllByRole('listitem', { hidden: true }).map((item) => item.textContent)
+    expect(labels).toEqual(['STABILIZE', 'AUTO', 'GUIDED', 'LOITER'])
+  })
 })

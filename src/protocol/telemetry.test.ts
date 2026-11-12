@@ -35,10 +35,16 @@ describe('parseTelemetryMessage', () => {
     ['a missing field', { type: 'heartbeat', seq: 1, timeMs: 0, mode: 'AUTO' }],
     ['a wrong field type', { ...positionMessage(), altitudeM: '40' }],
     ['a value that is not a number', { ...positionMessage(), altitudeM: Number.NaN }],
-    ['an unknown flight mode', { ...heartbeatMessage(), mode: 'LOITER' }],
+    ['an unknown flight mode', { ...heartbeatMessage(), mode: 'HYPERSPACE' }],
     ['a latitude off the globe', { ...homeMessage(), lat: 123 }],
   ])('rejects %s', (_, data) => {
     expect(parseTelemetryMessage(data)).toBeNull()
+  })
+
+  it('accepts ArduCopter flight modes from a real autopilot', () => {
+    expect(parseTelemetryMessage({ ...heartbeatMessage(), mode: 'LOITER' })).toMatchObject({
+      mode: 'LOITER',
+    })
   })
 
   it('drops fields the protocol does not know', () => {

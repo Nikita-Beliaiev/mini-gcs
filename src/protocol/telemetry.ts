@@ -1,8 +1,9 @@
 import { z } from 'zod'
 import { commandTypeSchema } from './commands'
+import { FLIGHT_MODES } from './flightModes'
 import { latLonSchema, pointListSchema } from './shared'
 
-export const flightModeSchema = z.enum(['STANDBY', 'TAKEOFF', 'AUTO', 'RTL', 'LAND'])
+export const flightModeSchema = z.enum(FLIGHT_MODES)
 
 export const gpsFixSchema = z.enum(['none', '2d', '3d'])
 

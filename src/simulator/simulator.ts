@@ -10,7 +10,8 @@ import { en } from '../i18n/en'
 import { validateGeofence, validateMission } from '../mission/missionRules'
 import { describePlanIssue } from '../mission/planIssueText'
 import type { CommandEnvelope, SimulatedFault } from '../protocol/commands'
-import type { FlightMode, GpsFix, TelemetryMessage } from '../protocol/telemetry'
+import type { SimulatorFlightMode } from '../protocol/flightModes'
+import type { GpsFix, TelemetryMessage } from '../protocol/telemetry'
 import { clamp } from '../shared/math'
 import { approach, tiltForMotion, turnToward, type Tilt } from './motion'
 import { createRandom, randomBetween } from './random'
@@ -70,7 +71,7 @@ const MESSAGE_SCHEDULE: readonly { type: ScheduledMessageType; intervalMs: numbe
 ]
 
 interface VehicleState {
-  mode: FlightMode
+  mode: SimulatorFlightMode
   modeStartedAtMs: number
   armed: boolean
   position: LatLon
@@ -143,7 +144,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
   let linkLostUntilMs = 0
   let gpsLostUntilMs = 0
 
-  function setMode(mode: FlightMode): void {
+  function setMode(mode: SimulatorFlightMode): void {
     vehicle.mode = mode
     vehicle.modeStartedAtMs = timeMs
   }

@@ -1,18 +1,14 @@
 import { useMemo } from 'react'
 import { useMessages } from '../i18n/localeStore'
+import { FLIGHT_MODES } from '../protocol/flightModes'
 import { useReplaySession } from '../session/sessionContext'
 import { classNames } from '../ui/classNames'
 import { flightLogDurationMs } from './flightLog'
 import { flightSegments, type SegmentKind } from './flightSegments'
 import styles from './FlightModeStrip.module.css'
 
-const KIND_ORDER: Record<SegmentKind, number> = {
-  STANDBY: 0,
-  TAKEOFF: 1,
-  AUTO: 2,
-  RTL: 3,
-  LAND: 4,
-  noLink: 5,
+function kindOrder(kind: SegmentKind): number {
+  return kind === 'noLink' ? FLIGHT_MODES.length : FLIGHT_MODES.indexOf(kind)
 }
 
 function percentOf(partMs: number, wholeMs: number): string {
@@ -25,7 +21,7 @@ export function FlightModeStrip() {
   const durationMs = flightLogDurationMs(log.messages)
   const segments = useMemo(() => flightSegments(log.messages), [log])
   const shownKinds = [...new Set(segments.map((segment) => segment.kind))].sort(
-    (first, second) => KIND_ORDER[first] - KIND_ORDER[second],
+    (first, second) => kindOrder(first) - kindOrder(second),
   )
 
   return (

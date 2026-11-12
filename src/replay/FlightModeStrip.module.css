@@ -41,11 +41,18 @@
   border-radius: 2px;
 }
 
-.kind[data-kind='STANDBY'] {
+.kind {
+  background: var(--color-text);
+}
+
+.kind[data-kind='STANDBY'],
+.kind[data-kind='STABILIZE'],
+.kind[data-kind='UNKNOWN'] {
   background: var(--color-text-muted);
 }
 
-.kind[data-kind='TAKEOFF'] {
+.kind[data-kind='TAKEOFF'],
+.kind[data-kind='GUIDED'] {
   background: var(--color-ok);
 }
 
@@ -53,7 +60,10 @@
   background: var(--color-accent);
 }
 
-.kind[data-kind='RTL'] {
+.kind[data-kind='RTL'],
+.kind[data-kind='SMART_RTL'],
+.kind[data-kind='AUTO_RTL'],
+.kind[data-kind='BRAKE'] {
   background: var(--color-warning);
 }
 
