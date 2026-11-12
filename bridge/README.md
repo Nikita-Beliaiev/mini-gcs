@@ -35,7 +35,7 @@ Then start the bridge and the station:
 npm run dev                                          # in the repository root
 ```
 
-Open http://localhost:5173/?server=ws://127.0.0.1:8788. The vehicle appears on the ground at home. Draw a route and upload it: the bridge uploads the mission, waits until ArduCopter is ready to arm, takes off in GUIDED to 40 m and switches to AUTO. At the end of the route the mission returns home and lands.
+Open http://localhost:5173/?server=ws://127.0.0.1:8788. The vehicle appears on the ground at home. Draw a route and upload it: the bridge uploads the mission, waits until ArduCopter is ready to arm, takes off in GUIDED to 40 m and switches to AUTO. At the end of the route the mission returns home and lands. After SITL starts, its EKF needs about 40 s before it uses GPS; until then the launch waits and a geofence upload is refused with "Waiting for the vehicle position". The bridge prints the autopilot's own messages, such as `Arm: Need Position Estimate`, so the console shows why ArduPilot refused something.
 
 | Option           | Default | What it does                                        |
 | ---------------- | ------- | --------------------------------------------------- |
@@ -61,6 +61,7 @@ A recorded `.tlog` opens in the station's replay, like logs from Mission Planner
 
 - **Uploading a mission** follows the MAVLink mission protocol: `MISSION_COUNT`, then one `MISSION_ITEM_INT` for each `MISSION_REQUEST_INT`, until `MISSION_ACK`. A lost message is sent again; the vehicle's rejection, such as `MAV_MISSION_INVALID_SEQUENCE`, reaches the station as the reason.
 - **A station route becomes** home, a takeoff, the waypoints at the takeoff altitude and a return to launch.
+- **Readiness comes from the EKF.** The pre-arm flag in `SYS_STATUS` passes in STABILIZE before there is a position, so the bridge also waits for `EKF_STATUS_REPORT` to show an absolute horizontal position, then retries arming until ArduCopter agrees.
 - **When the vehicle connects**, the bridge asks for telemetry rates with `MAV_CMD_SET_MESSAGE_INTERVAL` and downloads the mission and geofence already on it. It does this again after the vehicle has been silent for 3 s, for example after SITL restarts.
 - **Ping** measures a `TIMESYNC` round trip to the autopilot, not to the bridge.
 - **Link quality** comes from gaps in the autopilot's frame sequence numbers over the last 2 s.

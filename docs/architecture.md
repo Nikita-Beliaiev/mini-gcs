@@ -2,7 +2,7 @@
 
 Mini GCS is a browser ground control station for one simulated quadcopter. This page explains how the pieces fit together and why they are built this way.
 
-All flight data is simulated. The protocol is the project's own, loosely modelled on MAVLink, and cannot talk to real aircraft.
+The station speaks its own protocol, loosely modelled on MAVLink. It reaches real MAVLink in two places: it replays ArduPilot telemetry logs (`.tlog`) with its own decoder, and a Python bridge connects it to ArduPilot SITL, the official ArduPilot simulator. All flights are simulated.
 
 ## Data flow
 
@@ -11,10 +11,13 @@ flowchart LR
   model["Flight model<br/>pure TypeScript, seeded, 20 ms steps"]
   model --> worker["Web Worker<br/>static demo"]
   model --> server["Node WebSocket server<br/>npm run sim:server"]
+  sitl["ArduPilot SITL"] -- "MAVLink over UDP" --> bridge["Python bridge<br/>gcs-bridge"]
   worker -- "postMessage (trusted)" --> transport["Transport<br/>worker, WebSocket or replay"]
   server -- "JSON, checked with Zod" --> transport
+  bridge -- "JSON, checked with Zod" --> transport
   transport -- "live only" --> recorder["Flight recorder<br/>last 10 minutes"]
   recorder --> log["Flight log<br/>recording or file"]
+  tlog["MAVLink .tlog file"] -- "decoder in a Web Worker" --> log
   log -- "replay player" --> transport
   transport --> telemetry["Telemetry store<br/>latest messages, ring buffers,<br/>one flush per animation frame"]
   telemetry --> readouts["Readouts<br/>useSyncExternalStore"]
@@ -38,6 +41,8 @@ flowchart LR
 | Mission rules           | `src/mission`                            | Validation shared by the station and the vehicle.                                |
 | Alerts                  | `src/alerts`                             | Alert rules, reconciliation and the watchdog.                                    |
 | Recording and replay    | `src/replay`                             | Flight recorder, log files, the replay player and its controls.                  |
+| MAVLink                 | `src/mavlink`                            | MAVLink 1 and 2 decoder, `.tlog` reader and the translator to station messages.  |
+| ArduPilot bridge        | `bridge`                                 | Python: MAVLink to ArduPilot over UDP, the station protocol over a WebSocket.    |
 | Sessions                | `src/session`                            | Whether the screen shows the live vehicle or a replay, and switching between.    |
 | Languages               | `src/i18n`                               | English and Ukrainian dictionaries, the chosen language and how it is picked.    |
 | Map, charts, instrument | `src/map`, `src/charts`, `src/telemetry` | Rendering that bypasses React for high-rate data.                                |
@@ -48,7 +53,7 @@ Messages are loosely modelled on MAVLink: each type has its own rate, plus a seq
 
 | Message          | Rate      | Contents                                                       |
 | ---------------- | --------- | -------------------------------------------------------------- |
-| `heartbeat`      | 1 Hz      | flight mode, armed state                                       |
+| `heartbeat`      | 1 Hz      | flight mode (the simulator's or ArduCopter's), armed state     |
 | `position`       | 10 Hz     | latitude, longitude, altitude above home, speed, heading       |
 | `attitude`       | 50 Hz     | roll, pitch, yaw                                               |
 | `systemStatus`   | 2 Hz      | battery, GPS fix and satellites, link quality, geofence breach |
@@ -151,6 +156,53 @@ sequenceDiagram
 - **Log files** hold a format name, a version, the save time and the messages. The parser, with Zod, loads only when a file is opened.
 - **The timeline** shows flight modes from heartbeats and marks gaps longer than the link loss timeout as a lost link.
 
+## MAVLink logs
+
+The station opens `.tlog` files, the telemetry logs that Mission Planner, QGroundControl and the bridge write, and replays them like its own recordings. A `.tlog` is a sequence of records, each an 8-byte big-endian timestamp in microseconds followed by one MAVLink frame. The file is parsed in a Web Worker, so a large log does not freeze the page.
+
+- **The decoder** reads MAVLink 1 and 2 frames, checks the X.25 checksum with each message's `CRC_EXTRA`, zero-fills MAVLink 2 payloads that were truncated on the wire, and skips the 13-byte signature of signed frames. It knows the 12 messages the station needs; other frames are skipped by their length without being decoded.
+- **Damaged bytes do not stop the reader.** When a record does not start with a plausible timestamp and a valid frame, the reader moves on one byte at a time until it finds the next one, and counts what it skipped.
+- **The translator** turns ArduPilot messages into station messages: `HEARTBEAT` into the flight mode and armed state, `GLOBAL_POSITION_INT` into position, `ATTITUDE` from radians into degrees, and `SYS_STATUS`, `GPS_RAW_INT` and `FENCE_STATUS` into one system status. It ignores the zero position an autopilot sends before it has a GPS fix.
+- **Missions and geofences are rebuilt from transfers.** A log does not contain "the mission"; it contains the mission protocol. The translator follows `MISSION_COUNT` and `MISSION_ITEM_INT` in either direction and keeps the plan only when the other side answers with an accepted `MISSION_ACK`, so a rejected or incomplete upload never shows up.
+- **Link quality comes from sequence numbers.** Every MAVLink frame carries an 8-bit counter; gaps over the last 2 s give the share of frames that were lost, the way QGroundControl estimates it.
+- **The tests use frames encoded by pymavlink**, the reference MAVLink implementation. A script in `bridge/scripts` writes them, so the decoder is checked against an independent encoder instead of against itself.
+
+## Flying ArduPilot SITL
+
+`gcs-bridge` is a Python program between ArduPilot SITL and the station. It speaks MAVLink to the autopilot over UDP and the station's own protocol over a WebSocket, so the station flies a real autopilot through the same WebSocket transport it uses for the Node simulator. Details and setup are in [bridge/README.md](../bridge/README.md).
+
+```mermaid
+sequenceDiagram
+  actor Operator
+  participant Station
+  participant Bridge as gcs-bridge
+  participant AP as ArduCopter SITL
+
+  Operator->>Station: Upload to vehicle
+  Station->>Bridge: uploadMission
+  Bridge->>AP: MISSION_COUNT
+  loop each item
+    AP->>Bridge: MISSION_REQUEST_INT
+    Bridge->>AP: MISSION_ITEM_INT
+  end
+  AP->>Bridge: MISSION_ACK accepted
+  Bridge-->>Station: commandAck, mission
+  Bridge->>AP: GUIDED, then ARM until ready, then NAV_TAKEOFF 40 m
+  AP-->>Bridge: GLOBAL_POSITION_INT at 36 m
+  Bridge->>AP: AUTO
+  AP-->>Station: flies the route, returns home and lands
+```
+
+- **A station route becomes an ArduCopter mission:** home, a takeoff, the waypoints and a return to launch. A lost message is sent again, and a rejection such as `MAV_MISSION_INVALID_SEQUENCE` reaches the operator as the reason.
+- **ArduCopter decides when it is ready.** Its pre-arm flag in `SYS_STATUS` passes in STABILIZE before the EKF has a position, and a non-zero `GLOBAL_POSITION_INT` appears when the EKF sets its origin, about 20 s before it uses GPS. Arming in GUIDED and enabling a geofence fail until then. The bridge therefore waits for `EKF_STATUS_REPORT` to show an absolute horizontal position, retries arming until the autopilot agrees, and logs the autopilot's `STATUSTEXT` messages. Both quirks were found by flying SITL, not by the fake autopilot in the tests.
+- **Commands run concurrently, changes to the vehicle do not.** A ping does not wait behind an upload, but uploads, mode changes and parameter writes take one lock, so two MAVLink exchanges never interleave.
+- **Ping is a `TIMESYNC` round trip** to the autopilot, so the latency readout includes the whole path, not just the WebSocket.
+- **The simulator controls map to SITL:** link loss holds back the bridge's traffic for 10 s, GPS loss sets `SIM_GPS1_ENABLE` to 0 for 15 s, and the battery drop uses `MAV_CMD_BATTERY_RESET`.
+
+## One protocol, two languages
+
+The Zod schemas in `src/protocol` are the single source of truth. `npm run protocol:schema` exports them as JSON Schema to `bridge/contract`, a station test fails when the committed file is out of date, and the bridge's tests check every message it sends against that file. The bridge's pydantic models for incoming commands are checked to cover the same command types. Changing the protocol on one side without the other fails CI.
+
 ## Languages
 
 The interface is available in English and Ukrainian.
@@ -169,10 +221,12 @@ The interface is available in English and Ukrainian.
 | WebSocket messages              | No       | Parsed and checked against the Zod schemas; anything else is dropped. |
 | Commands arriving at the server | No       | Checked the same way; malformed commands are ignored.                 |
 | Opened flight log files         | No       | Up to 50 MB and 200,000 messages, checked against the Zod schemas.    |
+| Opened `.tlog` files            | No       | Up to 50 MB, frames checked by checksum, parsed in a Web Worker.      |
+| Commands arriving at the bridge | No       | Checked with pydantic; pages from unknown origins are refused.        |
 | `?server=` parameter            | No       | Only `ws:` and `wss:` addresses are used.                             |
 | `?lang=` and the saved language | No       | Only `en` and `uk` are used; anything else falls back.                |
 
-The simulator server listens on `127.0.0.1` only. It does not check the `Origin` header, so any page open in the same browser could connect to it; that is acceptable for a local simulator and would need fixing before exposing it anywhere else.
+The simulator server and the bridge listen on `127.0.0.1` only. The Node simulator server does not check the `Origin` header, so any page open in the same browser could connect to it; that is acceptable for a local simulator. The bridge commands an autopilot, so it accepts only the station's own origins and clients without an `Origin` header.
 
 ## Testing
 
@@ -183,6 +237,9 @@ The simulator server listens on `127.0.0.1` only. It does not check the `Origin`
 | Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                     |
 | End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages.    |
 | Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, and drawing in Ukrainian. |
+| MAVLink       | Vitest with pymavlink fixtures    | Frames, checksums, truncation, signing, damaged logs, mission transfers.        |
+| Bridge        | pytest, ruff, mypy (strict)       | A fake ArduCopter over real UDP and a real WebSocket client, no SITL needed.    |
+| Contract      | JSON Schema from Zod              | Every message the bridge sends is valid for the station.                        |
 
 MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrappers are mocked in component tests and exercised in Playwright instead. The logic they rely on, such as GeoJSON builders and chart windows, has its own unit tests.
 
@@ -196,6 +253,9 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - **Rebuilding instead of snapshots.** Seeking back replays the log from the start. Periodic snapshots of the telemetry store would make long logs faster to seek, at the cost of more code and memory; 10 minutes does not need them.
 - **Own dictionaries instead of an i18n library.** For two languages and about 150 strings, typed objects give compile-time checks with no dependency. With translators, many languages or ICU message files, i18next or FormatJS would pay off.
 - **Mermaid instead of images.** Diagrams live as text next to the code, so they show up in diffs and are easy to keep current.
+- **The bridge translates, the station stays MAVLink-free.** The browser keeps one protocol and one set of transports; MAVLink details, retries and ArduPilot quirks live in one Python process. The cost is that the station can only use what its protocol describes.
+- **Python for the bridge.** pymavlink is the reference MAVLink implementation and most ArduPilot tooling is Python, so the bridge uses the same codec as MAVProxy instead of a port.
+- **An own decoder in the browser.** Replaying logs needs 12 messages; a small decoder keeps the bundle light, works in a Web Worker and is checked against pymavlink.
 
 ## Known limitations
 
@@ -207,3 +267,6 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - The recording lives in memory only. Reloading the page loses it unless it was downloaded, and in worker mode going back to live starts a new flight and a new recording.
 - Seeking back in a log much longer than 10 minutes gets slower, because it replays from the start.
 - The file picker button is drawn by the browser, so it follows the browser's language rather than the station's.
+- A `.tlog` from an autopilot without a battery monitor shows the battery as 100%, because the protocol has no "unknown" battery level.
+- The bridge launches a mission only from the ground when a mission is uploaded; after landing, the next upload flies again. There is no manual control.
+- The simulator controls of the bridge set SITL parameters and do not work on a real autopilot.
