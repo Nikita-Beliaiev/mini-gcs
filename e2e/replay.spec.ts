@@ -53,6 +53,43 @@ test('downloads the recording and opens the file again', async ({ page }) => {
   await expect(readout(page, 'Flight mode')).toContainText('TAKEOFF')
 })
 
+test('opens a MAVLink telemetry log from ArduPilot', async ({ page }) => {
+  await openStation(page)
+  await page.getByRole('tab', { name: 'Flight log' }).click()
+
+  await page.getByLabel('Open a flight log').setInputFiles({
+    name: 'flight.tlog',
+    mimeType: 'application/octet-stream',
+    buffer: await readFile('src/mavlink/fixtures/flight.tlog'),
+  })
+
+  await expect(page.getByRole('status')).toHaveText('Replay')
+  await expect(page.getByRole('region', { name: 'Flight log' })).toContainText('flight.tlog')
+  await page.getByRole('button', { name: 'Pause' }).click()
+  await page.getByRole('slider', { name: 'Replay position' }).press('End')
+  await expect(readout(page, 'Flight mode')).toContainText('AUTO')
+  await expect(readout(page, 'Altitude')).toContainText('12.0')
+})
+
+test('replays a real ArduCopter flight recorded in SITL', async ({ page }) => {
+  await openStation(page)
+  await page.getByRole('tab', { name: 'Flight log' }).click()
+
+  await page.getByRole('button', { name: 'Replay a real ArduPilot flight' }).click()
+
+  await expect(page.getByRole('status')).toHaveText('Replay')
+  await expect(page.getByRole('region', { name: 'Flight log' })).toContainText(
+    'ArduCopter SITL flight',
+  )
+  await page.getByRole('button', { name: 'Pause' }).click()
+  for (let step = 0; step < 12; step += 1) {
+    await page.getByRole('button', { name: 'Forward 10 s' }).click()
+  }
+  await expect(readout(page, 'Flight mode')).toContainText('AUTO')
+  await expect(readout(page, 'Arming')).toContainText('Armed')
+  await expect(readout(page, 'Altitude')).toContainText('40')
+})
+
 test('explains why a file cannot be opened', async ({ page }) => {
   await openStation(page)
   await page.getByRole('tab', { name: 'Flight log' }).click()
