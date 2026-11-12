@@ -1,0 +1,239 @@
+{
+  "frames": [
+    {
+      "label": "HEARTBEAT",
+      "hex": "fd090000000101000000030000000203d9040338a2",
+      "fields": {
+        "mavpackettype": "HEARTBEAT",
+        "type": 2,
+        "autopilot": 3,
+        "base_mode": 217,
+        "custom_mode": 3,
+        "system_status": 4,
+        "mavlink_version": 3
+      }
+    },
+    {
+      "label": "HEARTBEAT plane",
+      "hex": "fd090000000101000000030000000103d9040345ae",
+      "fields": {
+        "mavpackettype": "HEARTBEAT",
+        "type": 1,
+        "autopilot": 3,
+        "base_mode": 217,
+        "custom_mode": 3,
+        "system_status": 4,
+        "mavlink_version": 3
+      }
+    },
+    {
+      "label": "SYS_STATUS",
+      "hex": "fd1f000000010101000000000000000000000000000000003831fa0a000000000000000000000000578803",
+      "fields": {
+        "mavpackettype": "SYS_STATUS",
+        "onboard_control_sensors_present": 0,
+        "onboard_control_sensors_enabled": 0,
+        "onboard_control_sensors_health": 0,
+        "load": 0,
+        "voltage_battery": 12600,
+        "current_battery": 2810,
+        "battery_remaining": 87,
+        "drop_rate_comm": 0,
+        "errors_comm": 0,
+        "errors_count1": 0,
+        "errors_count2": 0,
+        "errors_count3": 0,
+        "errors_count4": 0,
+        "onboard_control_sensors_present_extended": 0,
+        "onboard_control_sensors_enabled_extended": 0,
+        "onboard_control_sensors_health_extended": 0
+      }
+    },
+    {
+      "label": "SYS_STATUS unknown battery",
+      "hex": "fd1f000000010101000001000000010000000100000000000000ffff000000000000000000000000ff77e8",
+      "fields": {
+        "mavpackettype": "SYS_STATUS",
+        "onboard_control_sensors_present": 1,
+        "onboard_control_sensors_enabled": 1,
+        "onboard_control_sensors_health": 1,
+        "load": 0,
+        "voltage_battery": 0,
+        "current_battery": -1,
+        "battery_remaining": -1,
+        "drop_rate_comm": 0,
+        "errors_comm": 0,
+        "errors_count1": 0,
+        "errors_count2": 0,
+        "errors_count3": 0,
+        "errors_count4": 0,
+        "onboard_control_sensors_present_extended": 0,
+        "onboard_control_sensors_enabled_extended": 0,
+        "onboard_control_sensors_health_extended": 0
+      }
+    },
+    {
+      "label": "GPS_RAW_INT",
+      "hex": "fd1e000000010118000001000000000000000100000002000000030000007900c80000000000060a9bc0",
+      "fields": {
+        "mavpackettype": "GPS_RAW_INT",
+        "time_usec": 1,
+        "fix_type": 6,
+        "lat": 1,
+        "lon": 2,
+        "alt": 3,
+        "eph": 121,
+        "epv": 200,
+        "vel": 0,
+        "cog": 0,
+        "satellites_visible": 10,
+        "alt_ellipsoid": 0,
+        "h_acc": 0,
+        "v_acc": 0,
+        "vel_acc": 0,
+        "hdg_acc": 0,
+        "yaw": 0
+      }
+    },
+    {
+      "label": "ATTITUDE",
+      "hex": "fd1000000001011e0000e8030000cdcccc3dcdcc4cbe0000c0bfad38",
+      "fields": {
+        "mavpackettype": "ATTITUDE",
+        "time_boot_ms": 1000,
+        "roll": 0.10000000149011612,
+        "pitch": -0.20000000298023224,
+        "yaw": -1.5,
+        "rollspeed": 0.0,
+        "pitchspeed": 0.0,
+        "yawspeed": 0.0
+      }
+    },
+    {
+      "label": "GLOBAL_POSITION_INT",
+      "hex": "fd1c0000000101210000e803000042cbaf19a2e7f00606b706003c9c000006ff2c0100003930d768",
+      "fields": {
+        "mavpackettype": "GLOBAL_POSITION_INT",
+        "time_boot_ms": 1000,
+        "lat": 430951234,
+        "lon": 116451234,
+        "alt": 440070,
+        "relative_alt": 39996,
+        "vx": -250,
+        "vy": 300,
+        "vz": 0,
+        "hdg": 12345
+      }
+    },
+    {
+      "label": "MISSION_CURRENT",
+      "hex": "fd0600000001012a00000300070002012ccf",
+      "fields": {
+        "mavpackettype": "MISSION_CURRENT",
+        "seq": 3,
+        "total": 7,
+        "mission_state": 2,
+        "mission_mode": 1
+      }
+    },
+    {
+      "label": "MISSION_COUNT",
+      "hex": "fd0500000001012c00000500010101112b",
+      "fields": {
+        "mavpackettype": "MISSION_COUNT",
+        "target_system": 1,
+        "target_component": 1,
+        "count": 5,
+        "mission_type": 1
+      }
+    },
+    {
+      "label": "MISSION_CLEAR_ALL",
+      "hex": "fd0300000001012d0000010101948b",
+      "fields": {
+        "mavpackettype": "MISSION_CLEAR_ALL",
+        "target_system": 1,
+        "target_component": 1,
+        "mission_type": 1
+      }
+    },
+    {
+      "label": "MISSION_ACK",
+      "hex": "fd0400000001012f0000ffbe0001a0e9",
+      "fields": {
+        "mavpackettype": "MISSION_ACK",
+        "target_system": 255,
+        "target_component": 190,
+        "type": 0,
+        "mission_type": 1
+      }
+    },
+    {
+      "label": "MISSION_ITEM_INT",
+      "hex": "fd25000000010149000000004040000000000000000000000000de43b0195a21f106000020420200100001010600012d46",
+      "fields": {
+        "mavpackettype": "MISSION_ITEM_INT",
+        "target_system": 1,
+        "target_component": 1,
+        "seq": 2,
+        "frame": 6,
+        "command": 16,
+        "current": 0,
+        "autocontinue": 1,
+        "param1": 3.0,
+        "param2": 0.0,
+        "param3": 0.0,
+        "param4": 0.0,
+        "x": 430982110,
+        "y": 116466010,
+        "z": 40.0,
+        "mission_type": 0
+      }
+    },
+    {
+      "label": "FENCE_STATUS",
+      "hex": "fd080000000101a20000e80300000200010114cd",
+      "fields": {
+        "mavpackettype": "FENCE_STATUS",
+        "breach_status": 1,
+        "breach_count": 2,
+        "breach_type": 1,
+        "breach_time": 1000,
+        "breach_mitigation": 0
+      }
+    },
+    {
+      "label": "HOME_POSITION",
+      "hex": "fd1c0000000101f2000070c6af19d0e2f006e41a06000000000000000000000000000000803ff726",
+      "fields": {
+        "mavpackettype": "HOME_POSITION",
+        "latitude": 430950000,
+        "longitude": 116450000,
+        "altitude": 400100,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "q": [1.0, 0.0, 0.0, 0.0],
+        "approach_x": 0.0,
+        "approach_y": 0.0,
+        "approach_z": 0.0,
+        "time_usec": 0
+      }
+    },
+    {
+      "label": "VFR_HUD",
+      "hex": "fd1300000001014a00000000803f000000400000dc43000000005a001e2352",
+      "fields": {
+        "mavpackettype": "VFR_HUD",
+        "airspeed": 1.0,
+        "groundspeed": 2.0,
+        "heading": 90,
+        "throttle": 30,
+        "alt": 440.0,
+        "climb": 0.0
+      }
+    }
+  ],
+  "v1Heartbeat": "fe09000101000400000002035903033c04",
+  "signedMissionCurrent": "fd0601000001012a00000400070002011e400101000000000099f648d30239"
+}

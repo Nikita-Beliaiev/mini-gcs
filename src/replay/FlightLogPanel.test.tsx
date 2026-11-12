@@ -24,6 +24,17 @@ describe('FlightLogPanel', () => {
     expect(panel).toHaveTextContent('Commands are not available while replaying a flight.')
   })
 
+  it('names the sample flight in the current language', () => {
+    useLocaleStore.getState().setLocale('uk')
+    const { session } = createTestReplaySession(messages, { kind: 'sample' })
+
+    renderWithSession(<FlightLogPanel />, session)
+
+    expect(screen.getByRole('region', { name: 'Журнал польоту' })).toHaveTextContent(
+      'ДжерелоПоліт ArduCopter SITL',
+    )
+  })
+
   it('describes the recording in Ukrainian', () => {
     useLocaleStore.getState().setLocale('uk')
     const { session } = createTestReplaySession(messages, { kind: 'recording' })

@@ -9,16 +9,37 @@ import {
   flightLogFileName,
   serializeFlightLog,
   type FlightLogError,
+  type FlightLogResult,
 } from './flightLog'
 import { describeFlightLogError } from './flightLogErrorText'
 import { RECORDING_WINDOW_MS } from './flightRecorder'
 import styles from './FlightLogControls.module.css'
 
 const RECORDING_WINDOW_MINUTES = RECORDING_WINDOW_MS / 60_000
+const SAMPLE_TLOG_URL = `${import.meta.env.BASE_URL}samples/arducopter-sitl.tlog`
 
-interface FileError {
-  fileName: string
-  error: FlightLogError
+type OpenError = { kind: 'file'; fileName: string; error: FlightLogError } | { kind: 'sample' }
+
+async function readLogFile(file: File): Promise<FlightLogResult> {
+  const { isTlogFileName, readTlogFile } = await import('./tlogFile')
+  if (isTlogFileName(file.name)) {
+    return readTlogFile(file)
+  }
+  const { readFlightLogFile } = await import('./flightLogFile')
+  return readFlightLogFile(file)
+}
+
+async function readSampleLog(): Promise<FlightLogResult | null> {
+  try {
+    const response = await fetch(SAMPLE_TLOG_URL)
+    if (!response.ok) {
+      return null
+    }
+    const { readTlogFile } = await import('./tlogFile')
+    return await readTlogFile(await response.blob())
+  } catch {
+    return null
+  }
 }
 
 export function FlightLogControls() {
@@ -26,7 +47,8 @@ export function FlightLogControls() {
   const text = messages.flightLog
   const { startReplay } = useSession()
   const { recorder } = useLiveSession()
-  const [fileError, setFileError] = useState<FileError | null>(null)
+  const [openError, setOpenError] = useState<OpenError | null>(null)
+  const [loadingSample, setLoadingSample] = useState(false)
   const recorded = useSyncExternalStore(recorder.subscribe, () =>
     formatDuration(recorder.getDurationMs()),
   )
@@ -45,13 +67,24 @@ export function FlightLogControls() {
   }
 
   async function openFile(file: File): Promise<void> {
-    setFileError(null)
-    const { readFlightLogFile } = await import('./flightLogFile')
-    const result = await readFlightLogFile(file)
+    setOpenError(null)
+    const result = await readLogFile(file)
     if (result.ok) {
       startReplay(result.log, { kind: 'file', name: file.name })
     } else {
-      setFileError({ fileName: file.name, error: result.error })
+      setOpenError({ kind: 'file', fileName: file.name, error: result.error })
+    }
+  }
+
+  async function openSample(): Promise<void> {
+    setOpenError(null)
+    setLoadingSample(true)
+    const result = await readSampleLog()
+    setLoadingSample(false)
+    if (result?.ok) {
+      startReplay(result.log, { kind: 'sample' })
+    } else {
+      setOpenError({ kind: 'sample' })
     }
   }
 
@@ -61,6 +94,12 @@ export function FlightLogControls() {
     if (file) {
       void openFile(file)
     }
+  }
+
+  function describeOpenError(error: OpenError): string {
+    return error.kind === 'sample'
+      ? text.sampleError
+      : text.fileError(error.fileName, describeFlightLogError(error.error, messages))
   }
 
   return (
@@ -91,15 +130,26 @@ export function FlightLogControls() {
         {text.open}
         <input
           type="file"
-          accept=".json,application/json"
+          accept=".json,.tlog,application/json"
           className={styles.fileInput}
           onChange={handleFileChange}
         />
       </label>
+      <p className={styles.note}>{text.formats}</p>
+      <div className={styles.actions}>
+        <button
+          type="button"
+          className={buttonStyles.button}
+          disabled={loadingSample}
+          onClick={() => {
+            void openSample()
+          }}
+        >
+          {text.openSample}
+        </button>
+      </div>
       <p className={styles.error} aria-live="polite">
-        {fileError
-          ? text.fileError(fileError.fileName, describeFlightLogError(fileError.error, messages))
-          : null}
+        {openError ? describeOpenError(openError) : null}
       </p>
     </div>
   )

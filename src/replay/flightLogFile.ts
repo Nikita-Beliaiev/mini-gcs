@@ -5,13 +5,10 @@ import {
   FLIGHT_LOG_FORMAT,
   FLIGHT_LOG_VERSION,
   MAX_FLIGHT_LOG_BYTES,
-  type FlightLog,
+  MAX_FLIGHT_LOG_MESSAGES,
   type FlightLogError,
+  type FlightLogResult,
 } from './flightLog'
-
-export const MAX_FLIGHT_LOG_MESSAGES = 200_000
-
-export type FlightLogResult = { ok: true; log: FlightLog } | { ok: false; error: FlightLogError }
 
 const formatSchema = z.object({ format: z.literal(FLIGHT_LOG_FORMAT) })
 

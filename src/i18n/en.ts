@@ -180,6 +180,11 @@ export const en = {
     replayRecording: 'Replay recording',
     download: 'Download log',
     open: 'Open a flight log',
+    formats:
+      'Mini GCS logs (.json) and MAVLink telemetry logs (.tlog) from ArduPilot, Mission Planner or QGroundControl.',
+    openSample: 'Replay a real ArduPilot flight',
+    sampleName: 'ArduCopter SITL flight',
+    sampleError: 'The sample flight could not be loaded.',
     fileError: (fileName: string, error: string) => `${fileName}: ${error}`,
     recordingSource: 'Recording from this session',
     errors: {
@@ -187,6 +192,7 @@ export const en = {
       notJson: 'The file is not valid JSON.',
       notFlightLog: 'This file is not a Mini GCS flight log.',
       invalid: 'The flight log is damaged or was saved by an unsupported version.',
+      notTlog: 'This file is not a MAVLink telemetry log or has no vehicle data.',
     },
     title: 'Flight log',
     source: 'Source',

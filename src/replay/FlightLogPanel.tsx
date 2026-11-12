@@ -1,11 +1,23 @@
 import { useId } from 'react'
+import type { Messages } from '../i18n/en'
 import { useLocale, useMessages } from '../i18n/localeStore'
 import { useReplaySession } from '../session/sessionContext'
 import { formatDuration, formatUtcTime } from '../telemetry/format'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
-import { flightLogDurationMs } from './flightLog'
+import { flightLogDurationMs, type FlightLogSource } from './flightLog'
 import styles from './FlightLogPanel.module.css'
+
+function describeSource(source: FlightLogSource, text: Messages['flightLog']): string {
+  switch (source.kind) {
+    case 'recording':
+      return text.recordingSource
+    case 'sample':
+      return text.sampleName
+    case 'file':
+      return source.name
+  }
+}
 
 export function FlightLogPanel() {
   const titleId = useId()
@@ -13,7 +25,7 @@ export function FlightLogPanel() {
   const text = useMessages().flightLog
   const { log, source } = useReplaySession()
   const details = [
-    { term: text.source, value: source.kind === 'recording' ? text.recordingSource : source.name },
+    { term: text.source, value: describeSource(source, text) },
     { term: text.saved, value: formatUtcTime(log.savedAt) },
     { term: text.length, value: formatDuration(flightLogDurationMs(log.messages)) },
     { term: text.messages, value: log.messages.length.toLocaleString(locale) },

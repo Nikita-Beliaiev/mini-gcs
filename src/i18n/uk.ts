@@ -195,6 +195,11 @@ export const uk: Messages = {
     replayRecording: 'Відтворити запис',
     download: 'Зберегти журнал',
     open: 'Відкрити журнал польоту',
+    formats:
+      'Журнали Mini GCS (.json) і телеметричні журнали MAVLink (.tlog) з ArduPilot, Mission Planner чи QGroundControl.',
+    openSample: 'Відтворити справжній політ ArduPilot',
+    sampleName: 'Політ ArduCopter SITL',
+    sampleError: 'Не вдалося завантажити приклад польоту.',
     fileError: (fileName, error) => `${fileName}: ${error}`,
     recordingSource: 'Запис цього сеансу',
     errors: {
@@ -202,6 +207,7 @@ export const uk: Messages = {
       notJson: 'Файл не є коректним JSON.',
       notFlightLog: 'Це не журнал польоту Mini GCS.',
       invalid: 'Журнал пошкоджено або збережено непідтримуваною версією.',
+      notTlog: 'Цей файл не є телеметричним журналом MAVLink або в ньому немає даних апарата.',
     },
     title: 'Журнал польоту',
     source: 'Джерело',
