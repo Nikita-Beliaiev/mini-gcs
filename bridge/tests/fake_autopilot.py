@@ -33,6 +33,7 @@ class FakeAutopilotOptions:
     initial_mission: list[LatLon] = field(default_factory=list)
     has_position: bool = True
     arm_refusals: int = 0
+    fence_enable_refusals: int = 0
 
 
 class _Protocol(asyncio.DatagramProtocol):
@@ -237,6 +238,12 @@ class FakeAutopilot:
             self.options.arm_refusals -= 1
             result = mavlink.MAV_RESULT_FAILED
             self.send(self._mav.statustext_encode(mavlink.MAV_SEVERITY_CRITICAL, b"Arm: Not ready"))
+        if (
+            message.command == mavlink.MAV_CMD_DO_FENCE_ENABLE
+            and self.options.fence_enable_refusals
+        ):
+            self.options.fence_enable_refusals -= 1
+            result = mavlink.MAV_RESULT_FAILED
         if result == mavlink.MAV_RESULT_ACCEPTED:
             self._apply_command(message)
         self.send(self._mav.command_ack_encode(message.command, result, 0, 0, 255, 190))

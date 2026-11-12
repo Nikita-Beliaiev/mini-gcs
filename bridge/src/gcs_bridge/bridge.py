@@ -56,6 +56,7 @@ FENCE_TYPE_POLYGON = 4
 DEFAULT_RETRY = Retry(timeout_s=0.8, attempts=3)
 TAKEOFF_ALTITUDE_SHARE = 0.9
 CLOSE_TIMEOUT_S = 2.0
+FENCE_ENABLE_ATTEMPTS = 3
 
 
 class NotReadyError(Exception):
@@ -73,6 +74,7 @@ class BridgeConfig:
     retry: Retry = DEFAULT_RETRY
     launch_timeout_s: float = 180.0
     arm_retry_s: float = 2.0
+    fence_retry_s: float = 0.5
     link_loss_s: float = 10.0
     gps_loss_s: float = 15.0
     battery_drop_percent: float = 32.0
@@ -318,8 +320,19 @@ class Bridge:
             await upload(
                 self._link, control.target, fence_items(polygon), MISSION_TYPE_FENCE, self._retry
             )
-            await control.enable_fence(True)
+            await self._enable_fence(control)
         self._broadcast(self._translator.set_geofence(polygon))
+
+    async def _enable_fence(self, control: VehicleControl) -> None:
+        for attempt in range(1, FENCE_ENABLE_ATTEMPTS + 1):
+            try:
+                await control.enable_fence(True)
+            except CommandRejectedError:
+                if attempt == FENCE_ENABLE_ATTEMPTS:
+                    raise
+                await asyncio.sleep(self._config.fence_retry_s)
+            else:
+                return
 
     async def _clear_geofence(self) -> None:
         control = self._control()

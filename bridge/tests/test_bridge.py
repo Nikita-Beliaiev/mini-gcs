@@ -32,6 +32,7 @@ def bridge_config(**overrides: Any) -> BridgeConfig:
         "retry": Retry(timeout_s=0.2, attempts=3),
         "launch_timeout_s": 5.0,
         "arm_retry_s": 0.05,
+        "fence_retry_s": 0.05,
         "link_loss_s": 0.6,
         "gps_loss_s": 0.3,
         "heartbeat_interval_s": 0.1,
@@ -258,6 +259,26 @@ async def test_uploads_and_clears_a_geofence(system: System) -> None:
     assert system.autopilot.plans[1] == []
     assert not system.autopilot.fence_enabled
     await station.next(lambda message: message["type"] == "geofence" and message["polygon"] is None)
+
+
+@pytest.mark.parametrize("autopilot_options", [FakeAutopilotOptions(fence_enable_refusals=2)])
+async def test_retries_enabling_a_geofence_the_autopilot_is_not_ready_for(system: System) -> None:
+    station = await system.station()
+
+    ack = await station.command({"type": "uploadGeofence", "polygon": FENCE})
+
+    assert ack["accepted"] is True
+    assert system.autopilot.fence_enabled
+
+
+@pytest.mark.parametrize("autopilot_options", [FakeAutopilotOptions(fence_enable_refusals=5)])
+async def test_gives_up_on_a_geofence_the_autopilot_keeps_refusing(system: System) -> None:
+    station = await system.station()
+
+    ack = await station.command({"type": "uploadGeofence", "polygon": FENCE})
+
+    assert ack["accepted"] is False
+    assert ack["reason"] == "MAV_CMD_DO_FENCE_ENABLE: MAV_RESULT_FAILED"
 
 
 async def test_pings_the_autopilot_itself(system: System) -> None:
