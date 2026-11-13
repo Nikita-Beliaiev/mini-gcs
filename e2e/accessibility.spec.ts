@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { openStation, waitForMapAtHome } from './station'
+import { clickMapFromCenter, openStation, waitForMapAtHome } from './station'
+import { serveFlatTerrain } from './terrain'
 
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 
@@ -37,6 +38,23 @@ test('meets WCAG 2.2 AA checks in Ukrainian while drawing a route', async ({ pag
 
   await page.getByRole('button', { name: 'Намалювати маршрут на карті' }).click()
   await expect(page.getByText(/^Малювання маршруту/)).toBeVisible()
+
+  expect(await violations(page)).toEqual([])
+})
+
+test('meets WCAG 2.2 AA checks with a selected point and a terrain profile', async ({ page }) => {
+  await serveFlatTerrain(page, 300)
+  await openStation(page)
+  await waitForMapAtHome(page)
+
+  await page.getByRole('button', { name: 'Draw route on map' }).click()
+  await clickMapFromCenter(page, 120, -80)
+  await page.getByRole('button', { name: 'Done' }).click()
+  await clickMapFromCenter(page, -100, 60)
+  await expect(page.getByRole('region', { name: 'Selected point' })).toBeVisible()
+  await expect(
+    page.getByRole('figure', { name: 'Terrain profile' }).locator('canvas'),
+  ).toBeVisible()
 
   expect(await violations(page)).toEqual([])
 })
