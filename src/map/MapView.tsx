@@ -22,11 +22,13 @@ import {
 } from './mapData'
 import { addMapLayers, setSourceData, SOURCES } from './mapLayers'
 import { createDraftMarkers, createHomeMarker, createVehicleMarker, placeMarker } from './markers'
+import { addTerrainLayers, showTerrainSurface, TERRAIN_3D_PITCH } from './terrainLayers'
 import styles from './MapView.module.css'
 
 export interface MapViewProps {
   followVehicle: boolean
   showPlanning: boolean
+  terrain3d: boolean
   onUserPan: () => void
 }
 
@@ -36,12 +38,19 @@ const WORLD_VIEW: CameraOptions = { center: [0, 20], zoom: 1.5 }
 
 setWorkerUrl(maplibreWorkerUrl)
 
-export default function MapView({ followVehicle, showPlanning, onUserPan }: MapViewProps) {
+export default function MapView({
+  followVehicle,
+  showPlanning,
+  terrain3d,
+  onUserPan,
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const lastViewRef = useRef<CameraOptions | null>(null)
+  const loadedMapRef = useRef<MapLibreMap | null>(null)
   const messages = useMessages()
   const { telemetry } = useGroundStation()
   const isFollowingVehicle = useEffectEvent(() => followVehicle)
+  const isTerrain3d = useEffectEvent(() => terrain3d)
   const handleUserPan = useEffectEvent(() => {
     onUserPan()
   })
@@ -156,7 +165,10 @@ export default function MapView({ followVehicle, showPlanning, onUserPan }: MapV
     }
 
     map.on('load', () => {
+      addTerrainLayers(map)
+      showTerrainSurface(map, isTerrain3d())
       addMapLayers(map)
+      loadedMapRef.current = map
       renderTelemetry()
       unsubscribers.push(telemetry.subscribe(renderTelemetry))
       if (!showPlanning) {
@@ -192,6 +204,7 @@ export default function MapView({ followVehicle, showPlanning, onUserPan }: MapV
     })
 
     return () => {
+      loadedMapRef.current = null
       lastViewRef.current = centeredOnHome
         ? {
             center: map.getCenter(),
@@ -208,6 +221,15 @@ export default function MapView({ followVehicle, showPlanning, onUserPan }: MapV
       map.remove()
     }
   }, [telemetry, showPlanning, messages])
+
+  useEffect(() => {
+    const map = loadedMapRef.current
+    if (!map) {
+      return
+    }
+    showTerrainSurface(map, terrain3d)
+    map.easeTo({ pitch: terrain3d ? TERRAIN_3D_PITCH : 0 })
+  }, [terrain3d])
 
   return <div ref={containerRef} className={styles.map} />
 }

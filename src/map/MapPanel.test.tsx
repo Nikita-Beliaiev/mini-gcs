@@ -7,9 +7,10 @@ import { MapPanel } from './MapPanel'
 import type { MapViewProps } from './MapView'
 
 vi.mock('./MapView', () => ({
-  default: ({ followVehicle, showPlanning, onUserPan }: MapViewProps) => (
+  default: ({ followVehicle, showPlanning, terrain3d, onUserPan }: MapViewProps) => (
     <div>
       <p>{followVehicle ? 'Map follows the vehicle' : 'Map is free'}</p>
+      <p>{terrain3d ? 'Terrain in 3D' : 'Flat map'}</p>
       <p>{showPlanning ? 'Plans shown' : 'Plans hidden'}</p>
       <button type="button" onClick={onUserPan}>
         Drag map
@@ -55,6 +56,22 @@ describe('MapPanel', () => {
       'false',
     )
     expect(screen.getByText('Map is free')).toBeInTheDocument()
+  })
+
+  it('shows the terrain in 3D on request', async () => {
+    const user = userEvent.setup()
+    renderWithStation(<MapPanel showPlanning />)
+    const terrain3d = screen.getByRole('button', { name: '3D terrain' })
+    await screen.findByText('Flat map')
+
+    expect(terrain3d).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(terrain3d)
+    expect(terrain3d).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText('Terrain in 3D')).toBeInTheDocument()
+
+    await user.click(terrain3d)
+    expect(screen.getByText('Flat map')).toBeInTheDocument()
   })
 
   it('tells the map whether to show the plans', async () => {

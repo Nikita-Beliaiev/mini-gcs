@@ -63,6 +63,7 @@ export const en = {
   map: {
     title: 'Map',
     followVehicle: 'Follow vehicle',
+    terrain3d: '3D terrain',
     loading: 'Loading map…',
     vehicle: 'Vehicle',
     home: 'Home',

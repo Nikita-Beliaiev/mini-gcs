@@ -12,6 +12,12 @@
   gap: 12px;
 }
 
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .placeholder {
   display: grid;
   place-items: center;

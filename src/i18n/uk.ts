@@ -76,6 +76,7 @@ export const uk: Messages = {
   map: {
     title: 'Карта',
     followVehicle: 'Стежити за апаратом',
+    terrain3d: 'Рельєф 3D',
     loading: 'Завантаження карти…',
     vehicle: 'Апарат',
     home: 'Точка старту',

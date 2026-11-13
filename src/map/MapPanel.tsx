@@ -18,6 +18,7 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
   const text = useMessages().map
   const titleId = useId()
   const [followVehicle, setFollowVehicle] = useState(false)
+  const [terrain3d, setTerrain3d] = useState(false)
   const isDrawing = usePlanningStore((state) => showPlanning && state.editMode !== null)
 
   return (
@@ -26,22 +27,35 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
         <h2 id={titleId} className={panelStyles.title}>
           {text.title}
         </h2>
-        <button
-          type="button"
-          className={buttonStyles.button}
-          aria-pressed={followVehicle}
-          onClick={() => {
-            setFollowVehicle((following) => !following)
-          }}
-        >
-          {text.followVehicle}
-        </button>
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={buttonStyles.button}
+            aria-pressed={terrain3d}
+            onClick={() => {
+              setTerrain3d((shown) => !shown)
+            }}
+          >
+            {text.terrain3d}
+          </button>
+          <button
+            type="button"
+            className={buttonStyles.button}
+            aria-pressed={followVehicle}
+            onClick={() => {
+              setFollowVehicle((following) => !following)
+            }}
+          >
+            {text.followVehicle}
+          </button>
+        </div>
       </div>
       <div className={styles.mapArea} data-drawing={isDrawing}>
         <Suspense fallback={<p className={styles.placeholder}>{text.loading}</p>}>
           <MapView
             followVehicle={followVehicle}
             showPlanning={showPlanning}
+            terrain3d={terrain3d}
             onUserPan={() => {
               setFollowVehicle(false)
             }}
