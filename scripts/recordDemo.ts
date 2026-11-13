@@ -6,7 +6,7 @@ import { encodeGif, type Frame } from './gif'
 const OUTPUT_PATH = 'docs/demo.gif'
 const PORT = 4176
 const VIEWPORT = { width: 1280, height: 1000 }
-const FRAME_INTERVAL_MS = 160
+const FRAME_INTERVAL_MS = 200
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -91,10 +91,18 @@ async function playScenario(page: Page): Promise<void> {
   await clickMap(page, 230, 110)
   await clickMap(page, 40, 160)
   await delay(600)
+  await clickLocator(page, page.getByRole('button', { name: 'Done' }))
+  await delay(400)
 
   await clickLocator(page, page.getByRole('button', { name: 'Upload to vehicle' }))
   await page.getByText('Accepted by the vehicle').waitFor()
-  await delay(3500)
+  await delay(1500)
+
+  await clickMap(page, -170, 110)
+  await delay(600)
+  await clickLocator(page, page.getByRole('button', { name: 'Point camera here' }))
+  await page.getByText('Tracking a point').waitFor()
+  await delay(3000)
 
   await clickLocator(page, page.getByRole('tab', { name: 'Simulator' }))
   await delay(600)
