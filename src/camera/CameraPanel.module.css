@@ -131,3 +131,34 @@
   font-size: 11px;
   color: var(--color-text-muted);
 }
+
+.pick {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: crosshair;
+}
+
+.pick:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.controls {
+  display: grid;
+  gap: 2px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.status {
+  min-height: 1.45em;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}

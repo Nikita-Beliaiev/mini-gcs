@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { LatLon } from '../geo/geo'
 import { useLocaleStore } from '../i18n/localeStore'
-import { homeMessage, positionMessage } from '../test/messages'
+import { cameraMessage, commandAckMessage, homeMessage, positionMessage } from '../test/messages'
 import { renderWithStation } from '../test/render'
 import { flatTerrain } from '../test/terrain'
 import { useMapPointsStore } from './mapPointsStore'
@@ -23,7 +23,7 @@ function detail(term: string): Element | null {
 
 function renderCard() {
   const user = userEvent.setup()
-  const rendered = renderWithStation(<PointCard />, { terrain: flatTerrain(330) })
+  const rendered = renderWithStation(<PointCard canPointCamera />, { terrain: flatTerrain(330) })
   act(() => {
     rendered.transport.receive(homeMessage({ lat: 43.095, lon: 11.645 }))
     rendered.transport.receive(positionMessage({ lat: 43.1, lon: 11.62 }))
@@ -103,5 +103,37 @@ describe('PointCard', () => {
     expect(screen.getByRole('region', { name: 'Вибрана точка' })).toBeInTheDocument()
     expect(detail('Від старту')).toHaveTextContent('556 м, 000°')
     expect(screen.getByRole('button', { name: 'Копіювати координати' })).toBeInTheDocument()
+  })
+
+  it('points the camera at the selected point', async () => {
+    const { user, transport } = renderCard()
+    act(() => {
+      transport.setStatus('connected')
+      transport.receive(cameraMessage())
+    })
+    select(POINT)
+
+    await user.click(screen.getByRole('button', { name: 'Point camera here' }))
+    expect(transport.sent[0]?.command).toEqual({ type: 'lookAtPoint', ...POINT, altitudeM: 0 })
+    await act(async () => {
+      transport.receive(
+        commandAckMessage({
+          commandId: transport.sent[0]?.commandId,
+          command: 'lookAtPoint',
+          accepted: true,
+        }),
+      )
+      await Promise.resolve()
+    })
+
+    expect(screen.getByText('The camera keeps this point in view')).toBeInTheDocument()
+  })
+
+  it('offers the camera only when the vehicle has one', () => {
+    renderCard()
+
+    select(POINT)
+
+    expect(screen.queryByRole('button', { name: 'Point camera here' })).not.toBeInTheDocument()
   })
 })

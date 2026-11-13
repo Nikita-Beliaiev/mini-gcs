@@ -92,6 +92,8 @@ export const uk: Messages = {
       copiedCoordinates: 'Координати скопійовано',
       copiedMgrs: 'MGRS скопійовано',
       copyFailed: 'Не вдалося скопіювати в буфер обміну',
+      pointCamera: 'Навести камеру сюди',
+      cameraPointed: 'Камера утримує цю точку',
       close: 'Закрити',
     },
     loading: 'Завантаження карти…',
@@ -119,6 +121,16 @@ export const uk: Messages = {
     pan: 'Поворот',
     range: (distance) => `Дальність ${distance}`,
     aboveHorizon: 'Центр кадру над горизонтом',
+    pick: 'Вибрати точку на виді камери',
+    controls: 'Керування камерою',
+    moves: {
+      tiltUp: 'Нахилити вгору',
+      tiltDown: 'Нахилити вниз',
+      panLeft: 'Повернути ліворуч',
+      panRight: 'Повернути праворуч',
+      lookAhead: 'Дивитися вперед',
+      lookDown: 'Дивитися вниз',
+    },
   },
   charts: {
     title: (seconds) =>

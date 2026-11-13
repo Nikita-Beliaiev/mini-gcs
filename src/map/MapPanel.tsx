@@ -77,8 +77,8 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
           />
         </Suspense>
         <CursorReadout />
-        <PointCard />
-        {showCamera ? <CameraPanel /> : null}
+        <PointCard canPointCamera={showPlanning} />
+        {showCamera ? <CameraPanel canControl={showPlanning} /> : null}
         <AlertList />
         {showPlanning ? <DrawingBanner /> : null}
       </div>

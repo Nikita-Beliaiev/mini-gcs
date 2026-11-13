@@ -1,8 +1,10 @@
 import { useId, useState } from 'react'
+import { describeCameraCommand } from '../camera/cameraCommandText'
+import { groundHeightAboveHome } from '../camera/cameraGeometry'
 import type { LatLon } from '../geo/geo'
 import { formatMgrs } from '../geo/mgrs'
 import { useMessages } from '../i18n/localeStore'
-import { useTelemetry } from '../station/stationContext'
+import { useConnectionStatus, useGroundStation, useTelemetry } from '../station/stationContext'
 import {
   formatCoordinates,
   formatElevation,
@@ -14,20 +16,25 @@ import buttonStyles from '../ui/button.module.css'
 import { useMapPointsStore } from './mapPointsStore'
 import styles from './PointCard.module.css'
 
-type CopyResult = 'copiedCoordinates' | 'copiedMgrs' | 'copyFailed'
-
-interface CopyStatus {
+interface PointStatus {
   point: LatLon
-  result: CopyResult
+  message: string
 }
 
-export function PointCard() {
+interface PointCardProps {
+  canPointCamera: boolean
+}
+
+export function PointCard({ canPointCamera }: PointCardProps) {
   const messages = useMessages()
   const text = messages.map.point
   const titleId = useId()
+  const station = useGroundStation()
+  const isConnected = useConnectionStatus() === 'connected'
   const selected = useMapPointsStore((state) => state.selected)
   const clearSelection = useMapPointsStore((state) => state.clearSelection)
   const terrain = useTerrain()
+  const hasCamera = useTelemetry((state) => state.camera !== null)
   const fromHome = useTelemetry((state) =>
     state.home && selected ? formatRangeAndBearing(state.home, selected, messages.units) : NO_VALUE,
   )
@@ -36,7 +43,7 @@ export function PointCard() {
       ? formatRangeAndBearing(state.position, selected, messages.units)
       : NO_VALUE,
   )
-  const [copyStatus, setCopyStatus] = useState<CopyStatus | null>(null)
+  const [status, setStatus] = useState<PointStatus | null>(null)
 
   if (!selected) {
     return null
@@ -44,13 +51,20 @@ export function PointCard() {
   const coordinates = formatCoordinates(selected)
   const mgrs = formatMgrs(selected)
 
-  async function copy(value: string, point: LatLon, success: CopyResult): Promise<void> {
+  async function copy(value: string, point: LatLon, success: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(value)
-      setCopyStatus({ point, result: success })
+      setStatus({ point, message: success })
     } catch {
-      setCopyStatus({ point, result: 'copyFailed' })
+      setStatus({ point, message: text.copyFailed })
     }
+  }
+
+  async function pointCamera(point: LatLon): Promise<void> {
+    const { home } = station.telemetry.getSnapshot()
+    const altitudeM = home ? groundHeightAboveHome(terrain, home)(point) : 0
+    const result = await station.sendCommand({ type: 'lookAtPoint', ...point, altitudeM })
+    setStatus({ point, message: describeCameraCommand(result, text.cameraPointed, messages) })
   }
 
   return (
@@ -72,7 +86,7 @@ export function PointCard() {
               type="button"
               className={buttonStyles.button}
               aria-label={text.copyCoordinates}
-              onClick={() => void copy(coordinates, selected, 'copiedCoordinates')}
+              onClick={() => void copy(coordinates, selected, text.copiedCoordinates)}
             >
               {text.copy}
             </button>
@@ -87,7 +101,7 @@ export function PointCard() {
                 type="button"
                 className={buttonStyles.button}
                 aria-label={text.copyMgrs}
-                onClick={() => void copy(mgrs, selected, 'copiedMgrs')}
+                onClick={() => void copy(mgrs, selected, text.copiedMgrs)}
               >
                 {text.copy}
               </button>
@@ -109,8 +123,18 @@ export function PointCard() {
           <dd className={styles.value}>{fromVehicle}</dd>
         </div>
       </dl>
+      {canPointCamera && hasCamera ? (
+        <button
+          type="button"
+          className={buttonStyles.button}
+          disabled={!isConnected}
+          onClick={() => void pointCamera(selected)}
+        >
+          {text.pointCamera}
+        </button>
+      ) : null}
       <p className={styles.status} aria-live="polite">
-        {copyStatus?.point === selected ? text[copyStatus.result] : null}
+        {status?.point === selected ? status.message : null}
       </p>
     </section>
   )
