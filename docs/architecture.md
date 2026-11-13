@@ -21,7 +21,7 @@ flowchart LR
   log -- "replay player" --> transport
   transport --> telemetry["Telemetry store<br/>latest messages, ring buffers,<br/>one flush per animation frame"]
   telemetry --> readouts["Readouts<br/>useSyncExternalStore"]
-  telemetry --> direct["Map, charts, attitude indicator<br/>direct subscriptions"]
+  telemetry --> direct["Map, charts, attitude indicator,<br/>camera view: direct subscriptions"]
   telemetry --> monitor["Alert monitor<br/>rules and a 1 s watchdog"]
   monitor --> alertStore["Alert store<br/>Zustand"]
   planner["Mission and geofence planner<br/>Zustand"] --> sender["Command sender<br/>ids, acknowledgements, 3 s timeout"]
@@ -29,6 +29,7 @@ flowchart LR
   tiles["Terrain tiles<br/>Terrarium PNG over HTTPS"] --> terrain["Terrain sampler<br/>tile cache, interpolation"]
   terrain --> readouts
   terrain --> planner
+  terrain --> direct
 ```
 
 | Module                  | Folder                                   | Responsibility                                                                   |
@@ -50,6 +51,7 @@ flowchart LR
 | Languages               | `src/i18n`                               | English and Ukrainian dictionaries, the chosen language and how it is picked.    |
 | Terrain                 | `src/terrain`                            | Terrain tiles, elevation sampling, altitudes and route profiles.                 |
 | Coordinates             | `src/geo`                                | Distances, bearings, point-in-polygon and MGRS references.                       |
+| Camera                  | `src/camera`                             | Camera geometry on the terrain, the synthetic view, its HUD and controls.        |
 | Map, charts, instrument | `src/map`, `src/charts`, `src/telemetry` | Rendering that bypasses React for high-rate data.                                |
 
 ## Protocol
@@ -66,9 +68,10 @@ Messages are loosely modelled on MAVLink: each type has its own rate, plus a seq
 | `mission`        | 0.2 Hz    | id and waypoints of the mission on the vehicle                 |
 | `missionCurrent` | 1 Hz      | waypoint the vehicle is flying to                              |
 | `geofence`       | 0.2 Hz    | geofence polygon on the vehicle, or none                       |
+| `camera`         | 10 Hz     | gimbal tilt and pan, fields of view, the point it looks at     |
 | `commandAck`     | on demand | whether a command was accepted, and why not                    |
 
-Commands from the station: `uploadMission`, `uploadGeofence`, `clearGeofence` and `ping` for the vehicle, and `simulateFault` for the simulator itself. `mission` and `geofence` are also sent right after a change.
+Commands from the station: `uploadMission`, `uploadGeofence`, `clearGeofence`, `pointCamera`, `lookAtPoint` and `ping` for the vehicle, and `simulateFault` for the simulator itself. `mission` and `geofence` are also sent right after a change.
 
 ## Keeping 50 Hz telemetry smooth
 
@@ -124,6 +127,7 @@ stateDiagram-v2
 - Roll is the bank angle a turn needs, `atan(v·ω/g)`. Pitch leans forward to accelerate and against drag, both limited to 35°.
 - Noise comes from a seeded generator, so a test with a fixed seed always sees the same flight.
 - Faults are injected on purpose: a 10 s link loss drops every message and vehicle command, a GPS loss leaves two satellites for 15 s, a battery drop sets the charge to 32%.
+- The camera sits on a stabilised gimbal: its tilt is measured from the horizon, its pan from the vehicle heading, and it turns at most 90°/s. Looking at a point, it aims at the point's height above home, which the station sends from the terrain.
 
 ## Recording and replay
 
@@ -219,6 +223,28 @@ The station knows the ground under the vehicle and under a planned route. The he
 - **On the map**, a hillshade sits under roads, water and labels. The 3D view raises the terrain with 1.5 times exaggeration for the eye; the numbers never use it.
 - **Coordinates.** A readout follows the cursor with latitude and longitude, the MGRS reference and the ground elevation. Clicking the map outside drawing marks a point and opens a card with copy buttons and the distance and bearing from home and from the vehicle. MGRS references come from the `mgrs` library of the proj4js project, to the metre.
 
+## The camera
+
+The simulated vehicle carries a gimbal camera. The station shows where it looks on the map, draws what it would see, and lets the operator steer it. The camera message names its fields after the MISB ST 0601 sensor fields that video metadata uses: sensor relative azimuth and elevation, horizontal and vertical field of view, frame centre.
+
+`mermaid
+flowchart LR
+  camera["camera message<br/>tilt, pan, fields of view"] --> pose["Camera pose<br/>position, height, azimuth, tilt"]
+  position["position message"] --> pose
+  pose --> ray["Ray through a frame point"]
+  ray -- "10 m steps over the terrain,<br/>then bisection" --> hit["Ground point and range"]
+  hit --> footprint["Footprint and line of sight<br/>on the map"]
+  hit --> hud["HUD: MGRS and range<br/>of the frame centre"]
+  hit --> pick["Point clicked in the view"]
+  pose --> video["Synthetic view<br/>second MapLibre camera"]
+`
+
+- **One geometry for everything.** Pure functions turn the vehicle position, its heading and the gimbal angles into a ray for any point of the frame and march it over the terrain in 10 m steps, refining the hit by bisection. The footprint corners, the frame centre in the HUD and a point clicked in the view all come from the same functions, which are unit tested on flat ground, a cliff and a step. Corners that see the sky are drawn 1.5 km out.
+- **The synthetic view is a second map.** A MapLibre map with the Liberty style, terrain at true scale and a sky puts its camera at the vehicle's position and altitude above sea level with `calculateCameraOptionsFromCameraLngLatAltRotation`, turned to the gimbal's bearing and tilt, with the camera's vertical field of view and a 16:9 frame. Its centre is not clamped to the ground, so the camera stays where the vehicle is. In the browser, the map's own ground point under the centre of the view closely matches the geometry's frame centre. The view is labelled as synthetic: it stands in for a video stream, which would carry the same angles as metadata.
+- **Picking and pointing.** Clicking the view marks the ground point under the cursor, and Enter marks the point under the crosshair. The point card can point the camera at a selected point; the vehicle then keeps it in view while flying. Manual tilt and pan buttons move in 10° steps from the reported angles and end the tracking.
+- **Replays include the camera.** Camera messages are recorded like any other, so a replay shows the same view and footprint, without the controls.
+- **The bridge does not control a camera yet.** It understands the camera commands, so the protocol stays in step, and answers that it does not support them. ArduPilot SITL can simulate a mount, which would be the next step.
+
 ## Languages
 
 The interface is available in English and Ukrainian.
@@ -247,16 +273,16 @@ The simulator server and the bridge listen on `127.0.0.1` only. The Node simulat
 
 ## Testing
 
-| Layer         | Tool                              | What it covers                                                                                                           |
-| ------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Logic         | Vitest                            | Geometry, MGRS, simulator flights with fixed seeds, stores, rules, backoff, protocol, terrain sampling, route profiles.  |
-| Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names, in both languages.                                               |
-| Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                                                              |
-| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages, terrain from a stub tile.                   |
-| Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, drawing in Ukrainian, and with a point card and a terrain profile. |
-| MAVLink       | Vitest with pymavlink fixtures    | Frames, checksums, truncation, signing, damaged logs, mission transfers.                                                 |
-| Bridge        | pytest, ruff, mypy (strict)       | A fake ArduCopter over real UDP and a real WebSocket client, no SITL needed.                                             |
-| Contract      | JSON Schema from Zod              | Every message the bridge sends is valid for the station.                                                                 |
+| Layer         | Tool                              | What it covers                                                                                                                           |
+| ------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Logic         | Vitest                            | Geometry, MGRS, simulator flights with fixed seeds, stores, rules, backoff, protocol, terrain sampling, route profiles, camera geometry. |
+| Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names, in both languages.                                                               |
+| Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                                                                              |
+| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages, terrain from a stub tile, the camera.                       |
+| Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, drawing in Ukrainian, and with a point card and a terrain profile.                 |
+| MAVLink       | Vitest with pymavlink fixtures    | Frames, checksums, truncation, signing, damaged logs, mission transfers.                                                                 |
+| Bridge        | pytest, ruff, mypy (strict)       | A fake ArduCopter over real UDP and a real WebSocket client, no SITL needed.                                                             |
+| Contract      | JSON Schema from Zod              | Every message the bridge sends is valid for the station.                                                                                 |
 
 MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrappers are mocked in component tests and exercised in Playwright instead. The logic they rely on, such as GeoJSON builders and chart windows, has its own unit tests. Decoding a terrain tile needs a real canvas too, so component tests use a fake terrain and Playwright serves a flat tile built with pngjs, which keeps the end-to-end tests off the network for terrain and gives exact altitudes.
 
@@ -273,6 +299,8 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - **The bridge translates, the station stays MAVLink-free.** The browser keeps one protocol and one set of transports; MAVLink details, retries and ArduPilot quirks live in one Python process. The cost is that the station can only use what its protocol describes.
 - **Python for the bridge.** pymavlink is the reference MAVLink implementation and most ArduPilot tooling is Python, so the bridge uses the same codec as MAVProxy instead of a port.
 - **An own decoder in the browser.** Replaying logs needs 12 messages; a small decoder keeps the bundle light, works in a Web Worker and is checked against pymavlink.
+- **A synthetic view instead of video.** A real video stream needs imagery of the area; free aerial imagery detailed enough for a camera 80 m up, under a licence that allows this use, is not available. Drawing the view from map and terrain data keeps the demo self-contained and still exercises the geometry a real video overlay needs.
+- **Own ray casting instead of the view's `unproject`.** The footprint, the HUD and picking work without the second map, in tests and when the camera window is hidden, and give one answer everywhere.
 - **An own terrain sampler instead of the map's terrain.** The map's terrain heights depend on what it has drawn; the sampler gives the same height wherever it is asked, is a few dozen lines and runs in unit tests. MGRS, with its zones, bands and 100 km squares, comes from a small, well tested library instead.
 - **One mission altitude.** The station's profile, the simulator and the bridge all use 80 m above home. The protocol does not carry altitudes, so they are kept in step by a shared constant in TypeScript and the bridge's default.
 
@@ -292,3 +320,5 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - The terrain is a 25 to 30 m model of the ground without trees or buildings, so the profile keeps a 20 m margin and is a planning aid, not obstacle avoidance.
 - Altitude above sea level is the terrain height at home plus the altitude above home, not the GPS altitude, so it can differ from the autopilot's by a few metres.
 - The simulator and the bridge fly at a fixed altitude above home and do not follow the terrain.
+- The camera has no zoom, and the gimbal ignores the vehicle's roll and pitch as a stabilised one would.
+- The camera exists only in the station's simulator: the bridge rejects camera commands, and MAVLink logs carry no camera data the station reads.

@@ -67,6 +67,8 @@ A recorded `.tlog` opens in the station's replay, like logs from Mission Planner
 - **Link quality** comes from gaps in the autopilot's frame sequence numbers over the last 2 s.
 - **Commands run concurrently**, so a ping is not stuck behind an upload, but everything that changes the vehicle takes one lock, so two uploads never interleave.
 
+The station's camera controls are not supported yet: the bridge understands `pointCamera` and `lookAtPoint` and answers that it does not control a camera.
+
 The station's simulator controls map to SITL:
 
 | Station control | In SITL                                                                  |
