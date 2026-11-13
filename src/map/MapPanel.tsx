@@ -8,6 +8,7 @@ import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
 import { CursorReadout } from './CursorReadout'
 import styles from './MapPanel.module.css'
+import { PointCard } from './PointCard'
 
 const MapView = lazy(() => import('./MapView'))
 
@@ -63,6 +64,7 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
           />
         </Suspense>
         <CursorReadout />
+        <PointCard />
         <AlertList />
         {showPlanning ? <DrawingBanner /> : null}
       </div>

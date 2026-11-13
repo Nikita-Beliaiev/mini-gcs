@@ -12,6 +12,7 @@ import {
   formatGps,
   formatHeading,
   formatLatency,
+  formatRangeAndBearing,
   formatSignedAngle,
   formatUtcTime,
   NO_VALUE,
@@ -112,6 +113,15 @@ describe('formatElevation', () => {
   it('rounds to the metre and shows a dash without terrain', () => {
     expect(formatElevation(302.6, en.units)).toBe('303 m')
     expect(formatElevation(null, en.units)).toBe('—')
+  })
+})
+
+describe('formatRangeAndBearing', () => {
+  it('gives the distance and the bearing from one point to another', () => {
+    const home = { lat: 43.095, lon: 11.645 }
+
+    expect(formatRangeAndBearing(home, { lat: 43.1, lon: 11.645 }, en.units)).toBe('556 m, 000°')
+    expect(formatRangeAndBearing(home, { lat: 43.095, lon: 11.62 }, en.units)).toBe('2.0 km, 270°')
   })
 })
 

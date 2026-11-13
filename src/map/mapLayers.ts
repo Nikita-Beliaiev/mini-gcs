@@ -8,6 +8,7 @@ export const SOURCES = {
   draftMissionLine: 'draft-mission-line',
   trail: 'trail',
   vehicleMissionPoints: 'vehicle-mission-points',
+  selectedPoint: 'selected-point',
 } as const
 
 export type SourceId = (typeof SOURCES)[keyof typeof SOURCES]
@@ -19,6 +20,7 @@ const COLORS = {
   draft: '#c084fc',
   geofence: '#34d399',
   breach: '#f87171',
+  selectedPoint: '#fbbf24',
   outline: '#0b0f14',
 }
 
@@ -89,6 +91,17 @@ export function addMapLayers(map: MapLibreMap): void {
       ],
       'circle-stroke-width': 1.5,
       'circle-stroke-color': COLORS.outline,
+    },
+  })
+  map.addLayer({
+    id: SOURCES.selectedPoint,
+    type: 'circle',
+    source: SOURCES.selectedPoint,
+    paint: {
+      'circle-radius': 6,
+      'circle-color': 'rgba(0, 0, 0, 0)',
+      'circle-stroke-width': 2.5,
+      'circle-stroke-color': COLORS.selectedPoint,
     },
   })
 }

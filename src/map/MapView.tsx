@@ -156,9 +156,14 @@ export default function MapView({
       geofenceDraftMarkers.update(points)
     }
 
+    function renderSelectedPoint(point: LatLon | null): void {
+      setSourceData(map, SOURCES.selectedPoint, createPointData(point ? [point] : [], null))
+    }
+
     function applyEditMode(mode: PlanTarget | null): void {
       map.getCanvas().style.cursor = mode ? 'crosshair' : ''
       if (mode) {
+        useMapPointsStore.getState().clearSelection()
         map.doubleClickZoom.disable()
       } else {
         map.doubleClickZoom.enable()
@@ -172,6 +177,14 @@ export default function MapView({
       loadedMapRef.current = map
       renderTelemetry()
       unsubscribers.push(telemetry.subscribe(renderTelemetry))
+      renderSelectedPoint(useMapPointsStore.getState().selected)
+      unsubscribers.push(
+        useMapPointsStore.subscribe((state, previous) => {
+          if (state.selected !== previous.selected) {
+            renderSelectedPoint(state.selected)
+          }
+        }),
+      )
       if (!showPlanning) {
         return
       }
@@ -195,9 +208,12 @@ export default function MapView({
       )
     })
     map.on('click', (event) => {
+      const point = { lat: event.lngLat.lat, lon: event.lngLat.lng }
       const { editMode, addPoint } = usePlanningStore.getState()
       if (showPlanning && editMode) {
-        addPoint(editMode, { lat: event.lngLat.lat, lon: event.lngLat.lng })
+        addPoint(editMode, point)
+      } else {
+        useMapPointsStore.getState().select(point)
       }
     })
     map.on('mousemove', (event) => {

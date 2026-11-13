@@ -1,4 +1,4 @@
-import { normalizeDegrees, type LatLon } from '../geo/geo'
+import { bearingDegrees, distanceMeters, normalizeDegrees, type LatLon } from '../geo/geo'
 import type { Messages } from '../i18n/en'
 import type { GpsFix, SystemStatusMessage } from '../protocol/telemetry'
 
@@ -62,6 +62,10 @@ export function formatDistance(meters: number | undefined, units: Messages['unit
 
 export function formatElevation(meters: number | null, units: Messages['units']): string {
   return meters === null ? NO_VALUE : `${String(Math.round(meters))} ${units.meters}`
+}
+
+export function formatRangeAndBearing(from: LatLon, to: LatLon, units: Messages['units']): string {
+  return `${formatDistance(distanceMeters(from, to), units)}, ${formatHeading(bearingDegrees(from, to))}`
 }
 
 export function formatCoordinates(point: LatLon): string {
