@@ -2,6 +2,8 @@ import type { GeoJSON } from 'geojson'
 import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl'
 
 export const SOURCES = {
+  cameraFootprint: 'camera-footprint',
+  cameraSight: 'camera-sight',
   vehicleGeofence: 'vehicle-geofence',
   draftGeofence: 'draft-geofence',
   vehicleMissionLine: 'vehicle-mission-line',
@@ -21,6 +23,7 @@ const COLORS = {
   geofence: '#34d399',
   breach: '#f87171',
   selectedPoint: '#fbbf24',
+  camera: '#f472b6',
   outline: '#0b0f14',
 }
 
@@ -50,6 +53,24 @@ export function addMapLayers(map: MapLibreMap): void {
     type: 'line',
     source: SOURCES.vehicleGeofence,
     paint: { 'line-color': geofenceColor, 'line-width': 2 },
+  })
+  map.addLayer({
+    id: `${SOURCES.cameraFootprint}-fill`,
+    type: 'fill',
+    source: SOURCES.cameraFootprint,
+    paint: { 'fill-color': COLORS.camera, 'fill-opacity': 0.12 },
+  })
+  map.addLayer({
+    id: `${SOURCES.cameraFootprint}-outline`,
+    type: 'line',
+    source: SOURCES.cameraFootprint,
+    paint: { 'line-color': COLORS.camera, 'line-width': 1.5, 'line-opacity': 0.8 },
+  })
+  map.addLayer({
+    id: SOURCES.cameraSight,
+    type: 'line',
+    source: SOURCES.cameraSight,
+    paint: { 'line-color': COLORS.camera, 'line-width': 1, 'line-dasharray': [2, 2] },
   })
   map.addLayer({
     id: SOURCES.draftGeofence,

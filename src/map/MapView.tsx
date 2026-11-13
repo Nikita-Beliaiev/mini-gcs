@@ -7,12 +7,19 @@ import {
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useEffectEvent, useRef } from 'react'
+import { cameraTarget } from '../camera/cameraTarget'
 import type { LatLon } from '../geo/geo'
 import { useMessages } from '../i18n/localeStore'
-import type { GeofenceMessage, MissionMessage } from '../protocol/telemetry'
+import type {
+  CameraMessage,
+  GeofenceMessage,
+  MissionMessage,
+  PositionMessage,
+} from '../protocol/telemetry'
 import { usePlanningStore, type PlanTarget } from '../planning/planningStore'
 import { activeWaypointIndex } from '../planning/vehicleMission'
 import { useGroundStation } from '../station/stationContext'
+import { useTerrain } from '../terrain/terrainContext'
 import {
   createLineData,
   createPointData,
@@ -50,6 +57,7 @@ export default function MapView({
   const loadedMapRef = useRef<MapLibreMap | null>(null)
   const messages = useMessages()
   const { telemetry } = useGroundStation()
+  const terrain = useTerrain()
   const isFollowingVehicle = useEffectEvent(() => followVehicle)
   const isTerrain3d = useEffectEvent(() => terrain3d)
   const handleUserPan = useEffectEvent(() => {
@@ -96,6 +104,8 @@ export default function MapView({
     let shownActiveIndex: number | null = null
     let shownGeofence: GeofenceMessage | null = null
     let shownBreach = false
+    let shownCameraPosition: PositionMessage | null = null
+    let shownCamera: CameraMessage | null = null
 
     function renderVehicleGeofence(): void {
       const { geofence, systemStatus } = telemetry.getSnapshot()
@@ -125,12 +135,35 @@ export default function MapView({
       shownActiveIndex = activeIndex
     }
 
+    function renderCamera(): void {
+      const state = telemetry.getSnapshot()
+      if (state.position === shownCameraPosition && state.camera === shownCamera) {
+        return
+      }
+      shownCameraPosition = state.position
+      shownCamera = state.camera
+      const target = cameraTarget(state, terrain)
+      setSourceData(
+        map,
+        SOURCES.cameraFootprint,
+        createPolygonData(target?.footprint ?? null, false),
+      )
+      setSourceData(
+        map,
+        SOURCES.cameraSight,
+        createLineData(
+          target?.center && state.position ? [state.position, target.center.point] : [],
+        ),
+      )
+    }
+
     function renderTelemetry(): void {
       const { position, home } = telemetry.getSnapshot()
 
       setSourceData(map, SOURCES.trail, createLineData(telemetry.getPositionHistory()))
       renderVehicleMission()
       renderVehicleGeofence()
+      renderCamera()
       placeMarker(homeMarker, map, home)
       placeMarker(vehicleMarker, map, position)
       if (position) {
@@ -244,7 +277,7 @@ export default function MapView({
       geofenceDraftMarkers.remove()
       map.remove()
     }
-  }, [telemetry, showPlanning, messages])
+  }, [telemetry, terrain, showPlanning, messages])
 
   useEffect(() => {
     const map = loadedMapRef.current
