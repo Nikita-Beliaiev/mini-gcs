@@ -108,6 +108,18 @@ export const uk: Messages = {
       'NavigationControl.ZoomOut': 'Віддалити',
     },
   },
+  camera: {
+    title: 'Камера',
+    view: 'Вид камери',
+    synthetic: 'Синтетичний вид',
+    syntheticNote: 'Намальовано з даних карти й рельєфу замість відеопотоку.',
+    noCamera: 'Цей апарат не передає даних камери.',
+    tracking: 'Утримує точку',
+    tilt: 'Нахил',
+    pan: 'Поворот',
+    range: (distance) => `Дальність ${distance}`,
+    aboveHorizon: 'Центр кадру над горизонтом',
+  },
   charts: {
     title: (seconds) =>
       `Останні ${count(seconds, { one: 'секунда', few: 'секунди', many: 'секунд', other: 'секунди' })}`,

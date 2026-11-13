@@ -63,7 +63,7 @@ const CAMERA_ASPECT = 16 / 9
 const CAMERA_HORIZONTAL_FOV_DEG = toDegrees(
   2 * Math.atan(CAMERA_ASPECT * Math.tan(toRadians(CAMERA_VERTICAL_FOV_DEG / 2))),
 )
-const DEFAULT_CAMERA_TILT_DEG = -35
+const DEFAULT_CAMERA_TILT_DEG = -15
 const GIMBAL_RATE_DEG_S = 90
 
 type ScheduledMessageType = Exclude<TelemetryMessage['type'], 'commandAck'>

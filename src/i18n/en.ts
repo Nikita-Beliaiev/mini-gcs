@@ -94,6 +94,18 @@ export const en = {
       'NavigationControl.ZoomOut': 'Zoom out',
     },
   },
+  camera: {
+    title: 'Camera',
+    view: 'Camera view',
+    synthetic: 'Synthetic view',
+    syntheticNote: 'Drawn from map and terrain data in place of a video stream.',
+    noCamera: 'No camera data from this vehicle.',
+    tracking: 'Tracking a point',
+    tilt: 'Tilt',
+    pan: 'Pan',
+    range: (distance: string) => `Range ${distance}`,
+    aboveHorizon: 'Frame centre above the horizon',
+  },
   charts: {
     title: (seconds: number) => `Last ${String(seconds)} seconds`,
     loading: 'Loading charts…',

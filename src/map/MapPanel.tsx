@@ -1,5 +1,6 @@
 import { lazy, Suspense, useId, useState } from 'react'
 import { AlertList } from '../alerts/AlertList'
+import { CameraPanel } from '../camera/CameraPanel'
 import { useMessages } from '../i18n/localeStore'
 import { DrawingBanner } from '../planning/DrawingBanner'
 import { usePlanningStore } from '../planning/planningStore'
@@ -17,10 +18,12 @@ interface MapPanelProps {
 }
 
 export function MapPanel({ showPlanning }: MapPanelProps) {
-  const text = useMessages().map
+  const messages = useMessages()
+  const text = messages.map
   const titleId = useId()
   const [followVehicle, setFollowVehicle] = useState(false)
   const [terrain3d, setTerrain3d] = useState(false)
+  const [showCamera, setShowCamera] = useState(true)
   const isDrawing = usePlanningStore((state) => showPlanning && state.editMode !== null)
 
   return (
@@ -30,6 +33,16 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
           {text.title}
         </h2>
         <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={buttonStyles.button}
+            aria-pressed={showCamera}
+            onClick={() => {
+              setShowCamera((shown) => !shown)
+            }}
+          >
+            {messages.camera.title}
+          </button>
           <button
             type="button"
             className={buttonStyles.button}
@@ -65,6 +78,7 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
         </Suspense>
         <CursorReadout />
         <PointCard />
+        {showCamera ? <CameraPanel /> : null}
         <AlertList />
         {showPlanning ? <DrawingBanner /> : null}
       </div>

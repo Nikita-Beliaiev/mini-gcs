@@ -11,28 +11,47 @@ import {
   type GroundHit,
 } from './cameraGeometry'
 
-export interface CameraTarget {
+type CameraState = Pick<TelemetryState, 'position' | 'camera' | 'home'>
+type Elevation = Pick<TerrainSampler, 'elevationAt'>
+
+export interface CameraView {
   pose: CameraPose
   groundHeight: GroundHeight
+}
+
+export interface CameraTarget extends CameraView {
   footprint: LatLon[]
   center: GroundHit | null
 }
 
 const LEVEL_GROUND: GroundHeight = () => 0
 
-export function cameraTarget(
-  { position, camera, home }: Pick<TelemetryState, 'position' | 'camera' | 'home'>,
-  terrain: Pick<TerrainSampler, 'elevationAt'>,
-): CameraTarget | null {
+export function cameraView(
+  { position, camera, home }: CameraState,
+  terrain: Elevation,
+): CameraView | null {
   if (!position || !camera) {
     return null
   }
-  const pose = cameraPoseOf(position, camera)
-  const groundHeight = home ? groundHeightAboveHome(terrain, home) : LEVEL_GROUND
   return {
-    pose,
-    groundHeight,
-    footprint: cameraFootprint(pose, groundHeight),
-    center: groundPointAt(pose, 0, 0, groundHeight),
+    pose: cameraPoseOf(position, camera),
+    groundHeight: home ? groundHeightAboveHome(terrain, home) : LEVEL_GROUND,
+  }
+}
+
+export function cameraCenter(state: CameraState, terrain: Elevation): GroundHit | null {
+  const view = cameraView(state, terrain)
+  return view ? groundPointAt(view.pose, 0, 0, view.groundHeight) : null
+}
+
+export function cameraTarget(state: CameraState, terrain: Elevation): CameraTarget | null {
+  const view = cameraView(state, terrain)
+  if (!view) {
+    return null
+  }
+  return {
+    ...view,
+    footprint: cameraFootprint(view.pose, view.groundHeight),
+    center: groundPointAt(view.pose, 0, 0, view.groundHeight),
   }
 }

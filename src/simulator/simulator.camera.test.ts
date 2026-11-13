@@ -23,7 +23,7 @@ describe('simulator camera', () => {
 
     expect(ofType(messages, 'camera')).toHaveLength(10)
     const camera = lastOfType(messages, 'camera')
-    expect(camera).toMatchObject({ tiltDeg: -35, panDeg: 0, lookAt: null })
+    expect(camera).toMatchObject({ tiltDeg: -15, panDeg: 0, lookAt: null })
     expect(camera.verticalFovDeg).toBeCloseTo(36.87, 2)
     expect(camera.horizontalFovDeg).toBeCloseTo(61.3, 1)
   })

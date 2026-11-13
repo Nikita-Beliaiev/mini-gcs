@@ -58,7 +58,7 @@ export function addMapLayers(map: MapLibreMap): void {
     id: `${SOURCES.cameraFootprint}-fill`,
     type: 'fill',
     source: SOURCES.cameraFootprint,
-    paint: { 'fill-color': COLORS.camera, 'fill-opacity': 0.12 },
+    paint: { 'fill-color': COLORS.camera, 'fill-opacity': 0.08 },
   })
   map.addLayer({
     id: `${SOURCES.cameraFootprint}-outline`,

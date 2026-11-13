@@ -74,6 +74,20 @@ describe('MapPanel', () => {
     expect(screen.getByText('Flat map')).toBeInTheDocument()
   })
 
+  it('shows and hides the camera', async () => {
+    const user = userEvent.setup()
+    renderWithStation(<MapPanel showPlanning />)
+    await screen.findByText('Map is free')
+    const camera = screen.getByRole('button', { name: 'Camera' })
+
+    expect(camera).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('region', { name: 'Camera' })).toBeInTheDocument()
+
+    await user.click(camera)
+    expect(camera).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByRole('region', { name: 'Camera' })).not.toBeInTheDocument()
+  })
+
   it('tells the map whether to show the plans', async () => {
     renderWithStation(<MapPanel showPlanning={false} />)
 

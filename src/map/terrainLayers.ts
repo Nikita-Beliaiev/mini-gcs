@@ -1,12 +1,32 @@
-import type { Map as MapLibreMap, RasterDEMSourceSpecification } from 'maplibre-gl'
+import type {
+  HillshadeLayerSpecification,
+  Map as MapLibreMap,
+  RasterDEMSourceSpecification,
+} from 'maplibre-gl'
 import { TERRAIN_MAX_ZOOM, TERRAIN_TILE_SIZE, TERRAIN_TILE_URL } from '../terrain/terrarium'
 
 const SHADING_SOURCE = 'terrain-shading'
 const SURFACE_SOURCE = 'terrain-surface'
 const SHADING_LAYER = 'terrain-shading'
-const TERRAIN_EXAGGERATION = 1.5
 
 export const TERRAIN_3D_PITCH = 60
+export const MAP_TERRAIN_EXAGGERATION = 1.5
+
+type HillshadePaint = NonNullable<HillshadeLayerSpecification['paint']>
+
+export const DARK_HILLSHADE: HillshadePaint = {
+  'hillshade-exaggeration': 0.9,
+  'hillshade-shadow-color': 'rgb(0 0 0 / 0.9)',
+  'hillshade-highlight-color': 'rgb(148 163 184 / 0.35)',
+  'hillshade-accent-color': 'rgb(0 0 0 / 0.5)',
+}
+
+export const LIGHT_HILLSHADE: HillshadePaint = {
+  'hillshade-exaggeration': 0.5,
+  'hillshade-shadow-color': 'rgb(40 48 40 / 0.6)',
+  'hillshade-highlight-color': 'rgb(255 255 255 / 0.3)',
+  'hillshade-accent-color': 'rgb(40 48 40 / 0.3)',
+}
 
 const TERRAIN_ATTRIBUTION =
   '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Terrain: Mapzen, Copernicus EU-DEM, USGS, NOAA</a>'
@@ -27,25 +47,19 @@ function firstLayerAboveAreas(map: MapLibreMap): string | undefined {
   return layers.find((layer) => layer.type !== 'background' && layer.type !== 'fill')?.id
 }
 
-export function addTerrainLayers(map: MapLibreMap): void {
+export function addTerrainLayers(map: MapLibreMap, shading: HillshadePaint = DARK_HILLSHADE): void {
   map.addSource(SHADING_SOURCE, elevationSource())
   map.addSource(SURFACE_SOURCE, elevationSource())
   map.addLayer(
-    {
-      id: SHADING_LAYER,
-      type: 'hillshade',
-      source: SHADING_SOURCE,
-      paint: {
-        'hillshade-exaggeration': 0.9,
-        'hillshade-shadow-color': 'rgb(0 0 0 / 0.9)',
-        'hillshade-highlight-color': 'rgb(148 163 184 / 0.35)',
-        'hillshade-accent-color': 'rgb(0 0 0 / 0.5)',
-      },
-    },
+    { id: SHADING_LAYER, type: 'hillshade', source: SHADING_SOURCE, paint: shading },
     firstLayerAboveAreas(map),
   )
 }
 
-export function showTerrainSurface(map: MapLibreMap, visible: boolean): void {
-  map.setTerrain(visible ? { source: SURFACE_SOURCE, exaggeration: TERRAIN_EXAGGERATION } : null)
+export function showTerrainSurface(
+  map: MapLibreMap,
+  visible: boolean,
+  exaggeration = MAP_TERRAIN_EXAGGERATION,
+): void {
+  map.setTerrain(visible ? { source: SURFACE_SOURCE, exaggeration } : null)
 }

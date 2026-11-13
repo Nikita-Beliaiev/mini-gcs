@@ -1,11 +1,5 @@
-import {
-  Map as MapLibreMap,
-  NavigationControl,
-  setWorkerUrl,
-  type CameraOptions,
-} from 'maplibre-gl'
+import { Map as MapLibreMap, NavigationControl, type CameraOptions } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useEffectEvent, useRef } from 'react'
 import { cameraTarget } from '../camera/cameraTarget'
 import type { LatLon } from '../geo/geo'
@@ -31,6 +25,7 @@ import { addMapLayers, setSourceData, SOURCES } from './mapLayers'
 import { createDraftMarkers, createHomeMarker, createVehicleMarker, placeMarker } from './markers'
 import { useMapPointsStore } from './mapPointsStore'
 import { addTerrainLayers, showTerrainSurface, TERRAIN_3D_PITCH } from './terrainLayers'
+import './maplibreWorker'
 import styles from './MapView.module.css'
 
 export interface MapViewProps {
@@ -43,8 +38,6 @@ export interface MapViewProps {
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark'
 const HOME_ZOOM = 15.5
 const WORLD_VIEW: CameraOptions = { center: [0, 20], zoom: 1.5 }
-
-setWorkerUrl(maplibreWorkerUrl)
 
 export default function MapView({
   followVehicle,
