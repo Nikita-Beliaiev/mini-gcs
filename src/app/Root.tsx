@@ -9,11 +9,14 @@ import {
 } from '../session/stationSession'
 import type { FlightLog, FlightLogSource } from '../replay/flightLog'
 import { GroundStationContext } from '../station/stationContext'
+import { TerrainContext } from '../terrain/terrainContext'
+import { NO_TERRAIN, type TerrainSampler } from '../terrain/terrainSampler'
 import { App } from './App'
 
 interface RootProps {
   live: LiveSession
   createReplay?: (log: FlightLog, source: FlightLogSource) => ReplaySession
+  terrain?: TerrainSampler
 }
 
 interface ShownSession {
@@ -21,7 +24,11 @@ interface ShownSession {
   key: number
 }
 
-export function Root({ live, createReplay = createReplaySession }: RootProps) {
+export function Root({
+  live,
+  createReplay = createReplaySession,
+  terrain = NO_TERRAIN,
+}: RootProps) {
   const [shown, setShown] = useState<ShownSession>({ session: live, key: 0 })
 
   const controls = useMemo<SessionControls>(() => {
@@ -42,10 +49,12 @@ export function Root({ live, createReplay = createReplaySession }: RootProps) {
   }, [shown.session, live, createReplay])
 
   return (
-    <SessionContext value={controls}>
-      <GroundStationContext value={shown.session.station}>
-        <App key={shown.key} />
-      </GroundStationContext>
-    </SessionContext>
+    <TerrainContext value={terrain}>
+      <SessionContext value={controls}>
+        <GroundStationContext value={shown.session.station}>
+          <App key={shown.key} />
+        </GroundStationContext>
+      </SessionContext>
+    </TerrainContext>
   )
 }
