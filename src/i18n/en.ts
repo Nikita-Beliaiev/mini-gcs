@@ -64,6 +64,8 @@ export const en = {
     title: 'Map',
     followVehicle: 'Follow vehicle',
     terrain3d: '3D terrain',
+    cursor: 'Cursor position',
+    elevation: (elevation: string) => `Elevation ${elevation}`,
     loading: 'Loading map…',
     vehicle: 'Vehicle',
     home: 'Home',

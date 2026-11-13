@@ -60,6 +60,10 @@ export function formatDistance(meters: number | undefined, units: Messages['unit
   return `${(meters / 1000).toFixed(1)} ${units.kilometers}`
 }
 
+export function formatElevation(meters: number | null, units: Messages['units']): string {
+  return meters === null ? NO_VALUE : `${String(Math.round(meters))} ${units.meters}`
+}
+
 export function formatCoordinates(point: LatLon): string {
   return `${point.lat.toFixed(5)}, ${point.lon.toFixed(5)}`
 }

@@ -1,0 +1,17 @@
+.cursor {
+  position: absolute;
+  bottom: 6px;
+  left: 10px;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  max-width: calc(100% - 20px);
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text);
+  background: rgb(11 15 20 / 0.8);
+  pointer-events: none;
+}

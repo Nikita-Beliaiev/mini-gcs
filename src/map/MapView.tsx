@@ -22,6 +22,7 @@ import {
 } from './mapData'
 import { addMapLayers, setSourceData, SOURCES } from './mapLayers'
 import { createDraftMarkers, createHomeMarker, createVehicleMarker, placeMarker } from './markers'
+import { useMapPointsStore } from './mapPointsStore'
 import { addTerrainLayers, showTerrainSurface, TERRAIN_3D_PITCH } from './terrainLayers'
 import styles from './MapView.module.css'
 
@@ -199,6 +200,12 @@ export default function MapView({
         addPoint(editMode, { lat: event.lngLat.lat, lon: event.lngLat.lng })
       }
     })
+    map.on('mousemove', (event) => {
+      useMapPointsStore.getState().setCursor({ lat: event.lngLat.lat, lon: event.lngLat.lng })
+    })
+    map.on('mouseout', () => {
+      useMapPointsStore.getState().setCursor(null)
+    })
     map.on('dragstart', () => {
       handleUserPan()
     })
@@ -216,6 +223,7 @@ export default function MapView({
       for (const unsubscribe of unsubscribers) {
         unsubscribe()
       }
+      useMapPointsStore.getState().setCursor(null)
       missionDraftMarkers.remove()
       geofenceDraftMarkers.remove()
       map.remove()

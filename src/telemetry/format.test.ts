@@ -8,6 +8,7 @@ import {
   formatDecimal,
   formatDistance,
   formatDuration,
+  formatElevation,
   formatGps,
   formatHeading,
   formatLatency,
@@ -104,6 +105,13 @@ describe('formatDistance', () => {
 
   it('shows a placeholder without a value', () => {
     expect(formatDistance(undefined, en.units)).toBe(NO_VALUE)
+  })
+})
+
+describe('formatElevation', () => {
+  it('rounds to the metre and shows a dash without terrain', () => {
+    expect(formatElevation(302.6, en.units)).toBe('303 m')
+    expect(formatElevation(null, en.units)).toBe('—')
   })
 })
 

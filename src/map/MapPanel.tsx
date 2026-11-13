@@ -6,6 +6,7 @@ import { usePlanningStore } from '../planning/planningStore'
 import buttonStyles from '../ui/button.module.css'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
+import { CursorReadout } from './CursorReadout'
 import styles from './MapPanel.module.css'
 
 const MapView = lazy(() => import('./MapView'))
@@ -61,6 +62,7 @@ export function MapPanel({ showPlanning }: MapPanelProps) {
             }}
           />
         </Suspense>
+        <CursorReadout />
         <AlertList />
         {showPlanning ? <DrawingBanner /> : null}
       </div>

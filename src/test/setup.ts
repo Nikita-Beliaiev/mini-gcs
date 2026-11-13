@@ -4,6 +4,7 @@ import { afterEach } from 'vitest'
 import { initialAlertData, useAlertStore } from '../alerts/alertStore'
 import { initialLatencyData, useLatencyStore } from '../connection/latencyStore'
 import { initialLocaleData, useLocaleStore } from '../i18n/localeStore'
+import { initialMapPointsData, useMapPointsStore } from '../map/mapPointsStore'
 import { initialPlanningData, usePlanningStore } from '../planning/planningStore'
 
 afterEach(() => {
@@ -12,4 +13,5 @@ afterEach(() => {
   useAlertStore.setState(initialAlertData)
   useLatencyStore.setState(initialLatencyData)
   useLocaleStore.setState(initialLocaleData)
+  useMapPointsStore.setState(initialMapPointsData)
 })

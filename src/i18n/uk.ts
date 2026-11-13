@@ -77,6 +77,8 @@ export const uk: Messages = {
     title: 'Карта',
     followVehicle: 'Стежити за апаратом',
     terrain3d: 'Рельєф 3D',
+    cursor: 'Положення курсора',
+    elevation: (elevation) => `Висота рельєфу ${elevation}`,
     loading: 'Завантаження карти…',
     vehicle: 'Апарат',
     home: 'Точка старту',
