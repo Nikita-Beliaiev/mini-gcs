@@ -26,6 +26,9 @@ flowchart LR
   monitor --> alertStore["Alert store<br/>Zustand"]
   planner["Mission and geofence planner<br/>Zustand"] --> sender["Command sender<br/>ids, acknowledgements, 3 s timeout"]
   sender --> transport
+  tiles["Terrain tiles<br/>Terrarium PNG over HTTPS"] --> terrain["Terrain sampler<br/>tile cache, interpolation"]
+  terrain --> readouts
+  terrain --> planner
 ```
 
 | Module                  | Folder                                   | Responsibility                                                                   |
@@ -45,6 +48,8 @@ flowchart LR
 | ArduPilot bridge        | `bridge`                                 | Python: MAVLink to ArduPilot over UDP, the station protocol over a WebSocket.    |
 | Sessions                | `src/session`                            | Whether the screen shows the live vehicle or a replay, and switching between.    |
 | Languages               | `src/i18n`                               | English and Ukrainian dictionaries, the chosen language and how it is picked.    |
+| Terrain                 | `src/terrain`                            | Terrain tiles, elevation sampling, altitudes and route profiles.                 |
+| Coordinates             | `src/geo`                                | Distances, bearings, point-in-polygon and MGRS references.                       |
 | Map, charts, instrument | `src/map`, `src/charts`, `src/telemetry` | Rendering that bypasses React for high-rate data.                                |
 
 ## Protocol
@@ -203,6 +208,17 @@ sequenceDiagram
 
 The Zod schemas in `src/protocol` are the single source of truth. `npm run protocol:schema` exports them as JSON Schema to `bridge/contract`, a station test fails when the committed file is out of date, and the bridge's tests check every message it sends against that file. The bridge's pydantic models for incoming commands are checked to cover the same command types. Changing the protocol on one side without the other fails CI.
 
+## Terrain and coordinates
+
+The station knows the ground under the vehicle and under a planned route. The heights come from Terrain Tiles, an open elevation dataset on AWS that serves PNG tiles in the Terrarium encoding, where a pixel's height is `R·256 + G + B/256 − 32768` metres. Around the demo area the data comes from EU-DEM, with about 25 to 30 m between samples.
+
+- **An own sampler for numbers, the map only for pictures.** The terrain sampler loads tiles at zoom 13, about 14 m per pixel here, decodes them in a canvas, interpolates between the four nearest pixel centres and keeps the tiles in a cache. A tile that fails is tried again after 30 s. Components read heights through a React context and re-render when a tile arrives. MapLibre can also report terrain heights, but only where the map has drawn tiles and only while it exists; the sampler gives the same answer in the telemetry panel, the planner and the tests.
+- **Three altitudes.** The vehicle reports its altitude above home, as autopilots do. Above sea level adds the terrain height at home; above the ground subtracts the terrain under the vehicle.
+- **The route profile** samples the ground every 20 m along straight legs from home through the waypoints and back, against the mission altitude, and names the lowest clearance and its leg. Below 20 m, or when the route runs into a slope, the text becomes a warning. It does not block the upload: the vehicle does not know the terrain, and the operator decides.
+- **The terrain found a bug.** Missions used to fly 40 m above home, and the demo patrol crosses a slope 41 m higher than home, so the simulated vehicle flew through the hillside. Missions now fly at 80 m, a constant shared by the station, the simulator and the bridge.
+- **On the map**, a hillshade sits under roads, water and labels. The 3D view raises the terrain with 1.5 times exaggeration for the eye; the numbers never use it.
+- **Coordinates.** A readout follows the cursor with latitude and longitude, the MGRS reference and the ground elevation. Clicking the map outside drawing marks a point and opens a card with copy buttons and the distance and bearing from home and from the vehicle. MGRS references come from the `mgrs` library of the proj4js project, to the metre.
+
 ## Languages
 
 The interface is available in English and Ukrainian.
@@ -215,33 +231,34 @@ The interface is available in English and Ukrainian.
 
 ## Trust boundaries
 
-| Source                          | Trusted? | What happens                                                          |
-| ------------------------------- | -------- | --------------------------------------------------------------------- |
-| Web Worker messages             | Yes      | Same origin and same build as the page, used as they are.             |
-| WebSocket messages              | No       | Parsed and checked against the Zod schemas; anything else is dropped. |
-| Commands arriving at the server | No       | Checked the same way; malformed commands are ignored.                 |
-| Opened flight log files         | No       | Up to 50 MB and 200,000 messages, checked against the Zod schemas.    |
-| Opened `.tlog` files            | No       | Up to 50 MB, frames checked by checksum, parsed in a Web Worker.      |
-| Commands arriving at the bridge | No       | Checked with pydantic; pages from unknown origins are refused.        |
-| `?server=` parameter            | No       | Only `ws:` and `wss:` addresses are used.                             |
-| `?lang=` and the saved language | No       | Only `en` and `uk` are used; anything else falls back.                |
+| Source                          | Trusted? | What happens                                                                                   |
+| ------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| Web Worker messages             | Yes      | Same origin and same build as the page, used as they are.                                      |
+| WebSocket messages              | No       | Parsed and checked against the Zod schemas; anything else is dropped.                          |
+| Commands arriving at the server | No       | Checked the same way; malformed commands are ignored.                                          |
+| Opened flight log files         | No       | Up to 50 MB and 200,000 messages, checked against the Zod schemas.                             |
+| Opened `.tlog` files            | No       | Up to 50 MB, frames checked by checksum, parsed in a Web Worker.                               |
+| Commands arriving at the bridge | No       | Checked with pydantic; pages from unknown origins are refused.                                 |
+| `?server=` parameter            | No       | Only `ws:` and `wss:` addresses are used.                                                      |
+| `?lang=` and the saved language | No       | Only `en` and `uk` are used; anything else falls back.                                         |
+| Terrain tiles                   | No       | Decoded only into heights; a failed request or a tile of the wrong size means no terrain data. |
 
 The simulator server and the bridge listen on `127.0.0.1` only. The Node simulator server does not check the `Origin` header, so any page open in the same browser could connect to it; that is acceptable for a local simulator. The bridge commands an autopilot, so it accepts only the station's own origins and clients without an `Origin` header.
 
 ## Testing
 
-| Layer         | Tool                              | What it covers                                                                  |
-| ------------- | --------------------------------- | ------------------------------------------------------------------------------- |
-| Logic         | Vitest                            | Geometry, simulator flights with fixed seeds, stores, rules, backoff, protocol. |
-| Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names, in both languages.      |
-| Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                     |
-| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages.    |
-| Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, and drawing in Ukrainian. |
-| MAVLink       | Vitest with pymavlink fixtures    | Frames, checksums, truncation, signing, damaged logs, mission transfers.        |
-| Bridge        | pytest, ruff, mypy (strict)       | A fake ArduCopter over real UDP and a real WebSocket client, no SITL needed.    |
-| Contract      | JSON Schema from Zod              | Every message the bridge sends is valid for the station.                        |
+| Layer         | Tool                              | What it covers                                                                                                           |
+| ------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Logic         | Vitest                            | Geometry, MGRS, simulator flights with fixed seeds, stores, rules, backoff, protocol, terrain sampling, route profiles.  |
+| Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names, in both languages.                                               |
+| Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                                                              |
+| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages, terrain from a stub tile.                   |
+| Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, drawing in Ukrainian, and with a point card and a terrain profile. |
+| MAVLink       | Vitest with pymavlink fixtures    | Frames, checksums, truncation, signing, damaged logs, mission transfers.                                                 |
+| Bridge        | pytest, ruff, mypy (strict)       | A fake ArduCopter over real UDP and a real WebSocket client, no SITL needed.                                             |
+| Contract      | JSON Schema from Zod              | Every message the bridge sends is valid for the station.                                                                 |
 
-MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrappers are mocked in component tests and exercised in Playwright instead. The logic they rely on, such as GeoJSON builders and chart windows, has its own unit tests.
+MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrappers are mocked in component tests and exercised in Playwright instead. The logic they rely on, such as GeoJSON builders and chart windows, has its own unit tests. Decoding a terrain tile needs a real canvas too, so component tests use a fake terrain and Playwright serves a flat tile built with pngjs, which keeps the end-to-end tests off the network for terrain and gives exact altitudes.
 
 ## Decisions and trade-offs
 
@@ -256,6 +273,8 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - **The bridge translates, the station stays MAVLink-free.** The browser keeps one protocol and one set of transports; MAVLink details, retries and ArduPilot quirks live in one Python process. The cost is that the station can only use what its protocol describes.
 - **Python for the bridge.** pymavlink is the reference MAVLink implementation and most ArduPilot tooling is Python, so the bridge uses the same codec as MAVProxy instead of a port.
 - **An own decoder in the browser.** Replaying logs needs 12 messages; a small decoder keeps the bundle light, works in a Web Worker and is checked against pymavlink.
+- **An own terrain sampler instead of the map's terrain.** The map's terrain heights depend on what it has drawn; the sampler gives the same height wherever it is asked, is a few dozen lines and runs in unit tests. MGRS, with its zones, bands and 100 km squares, comes from a small, well tested library instead.
+- **One mission altitude.** The station's profile, the simulator and the bridge all use 80 m above home. The protocol does not carry altitudes, so they are kept in step by a shared constant in TypeScript and the bridge's default.
 
 ## Known limitations
 
@@ -270,3 +289,6 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - A `.tlog` from an autopilot without a battery monitor shows the battery as 100%, because the protocol has no "unknown" battery level.
 - The bridge launches a mission only from the ground when a mission is uploaded; after landing, the next upload flies again. There is no manual control.
 - The simulator controls of the bridge set SITL parameters and do not work on a real autopilot.
+- The terrain is a 25 to 30 m model of the ground without trees or buildings, so the profile keeps a 20 m margin and is a planning aid, not obstacle avoidance.
+- Altitude above sea level is the terrain height at home plus the altitude above home, not the GPS altitude, so it can differ from the autopilot's by a few metres.
+- The simulator and the bridge fly at a fixed altitude above home and do not follow the terrain.

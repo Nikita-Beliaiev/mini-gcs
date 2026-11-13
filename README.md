@@ -8,14 +8,16 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 
 ![The station flying a patrol, uploading a new mission and raising a link loss alert](docs/demo.gif)
 
-> **Status:** the planned roadmap is complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, an English and Ukrainian interface, MAVLink log replay, a Python bridge to ArduPilot SITL, end-to-end and accessibility tests. Stretch goals are listed in the [Roadmap](#roadmap).
+> **Status:** phases 0 to 8 are complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, an English and Ukrainian interface, MAVLink log replay, a Python bridge to ArduPilot SITL, terrain and MGRS coordinates, end-to-end and accessibility tests. The next phases are listed in the [Roadmap](#roadmap).
 >
 > All flights are simulated, by the station's own simulator or by ArduPilot SITL. The project is not meant to control real aircraft.
 
 ## Features
 
 - Live map with vehicle position and heading, flight trail, home point and a follow-vehicle mode
-- Telemetry panel with an attitude indicator: flight mode, arming state, altitude, ground speed, heading, roll, pitch, battery, GPS fix and satellites, link quality
+- Telemetry panel with an attitude indicator: flight mode, arming state, altitude above home, above the ground and above sea level, ground speed, heading, roll, pitch, battery, GPS fix and satellites, link quality
+- Terrain from open elevation data: a hillshade and a 3D view on the map, and a terrain profile of a planned route that warns when a leg comes within 20 m of the ground
+- Coordinates under the cursor in decimal degrees and MGRS, and a card for a clicked point with its elevation, distance and bearing from home and from the vehicle, and copy buttons
 - Charts for the last 60 seconds of altitude, ground speed, battery and link quality
 - Mission planning: press "Draw route on map", click waypoints on the map, drag them, reorder or remove them in a list, check them against the rules and upload the route to the vehicle, which switches to it in flight
 - Geofence: draw a polygon, upload it, and the vehicle returns home when it crosses the border
@@ -27,7 +29,7 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 - Replay of MAVLink telemetry logs (`.tlog`) from ArduPilot, Mission Planner or QGroundControl, parsed in a Web Worker by an own MAVLink 1 and 2 decoder, with a sample ArduCopter flight one click away
 - A Python bridge to ArduPilot SITL: missions and geofences go to a real ArduCopter over the MAVLink mission protocol, and it takes off, flies the route and lands
 - Interface in English and Ukrainian, picked from the link, the last choice or the browser language
-- Simulated quadcopter that acquires GPS, takes off, flies its mission once, returns home, lands, swaps the battery and flies again
+- Simulated quadcopter that acquires GPS, takes off to 80 m above home, flies its mission once, returns home, lands, swaps the battery and flies again
 
 ## How it is built
 
@@ -50,6 +52,8 @@ The demo flies over farmland in Val d'Orcia, Tuscany.
 | State            | Custom telemetry store, Zustand for planning and alerts |
 | Validation       | Zod                                                     |
 | Languages        | Typed dictionaries, `Intl.PluralRules`                  |
+| Terrain          | AWS Terrain Tiles (Terrarium), own elevation sampler    |
+| Coordinates      | mgrs (proj4js) for MGRS references                      |
 | Simulator server | Node.js, ws, tsx                                        |
 | MAVLink          | Own decoder in TypeScript, pymavlink in the bridge      |
 | ArduPilot bridge | Python 3.12, asyncio, websockets, pydantic              |
@@ -103,12 +107,18 @@ To fly ArduPilot SITL instead, start SITL and the Python bridge as described in 
 - [x] **Phase 5:** flight recording and replay
 - [x] **Phase 6:** Ukrainian interface, clearer route drawing
 - [x] **Phase 7:** MAVLink log replay and a Python bridge that flies ArduPilot SITL
+- [x] **Phase 8:** terrain and coordinates: elevation, altitude above the ground, MGRS, route terrain profile
+- [ ] **Phase 9:** a gimbal camera: its footprint on the map, a synthetic video view and coordinates of a point clicked in the video
+- [ ] **Phase 10:** a situational picture: map marks with APP-6 symbols, GeoJSON and Cursor on Target export
+- [ ] **Phase 11:** working offline: the station and the map of the area without an internet connection
 
-Stretch goals: multiple vehicles, video feed, offline maps.
+Stretch goals: multiple vehicles, ArduPilot SITL in CI.
 
 ## Credits
 
 Map tiles by [OpenFreeMap](https://openfreemap.org), map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
+
+Terrain from [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) by Mapzen, with data produced using Copernicus data and information funded by the European Union (EU-DEM layers), SRTM and GMTED2010 courtesy of the U.S. Geological Survey, and ETOPO1 from the U.S. National Oceanic and Atmospheric Administration. [Full attribution](https://github.com/tilezen/joerd/blob/master/docs/attribution.md).
 
 ## License
 
