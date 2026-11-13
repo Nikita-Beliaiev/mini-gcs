@@ -68,7 +68,10 @@ async function clickLocator(page: Page, locator: Locator): Promise<void> {
 }
 
 async function clickMap(page: Page, dx: number, dy: number): Promise<void> {
-  const box = await page.locator('canvas.maplibregl-canvas').boundingBox()
+  const box = await page
+    .getByRole('region', { name: 'Map', exact: true })
+    .and(page.locator('canvas'))
+    .boundingBox()
   if (!box) {
     throw new Error('The map is not visible')
   }

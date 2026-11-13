@@ -14,7 +14,7 @@ export async function waitForMode(page: Page, mode: string, timeout = 60_000): P
 }
 
 export function mapCanvas(page: Page): Locator {
-  return page.locator('canvas.maplibregl-canvas')
+  return page.getByRole('region', { name: 'Map', exact: true }).and(page.locator('canvas'))
 }
 
 export async function clickMapFromCenter(page: Page, dx: number, dy: number): Promise<void> {
