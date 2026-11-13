@@ -163,6 +163,19 @@ export const uk: Messages = {
       draftMarker: (number) => `Нова точка маршруту ${String(number)}`,
       problems: 'Проблеми місії',
       route: (distance) => `Маршрут ${distance} від точки старту й назад`,
+      profile: {
+        title: 'Профіль рельєфу',
+        ground: 'Земля',
+        flightAltitude: 'Висота польоту',
+        noTerrain: 'Профіль рельєфу з’явиться, щойно завантажаться дані рельєфу.',
+        home: 'точкою старту',
+        lowestClearance: (clearance, from, to) =>
+          `Найменший запас: ${clearance} над землею, між ${from} і ${to}.`,
+        lowClearance: (clearance, from, to, altitude) =>
+          `Лише ${clearance} над землею між ${from} і ${to}. Апарат летить на ${altitude} над точкою старту й не огинає рельєф.`,
+        belowGround: (depth, from, to, altitude) =>
+          `Маршрут заходить на ${depth} у землю між ${from} і ${to}. Апарат летить на ${altitude} над точкою старту й не огинає рельєф.`,
+      },
       waitingForVehicle: 'Очікування місії з борту',
       onVehicle: (missionId, waypoints, activeWaypoint) =>
         `Місія ${String(missionId)} на борту: ${count(waypoints, POINTS)}${

@@ -4,21 +4,13 @@ import 'uplot/dist/uPlot.min.css'
 import { useMessages } from '../i18n/localeStore'
 import { useGroundStation } from '../station/stationContext'
 import { CHART_WINDOW_MS } from './chartData'
+import { CHART_AXIS } from './chartTheme'
 import type { ChartConfig } from './chartConfigs'
 import styles from './TimeSeriesChart.module.css'
 
 const CHART_HEIGHT = 120
-const AXIS_COLOR = '#7d8a9c'
-const GRID_COLOR = '#243041'
-const AXIS_FONT = '11px system-ui, sans-serif'
 
 function chartOptions(config: ChartConfig, width: number, secondsUnit: string): uPlot.Options {
-  const axis = {
-    stroke: AXIS_COLOR,
-    font: AXIS_FONT,
-    grid: { stroke: GRID_COLOR, width: 1 },
-    ticks: { stroke: GRID_COLOR, width: 1 },
-  }
   return {
     width,
     height: CHART_HEIGHT,
@@ -30,10 +22,10 @@ function chartOptions(config: ChartConfig, width: number, secondsUnit: string): 
     },
     axes: [
       {
-        ...axis,
+        ...CHART_AXIS,
         values: (_plot, ticks) => ticks.map((tick) => `${String(tick)} ${secondsUnit}`),
       },
-      { ...axis, size: 36 },
+      { ...CHART_AXIS, size: 36 },
     ],
     series: [
       {},

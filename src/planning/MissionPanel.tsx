@@ -10,6 +10,7 @@ import styles from './PlanEditor.module.css'
 import { usePlanningStore } from './planningStore'
 import { DraftPointList } from './DraftPointList'
 import { DrawOnMapButton } from './DrawOnMapButton'
+import { TerrainProfile } from './TerrainProfile'
 import { describeUpload, uploadPlan } from './uploadPlan'
 import { describeVehicleMission } from './vehicleMission'
 
@@ -50,6 +51,7 @@ export function MissionPanel() {
           )}
         </p>
       ) : null}
+      {home && draft.length > 0 ? <TerrainProfile home={home} waypoints={draft} /> : null}
       {generalIssues.length > 0 ? (
         <ul className={styles.issues} aria-label={text.mission.problems}>
           {generalIssues.map((issue) => (

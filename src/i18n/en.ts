@@ -146,6 +146,19 @@ export const en = {
       draftMarker: (number: number) => `Draft waypoint ${String(number)}`,
       problems: 'Mission problems',
       route: (distance: string) => `Route ${distance} from home and back`,
+      profile: {
+        title: 'Terrain profile',
+        ground: 'Ground',
+        flightAltitude: 'Flight altitude',
+        noTerrain: 'The terrain profile appears once terrain data has loaded.',
+        home: 'home',
+        lowestClearance: (clearance: string, from: string, to: string) =>
+          `Lowest clearance: ${clearance} above the ground, between ${from} and ${to}.`,
+        lowClearance: (clearance: string, from: string, to: string, altitude: string) =>
+          `Only ${clearance} above the ground between ${from} and ${to}. The vehicle flies ${altitude} above home and does not follow the terrain.`,
+        belowGround: (depth: string, from: string, to: string, altitude: string) =>
+          `The route runs ${depth} into the ground between ${from} and ${to}. The vehicle flies ${altitude} above home and does not follow the terrain.`,
+      },
       waitingForVehicle: 'Waiting for the vehicle mission',
       onVehicle: (missionId: number, waypoints: number, activeWaypoint: number | null) =>
         `Vehicle mission ${String(missionId)}: ${count(waypoints, 'waypoint', 'waypoints')}${
