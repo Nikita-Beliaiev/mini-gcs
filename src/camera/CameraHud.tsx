@@ -41,7 +41,6 @@ export function CameraHud() {
   return (
     <div className={styles.hud}>
       <span className={styles.hudTopLeft}>{angles}</span>
-      <span className={styles.hudTopRight}>{messages.camera.synthetic}</span>
       <span className={styles.crosshair} aria-hidden="true" />
       <span className={styles.hudBottom}>{center}</span>
     </div>

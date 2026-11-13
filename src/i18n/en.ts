@@ -99,8 +99,7 @@ export const en = {
   camera: {
     title: 'Camera',
     view: 'Camera view',
-    synthetic: 'Synthetic view',
-    syntheticNote: 'Drawn from map and terrain data in place of a video stream.',
+    syntheticNote: 'Synthetic view: drawn from map and terrain data in place of a video stream.',
     noCamera: 'No camera data from this vehicle.',
     tracking: 'Tracking a point',
     tilt: 'Tilt',
