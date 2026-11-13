@@ -68,7 +68,7 @@ test('opens a MAVLink telemetry log from ArduPilot', async ({ page }) => {
   await page.getByRole('button', { name: 'Pause' }).click()
   await page.getByRole('slider', { name: 'Replay position' }).press('End')
   await expect(readout(page, 'Flight mode')).toContainText('AUTO')
-  await expect(readout(page, 'Altitude')).toContainText('12.0')
+  await expect(readout(page, 'Above home')).toContainText('12.0')
 })
 
 test('replays a real ArduCopter flight recorded in SITL', async ({ page }) => {
@@ -87,7 +87,7 @@ test('replays a real ArduCopter flight recorded in SITL', async ({ page }) => {
   }
   await expect(readout(page, 'Flight mode')).toContainText('AUTO')
   await expect(readout(page, 'Arming')).toContainText('Armed')
-  await expect(readout(page, 'Altitude')).toContainText('40')
+  await expect(readout(page, 'Above home')).toContainText('40')
 })
 
 test('explains why a file cannot be opened', async ({ page }) => {

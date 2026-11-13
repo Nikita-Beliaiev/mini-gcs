@@ -3,16 +3,20 @@ import { describe, expect, it } from 'vitest'
 import {
   attitudeMessage,
   heartbeatMessage,
+  homeMessage,
   positionMessage,
   systemStatusMessage,
 } from '../test/messages'
 import { renderWithStation } from '../test/render'
+import { fakeTerrain } from '../test/terrain'
 import { TelemetryPanel } from './TelemetryPanel'
 
 const LABELS = [
   'Flight mode',
   'Arming',
-  'Altitude',
+  'Above home',
+  'Above ground',
+  'Above sea level',
   'Ground speed',
   'Heading',
   'Roll',
@@ -60,7 +64,7 @@ describe('TelemetryPanel', () => {
 
     expect(readout('Flight mode')).toHaveTextContent('RTL')
     expect(readout('Arming')).toHaveTextContent('Armed')
-    expect(readout('Altitude')).toHaveTextContent('38.3 m')
+    expect(readout('Above home')).toHaveTextContent('38.3 m')
     expect(readout('Ground speed')).toHaveTextContent('11.9 m/s')
     expect(readout('Heading')).toHaveTextContent('007°')
     expect(readout('Roll')).toHaveTextContent('+12°')
@@ -80,6 +84,34 @@ describe('TelemetryPanel', () => {
       transport.receive(positionMessage({ seq: 2, altitudeM: 12.5 }))
     })
 
-    expect(readout('Altitude')).toHaveTextContent('12.5 m')
+    expect(readout('Above home')).toHaveTextContent('12.5 m')
+  })
+
+  it('shows the altitude above the ground and above sea level from the terrain', () => {
+    const home = homeMessage({ lat: 43.095, lon: 11.645 })
+    const terrain = fakeTerrain((point) => (point.lat === home.lat ? 302 : 340))
+    const { transport } = renderWithStation(<TelemetryPanel />, { terrain })
+
+    act(() => {
+      transport.receive(home)
+      transport.receive(positionMessage({ lat: 43.09, lon: 11.65, altitudeM: 80 }))
+    })
+
+    expect(readout('Above home')).toHaveTextContent('80.0 m')
+    expect(readout('Above sea level')).toHaveTextContent('382.0 m')
+    expect(readout('Above ground')).toHaveTextContent('42.0 m')
+  })
+
+  it('leaves the terrain altitudes empty without terrain data', () => {
+    const { transport } = renderWithStation(<TelemetryPanel />)
+
+    act(() => {
+      transport.receive(homeMessage())
+      transport.receive(positionMessage({ altitudeM: 80 }))
+    })
+
+    expect(readout('Above home')).toHaveTextContent('80.0 m')
+    expect(readout('Above sea level')).toHaveTextContent(/—$/)
+    expect(readout('Above ground')).toHaveTextContent(/—$/)
   })
 })

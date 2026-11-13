@@ -2,6 +2,9 @@ import { useId } from 'react'
 import type { Messages } from '../i18n/en'
 import { useMessages } from '../i18n/localeStore'
 import { useTelemetry } from '../station/stationContext'
+import { useTerrain } from '../terrain/terrainContext'
+import type { TerrainSampler } from '../terrain/terrainSampler'
+import { altitudeAboveGround, altitudeAboveSeaLevel } from '../terrain/vehicleAltitudes'
 import { classNames } from '../ui/classNames'
 import panelStyles from '../ui/panel.module.css'
 import { AttitudeIndicator } from './AttitudeIndicator'
@@ -19,7 +22,7 @@ import type { TelemetryState } from './telemetryStore'
 interface ReadoutDefinition {
   id: keyof Messages['telemetry']['readouts']
   unit?: keyof Messages['units']
-  select: (state: TelemetryState, messages: Messages) => string
+  select: (state: TelemetryState, messages: Messages, terrain: TerrainSampler) => string
 }
 
 const READOUTS: readonly ReadoutDefinition[] = [
@@ -32,6 +35,16 @@ const READOUTS: readonly ReadoutDefinition[] = [
     id: 'altitude',
     unit: 'meters',
     select: (state) => formatDecimal(state.position?.altitudeM, 1),
+  },
+  {
+    id: 'aboveGround',
+    unit: 'meters',
+    select: (state, _messages, terrain) => formatDecimal(altitudeAboveGround(state, terrain), 1),
+  },
+  {
+    id: 'aboveSeaLevel',
+    unit: 'meters',
+    select: (state, _messages, terrain) => formatDecimal(altitudeAboveSeaLevel(state, terrain), 1),
   },
   {
     id: 'groundSpeed',
@@ -60,7 +73,8 @@ const READOUTS: readonly ReadoutDefinition[] = [
 
 function Readout({ id, unit, select }: ReadoutDefinition) {
   const messages = useMessages()
-  const value = useTelemetry((state) => select(state, messages))
+  const terrain = useTerrain()
+  const value = useTelemetry((state) => select(state, messages, terrain))
   const labelId = useId()
   const showUnit = unit !== undefined && value !== NO_VALUE
 

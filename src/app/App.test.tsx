@@ -61,7 +61,7 @@ describe('App', () => {
     expect(screen.getByRole('region', { name: 'Карта' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Останні 60 секунд' })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Двигуни' })).toHaveTextContent('Заблоковано')
-    expect(screen.getByRole('group', { name: 'Висота' })).toHaveTextContent('40.0 м')
+    expect(screen.getByRole('group', { name: 'Над стартом' })).toHaveTextContent('40.0 м')
     expect(screen.getByRole('status')).toHaveTextContent('Підключено')
     expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
       'Місія',

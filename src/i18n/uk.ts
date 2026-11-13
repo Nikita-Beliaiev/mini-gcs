@@ -58,7 +58,9 @@ export const uk: Messages = {
     readouts: {
       flightMode: 'Режим польоту',
       arming: 'Двигуни',
-      altitude: 'Висота',
+      altitude: 'Над стартом',
+      aboveGround: 'Над землею',
+      aboveSeaLevel: 'Над рівнем моря',
       groundSpeed: 'Шляхова швидкість',
       heading: 'Курс',
       roll: 'Крен',

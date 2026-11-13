@@ -45,7 +45,9 @@ export const en = {
     readouts: {
       flightMode: 'Flight mode',
       arming: 'Arming',
-      altitude: 'Altitude',
+      altitude: 'Above home',
+      aboveGround: 'Above ground',
+      aboveSeaLevel: 'Above sea level',
       groundSpeed: 'Ground speed',
       heading: 'Heading',
       roll: 'Roll',
