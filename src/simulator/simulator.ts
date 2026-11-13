@@ -4,6 +4,8 @@ import {
   distanceMeters,
   isPointInPolygon,
   signedAngleDifference,
+  toDegrees,
+  toRadians,
   type LatLon,
 } from '../geo/geo'
 import { en } from '../i18n/en'
@@ -56,6 +58,14 @@ const GPS_LOSS_DURATION_MS = 15_000
 const GPS_LOSS_SATELLITES = 2
 const BATTERY_DROP_PERCENT = 32
 
+const CAMERA_VERTICAL_FOV_DEG = 36.87
+const CAMERA_ASPECT = 16 / 9
+const CAMERA_HORIZONTAL_FOV_DEG = toDegrees(
+  2 * Math.atan(CAMERA_ASPECT * Math.tan(toRadians(CAMERA_VERTICAL_FOV_DEG / 2))),
+)
+const DEFAULT_CAMERA_TILT_DEG = -35
+const GIMBAL_RATE_DEG_S = 90
+
 type ScheduledMessageType = Exclude<TelemetryMessage['type'], 'commandAck'>
 
 const MESSAGE_SCHEDULE: readonly { type: ScheduledMessageType; intervalMs: number }[] = [
@@ -66,6 +76,7 @@ const MESSAGE_SCHEDULE: readonly { type: ScheduledMessageType; intervalMs: numbe
   { type: 'geofence', intervalMs: 5000 },
   { type: 'systemStatus', intervalMs: 500 },
   { type: 'position', intervalMs: 100 },
+  { type: 'camera', intervalMs: 100 },
   { type: 'attitude', intervalMs: 20 },
 ]
 
@@ -88,6 +99,15 @@ interface Mission {
   id: number
   waypoints: readonly LatLon[]
 }
+
+interface CameraAngles {
+  tiltDeg: number
+  panDeg: number
+}
+
+type CameraAim =
+  | { kind: 'angles'; tiltDeg: number; panDeg: number }
+  | { kind: 'point'; point: LatLon; altitudeM: number }
 
 interface Guidance {
   target: LatLon | null
@@ -127,6 +147,8 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
   }
   let mission: Mission = { id: 1, waypoints: defaultMission }
   let geofence: readonly LatLon[] | null = null
+  let cameraAim: CameraAim = { kind: 'angles', tiltDeg: DEFAULT_CAMERA_TILT_DEG, panDeg: 0 }
+  const gimbal: CameraAngles = { tiltDeg: DEFAULT_CAMERA_TILT_DEG, panDeg: 0 }
   const nextMessageAtMs: Record<ScheduledMessageType, number> = {
     heartbeat: 0,
     home: 0,
@@ -135,6 +157,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     geofence: 0,
     systemStatus: 0,
     position: 0,
+    camera: 0,
     attitude: 0,
   }
   let timeMs = 0
@@ -283,6 +306,28 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     vehicle.pitchDeg = approach(vehicle.pitchDeg, tilt.pitchDeg, TILT_RATE_DEG_S * dtS)
   }
 
+  function aimAngles(): CameraAngles {
+    if (cameraAim.kind === 'angles') {
+      return cameraAim
+    }
+    const distance = distanceMeters(vehicle.position, cameraAim.point)
+    const drop = vehicle.altitudeM - cameraAim.altitudeM
+    return {
+      tiltDeg: clamp(-toDegrees(Math.atan2(drop, distance)), -90, 0),
+      panDeg: signedAngleDifference(
+        vehicle.headingDeg,
+        bearingDegrees(vehicle.position, cameraAim.point),
+      ),
+    }
+  }
+
+  function updateGimbal(dtS: number): void {
+    const target = aimAngles()
+    const maxStepDeg = GIMBAL_RATE_DEG_S * dtS
+    gimbal.tiltDeg = approach(gimbal.tiltDeg, target.tiltDeg, maxStepDeg)
+    gimbal.panDeg = signedAngleDifference(0, turnToward(gimbal.panDeg, target.panDeg, maxStepDeg))
+  }
+
   function vibration(): number {
     return vehicle.armed ? randomBetween(random, -VIBRATION_DEG, VIBRATION_DEG) : 0
   }
@@ -360,6 +405,16 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
         }
       case 'geofence':
         return { type, ...header, polygon: geofence ? [...geofence] : null }
+      case 'camera':
+        return {
+          type,
+          ...header,
+          tiltDeg: gimbal.tiltDeg,
+          panDeg: gimbal.panDeg,
+          horizontalFovDeg: CAMERA_HORIZONTAL_FOV_DEG,
+          verticalFovDeg: CAMERA_VERTICAL_FOV_DEG,
+          lookAt: cameraAim.kind === 'point' ? cameraAim.point : null,
+        }
     }
   }
 
@@ -429,6 +484,12 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     return null
   }
 
+  function aimCamera(aim: CameraAim): null {
+    cameraAim = aim
+    nextMessageAtMs.camera = timeMs
+    return null
+  }
+
   function isLinkLost(): boolean {
     return timeMs < linkLostUntilMs
   }
@@ -443,6 +504,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
       updateGps()
       updateMode()
       updateMotion(dtS)
+      updateGimbal(dtS)
       updateBattery(dtS)
       const messages = collectDueMessages()
       return isLinkLost() ? [] : messages
@@ -464,6 +526,24 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
           return [acknowledge(envelope, clearGeofence())]
         case 'ping':
           return [acknowledge(envelope, null)]
+        case 'pointCamera':
+          return [
+            acknowledge(
+              envelope,
+              aimCamera({ kind: 'angles', tiltDeg: command.tiltDeg, panDeg: command.panDeg }),
+            ),
+          ]
+        case 'lookAtPoint':
+          return [
+            acknowledge(
+              envelope,
+              aimCamera({
+                kind: 'point',
+                point: { lat: command.lat, lon: command.lon },
+                altitudeM: command.altitudeM,
+              }),
+            ),
+          ]
       }
     },
   }

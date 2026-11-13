@@ -32,6 +32,8 @@ def test_parses_a_mission_upload() -> None:
         envelope({"type": "uploadMission", "waypoints": [{"lat": 123, "lon": 11.6}]}),
         envelope({"type": "uploadMission", "waypoints": [{"lat": 1, "lon": 1}] * 101}),
         envelope({"type": "simulateFault", "fault": "engineFire"}),
+        envelope({"type": "pointCamera", "tiltDeg": 15, "panDeg": 0}),
+        envelope({"type": "lookAtPoint", "lat": 43.1, "lon": 11.6}),
         json.dumps({"command": {"type": "ping"}}),
     ],
 )

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { pointListSchema } from './shared'
+import { latLonSchema, pointListSchema } from './shared'
 
 export const commandTypeSchema = z.enum([
   'uploadMission',
@@ -7,6 +7,8 @@ export const commandTypeSchema = z.enum([
   'clearGeofence',
   'simulateFault',
   'ping',
+  'pointCamera',
+  'lookAtPoint',
 ])
 
 export const simulatedFaultSchema = z.enum(['linkLoss', 'gpsLoss', 'batteryDrop'])
@@ -34,12 +36,26 @@ const pingCommandSchema = z.object({
   type: z.literal('ping'),
 })
 
+const pointCameraCommandSchema = z.object({
+  type: z.literal('pointCamera'),
+  tiltDeg: z.number().min(-90).max(0),
+  panDeg: z.number().min(-180).max(180),
+})
+
+const lookAtPointCommandSchema = z.object({
+  type: z.literal('lookAtPoint'),
+  ...latLonSchema.shape,
+  altitudeM: z.number(),
+})
+
 export const commandSchema = z.discriminatedUnion('type', [
   uploadMissionCommandSchema,
   uploadGeofenceCommandSchema,
   clearGeofenceCommandSchema,
   simulateFaultCommandSchema,
   pingCommandSchema,
+  pointCameraCommandSchema,
+  lookAtPointCommandSchema,
 ])
 
 export const commandEnvelopeSchema = z.object({
@@ -53,6 +69,8 @@ export type UploadGeofenceCommand = z.infer<typeof uploadGeofenceCommandSchema>
 export type ClearGeofenceCommand = z.infer<typeof clearGeofenceCommandSchema>
 export type SimulateFaultCommand = z.infer<typeof simulateFaultCommandSchema>
 export type PingCommand = z.infer<typeof pingCommandSchema>
+export type PointCameraCommand = z.infer<typeof pointCameraCommandSchema>
+export type LookAtPointCommand = z.infer<typeof lookAtPointCommandSchema>
 export type Command = z.infer<typeof commandSchema>
 export type CommandType = z.infer<typeof commandTypeSchema>
 export type CommandEnvelope = z.infer<typeof commandEnvelopeSchema>

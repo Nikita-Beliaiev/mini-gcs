@@ -1,5 +1,6 @@
 import type {
   AttitudeMessage,
+  CameraMessage,
   CommandAckMessage,
   GeofenceMessage,
   HeartbeatMessage,
@@ -93,6 +94,20 @@ export function commandAckMessage(overrides: Partial<CommandAckMessage> = {}): C
     command: 'uploadMission',
     accepted: true,
     reason: null,
+    ...overrides,
+  }
+}
+
+export function cameraMessage(overrides: Partial<CameraMessage> = {}): CameraMessage {
+  return {
+    type: 'camera',
+    seq: 1,
+    timeMs: 0,
+    tiltDeg: -35,
+    panDeg: 0,
+    horizontalFovDeg: 61.3,
+    verticalFovDeg: 36.87,
+    lookAt: null,
     ...overrides,
   }
 }

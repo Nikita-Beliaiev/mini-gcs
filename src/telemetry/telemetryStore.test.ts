@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   attitudeMessage,
+  cameraMessage,
   commandAckMessage,
   geofenceMessage,
   heartbeatMessage,
@@ -44,6 +45,7 @@ describe('createTelemetryStore', () => {
       mission: null,
       missionCurrent: null,
       geofence: null,
+      camera: null,
     })
     expect(store.getPositionHistory()).toEqual([])
   })
@@ -57,6 +59,7 @@ describe('createTelemetryStore', () => {
     const mission = missionMessage()
     const missionCurrent = missionCurrentMessage()
     const geofence = geofenceMessage()
+    const camera = cameraMessage()
     const newerPosition = positionMessage({ seq: 2, altitudeM: 41 })
 
     for (const message of [
@@ -68,6 +71,7 @@ describe('createTelemetryStore', () => {
       mission,
       missionCurrent,
       geofence,
+      camera,
       newerPosition,
     ]) {
       store.push(message)
@@ -83,6 +87,7 @@ describe('createTelemetryStore', () => {
       mission,
       missionCurrent,
       geofence,
+      camera,
     })
   })
 

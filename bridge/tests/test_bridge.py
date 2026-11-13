@@ -314,6 +314,18 @@ async def test_simulates_gps_loss_and_a_battery_drop_in_sitl(system: System) -> 
     await station.next(lambda m: m["type"] == "systemStatus" and m["batteryPercent"] == 32)
 
 
+async def test_says_it_does_not_control_a_camera_yet(system: System) -> None:
+    station = await system.station()
+
+    for command in (
+        {"type": "pointCamera", "tiltDeg": -45, "panDeg": 0},
+        {"type": "lookAtPoint", "lat": 43.1, "lon": 11.6, "altitudeM": 0},
+    ):
+        ack = await station.command(command)
+        assert ack["accepted"] is False
+        assert ack["reason"] == "The bridge does not control a camera yet"
+
+
 async def test_ignores_commands_outside_the_protocol(system: System) -> None:
     station = await system.station()
 

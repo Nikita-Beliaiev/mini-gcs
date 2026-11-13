@@ -72,6 +72,16 @@ const geofenceMessageSchema = z.object({
   polygon: pointListSchema.nullable(),
 })
 
+const cameraMessageSchema = z.object({
+  type: z.literal('camera'),
+  ...header,
+  tiltDeg: z.number(),
+  panDeg: z.number(),
+  horizontalFovDeg: z.number(),
+  verticalFovDeg: z.number(),
+  lookAt: latLonSchema.nullable(),
+})
+
 const commandAckMessageSchema = z.object({
   type: z.literal('commandAck'),
   ...header,
@@ -90,6 +100,7 @@ export const telemetryMessageSchema = z.discriminatedUnion('type', [
   missionMessageSchema,
   missionCurrentMessageSchema,
   geofenceMessageSchema,
+  cameraMessageSchema,
   commandAckMessageSchema,
 ])
 
@@ -103,6 +114,7 @@ export type HomeMessage = z.infer<typeof homeMessageSchema>
 export type MissionMessage = z.infer<typeof missionMessageSchema>
 export type MissionCurrentMessage = z.infer<typeof missionCurrentMessageSchema>
 export type GeofenceMessage = z.infer<typeof geofenceMessageSchema>
+export type CameraMessage = z.infer<typeof cameraMessageSchema>
 export type CommandAckMessage = z.infer<typeof commandAckMessageSchema>
 export type TelemetryMessage = z.infer<typeof telemetryMessageSchema>
 export type TelemetryMessageType = TelemetryMessage['type']

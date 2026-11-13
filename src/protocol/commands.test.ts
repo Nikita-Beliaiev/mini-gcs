@@ -9,6 +9,8 @@ describe('parseCommandEnvelope', () => {
     { commandId: 3, command: { type: 'simulateFault', fault: 'gpsLoss' } },
     { commandId: 4, command: { type: 'uploadMission', waypoints: [{ lat: 43.1, lon: 11.6 }] } },
     { commandId: 5, command: { type: 'uploadGeofence', polygon: [{ lat: 43.1, lon: 11.6 }] } },
+    { commandId: 6, command: { type: 'pointCamera', tiltDeg: -45, panDeg: 30 } },
+    { commandId: 7, command: { type: 'lookAtPoint', lat: 43.1, lon: 11.6, altitudeM: -12 } },
   ])('accepts $command.type', (envelope) => {
     expect(parseCommandEnvelope(envelope)).toEqual(envelope)
   })
@@ -18,6 +20,14 @@ describe('parseCommandEnvelope', () => {
     ['a fractional command id', { commandId: 1.5, command: { type: 'ping' } }],
     ['an unknown command', { commandId: 1, command: { type: 'disarm' } }],
     ['an unknown fault', { commandId: 1, command: { type: 'simulateFault', fault: 'fire' } }],
+    [
+      'a camera tilted above the horizon',
+      { commandId: 1, command: { type: 'pointCamera', tiltDeg: 10, panDeg: 0 } },
+    ],
+    [
+      'a camera point without its altitude',
+      { commandId: 1, command: { type: 'lookAtPoint', lat: 43.1, lon: 11.6 } },
+    ],
     [
       'a waypoint off the globe',
       { commandId: 1, command: { type: 'uploadMission', waypoints: [{ lat: 0, lon: 200 }] } },

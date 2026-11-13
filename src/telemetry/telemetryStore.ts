@@ -1,5 +1,6 @@
 import type {
   AttitudeMessage,
+  CameraMessage,
   GeofenceMessage,
   HeartbeatMessage,
   HomeMessage,
@@ -21,6 +22,7 @@ export interface TelemetryState {
   mission: MissionMessage | null
   missionCurrent: MissionCurrentMessage | null
   geofence: GeofenceMessage | null
+  camera: CameraMessage | null
 }
 
 export interface TelemetryStore {
@@ -50,6 +52,7 @@ export const EMPTY_TELEMETRY_STATE: TelemetryState = {
   mission: null,
   missionCurrent: null,
   geofence: null,
+  camera: null,
 }
 
 function scheduleAnimationFrame(callback: () => void): void {
@@ -74,6 +77,8 @@ function applyMessage(state: TelemetryState, message: TelemetryMessage): Telemet
       return { ...state, missionCurrent: message }
     case 'geofence':
       return { ...state, geofence: message }
+    case 'camera':
+      return { ...state, camera: message }
     case 'commandAck':
       return state
   }

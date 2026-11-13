@@ -9,7 +9,13 @@ MAX_POINTS_PER_MESSAGE = 100
 type Telemetry = dict[str, Any]
 type GpsFix = Literal["none", "2d", "3d"]
 type CommandType = Literal[
-    "uploadMission", "uploadGeofence", "clearGeofence", "simulateFault", "ping"
+    "uploadMission",
+    "uploadGeofence",
+    "clearGeofence",
+    "simulateFault",
+    "ping",
+    "pointCamera",
+    "lookAtPoint",
 ]
 
 
@@ -46,8 +52,27 @@ class Ping(BaseModel):
     type: Literal["ping"]
 
 
+class PointCamera(BaseModel):
+    type: Literal["pointCamera"]
+    tilt_deg: float = Field(alias="tiltDeg", ge=-90, le=0)
+    pan_deg: float = Field(alias="panDeg", ge=-180, le=180)
+
+
+class LookAtPoint(BaseModel):
+    type: Literal["lookAtPoint"]
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+    altitude_m: float = Field(alias="altitudeM")
+
+
 type Command = Annotated[
-    UploadMission | UploadGeofence | ClearGeofence | SimulateFault | Ping,
+    UploadMission
+    | UploadGeofence
+    | ClearGeofence
+    | SimulateFault
+    | Ping
+    | PointCamera
+    | LookAtPoint,
     Field(discriminator="type"),
 ]
 

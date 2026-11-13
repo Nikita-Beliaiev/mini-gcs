@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   attitudeMessage,
+  cameraMessage,
   commandAckMessage,
   geofenceMessage,
   heartbeatMessage,
@@ -23,6 +24,8 @@ describe('parseTelemetryMessage', () => {
     missionCurrentMessage(),
     geofenceMessage(),
     geofenceMessage({ polygon: [{ lat: 1, lon: 2 }] }),
+    cameraMessage(),
+    cameraMessage({ lookAt: { lat: 43.1, lon: 11.6 } }),
     commandAckMessage({ accepted: false, reason: 'Busy' }),
   ])('accepts a valid $type message', (message) => {
     expect(parseTelemetryMessage(message)).toEqual(message)

@@ -63,6 +63,10 @@ class NotReadyError(Exception):
     pass
 
 
+class UnsupportedCommandError(Exception):
+    pass
+
+
 @dataclass(frozen=True)
 class BridgeConfig:
     vehicle_host: str = "127.0.0.1"
@@ -241,7 +245,14 @@ class Bridge:
                     await self._simulate_fault(command.fault)
                 case protocol.Ping():
                     await self._control().ping()
-        except (NotReadyError, TransferError, CommandRejectedError) as error:
+                case protocol.PointCamera() | protocol.LookAtPoint():
+                    raise UnsupportedCommandError("The bridge does not control a camera yet")
+        except (
+            NotReadyError,
+            TransferError,
+            CommandRejectedError,
+            UnsupportedCommandError,
+        ) as error:
             log.info("%s rejected: %s", command.type, error)
             return protocol.command_ack(envelope.command_id, command.type, False, str(error))
         return protocol.command_ack(envelope.command_id, command.type, True, None)
