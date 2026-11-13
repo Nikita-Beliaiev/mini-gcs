@@ -53,6 +53,10 @@
   font-family: var(--font-mono);
 }
 
+.value button {
+  font-family: var(--font-sans);
+}
+
 .status {
   min-height: 1.45em;
   font-size: 11px;
