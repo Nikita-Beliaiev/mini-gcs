@@ -1,5 +1,6 @@
 import { distanceMeters, isPointInPolygon, type LatLon } from '../geo/geo'
 
+export const MISSION_ALTITUDE_M = 80
 export const MAX_MISSION_WAYPOINTS = 20
 export const MAX_DISTANCE_FROM_HOME_M = 2000
 export const MIN_GEOFENCE_VERTICES = 3

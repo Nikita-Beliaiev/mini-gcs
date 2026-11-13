@@ -70,7 +70,7 @@ class BridgeConfig:
     station_host: str = "127.0.0.1"
     station_port: int = 8788
     allowed_origins: tuple[str, ...] = DEFAULT_ALLOWED_ORIGINS
-    takeoff_altitude_m: float = 40.0
+    takeoff_altitude_m: float = 80.0
     retry: Retry = DEFAULT_RETRY
     launch_timeout_s: float = 180.0
     arm_retry_s: float = 2.0

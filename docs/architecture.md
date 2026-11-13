@@ -109,7 +109,7 @@ The station checks a plan before upload so the operator sees problems early, but
 stateDiagram-v2
   [*] --> STANDBY
   STANDBY --> TAKEOFF: 5 s on the ground<br/>and a 3D GPS fix
-  TAKEOFF --> AUTO: 40 m reached
+  TAKEOFF --> AUTO: 80 m reached
   AUTO --> RTL: last waypoint,<br/>battery at 30%<br/>or outside the geofence
   RTL --> LAND: within 2 m of home
   LAND --> STANDBY: on the ground,<br/>battery swapped
@@ -187,8 +187,8 @@ sequenceDiagram
   end
   AP->>Bridge: MISSION_ACK accepted
   Bridge-->>Station: commandAck, mission
-  Bridge->>AP: GUIDED, then ARM until ready, then NAV_TAKEOFF 40 m
-  AP-->>Bridge: GLOBAL_POSITION_INT at 36 m
+  Bridge->>AP: GUIDED, then ARM until ready, then NAV_TAKEOFF 80 m
+  AP-->>Bridge: GLOBAL_POSITION_INT at 72 m
   Bridge->>AP: AUTO
   AP-->>Station: flies the route, returns home and lands
 ```

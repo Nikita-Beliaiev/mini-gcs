@@ -8,6 +8,7 @@ import {
   run,
   runUntil,
 } from '../test/simulation'
+import { MISSION_ALTITUDE_M } from '../mission/missionRules'
 import { DEMO_HOME, DEMO_PATROL_ROUTE } from './demoArea'
 import { createSimulator, gpsFixFor } from './simulator'
 
@@ -77,13 +78,13 @@ describe('createSimulator', () => {
       expect.objectContaining({ mode: 'TAKEOFF', armed: true }),
     )
     expect(lastOfType(messages, 'systemStatus').gpsFix).toBe('3d')
-    expect(lastOfType(messages, 'position').altitudeM).toBeCloseTo(40, 0)
+    expect(lastOfType(messages, 'position').altitudeM).toBeCloseTo(MISSION_ALTITUDE_M, 0)
   })
 
   it('returns home on low battery, lands and flies again with a fresh battery', () => {
     const simulator = createDemoSimulator(LONG_MISSION)
 
-    const toRtl = runUntil(simulator, isModeHeartbeat('RTL'), 400)
+    const toRtl = runUntil(simulator, isModeHeartbeat('RTL'), 600)
     expect(lastOfType(toRtl, 'systemStatus').batteryPercent).toBeLessThanOrEqual(31)
 
     const toLanding = runUntil(simulator, isModeHeartbeat('STANDBY'), 300)

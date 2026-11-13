@@ -163,7 +163,7 @@ async def test_uploads_a_mission_and_flies_it(system: System) -> None:
         mavlink.MAV_CMD_NAV_TAKEOFF
     )
     assert system.autopilot.armed
-    assert system.autopilot.relative_alt_m == 40
+    assert system.autopilot.relative_alt_m == 80
 
 
 @pytest.mark.parametrize("autopilot_options", [FakeAutopilotOptions(ignore_items=1)])

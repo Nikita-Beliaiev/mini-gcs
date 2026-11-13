@@ -22,10 +22,10 @@ Start SITL so that it sends MAVLink to the bridge, with home at the demo field:
 
 ```bash
 # Windows: the build Mission Planner uses, from firmware.ardupilot.org/Tools/MissionPlanner/sitl/CopterStable/
-ArduCopter.elf --model quad --home 43.095,11.645,400,0 --defaults copter.parm -I0 --serial0 udpclient:127.0.0.1:14550
+ArduCopter.elf --model quad --home 43.095,11.645,302,0 --defaults copter.parm -I0 --serial0 udpclient:127.0.0.1:14550
 
 # Linux: from an ArduPilot checkout
-Tools/autotest/sim_vehicle.py -v ArduCopter --custom-location=43.095,11.645,400,0 --out=udp:127.0.0.1:14550 --no-mavproxy
+Tools/autotest/sim_vehicle.py -v ArduCopter --custom-location=43.095,11.645,302,0 --out=udp:127.0.0.1:14550 --no-mavproxy
 ```
 
 Then start the bridge and the station:
@@ -35,14 +35,14 @@ Then start the bridge and the station:
 npm run dev                                          # in the repository root
 ```
 
-Open http://localhost:5173/?server=ws://127.0.0.1:8788. The vehicle appears on the ground at home. Draw a route and upload it: the bridge uploads the mission, waits until ArduCopter is ready to arm, takes off in GUIDED to 40 m and switches to AUTO. At the end of the route the mission returns home and lands. After SITL starts, its EKF needs about 40 s before it uses GPS; until then the launch waits and a geofence upload is refused with "Waiting for the vehicle position". The bridge prints the autopilot's own messages, such as `Arm: Need Position Estimate`, so the console shows why ArduPilot refused something.
+Open http://localhost:5173/?server=ws://127.0.0.1:8788. The vehicle appears on the ground at home. Draw a route and upload it: the bridge uploads the mission, waits until ArduCopter is ready to arm, takes off in GUIDED to 80 m and switches to AUTO. At the end of the route the mission returns home and lands. After SITL starts, its EKF needs about 40 s before it uses GPS; until then the launch waits and a geofence upload is refused with "Waiting for the vehicle position". The bridge prints the autopilot's own messages, such as `Arm: Need Position Estimate`, so the console shows why ArduPilot refused something.
 
 | Option           | Default | What it does                                        |
 | ---------------- | ------- | --------------------------------------------------- |
 | `--vehicle-port` | `14550` | UDP port the autopilot sends MAVLink to             |
 | `--port`         | `8788`  | WebSocket port for the station                      |
 | `--allow-origin` |         | Another page origin allowed to connect (repeatable) |
-| `--altitude`     | `40`    | Takeoff and waypoint altitude above home, in metres |
+| `--altitude`     | `80`    | Takeoff and waypoint altitude above home, in metres |
 | `--tlog`         |         | Record all MAVLink traffic to a `.tlog` file        |
 
 A recorded `.tlog` opens in the station's replay, like logs from Mission Planner or QGroundControl.

@@ -7,7 +7,7 @@ import {
   type LatLon,
 } from '../geo/geo'
 import { en } from '../i18n/en'
-import { validateGeofence, validateMission } from '../mission/missionRules'
+import { MISSION_ALTITUDE_M, validateGeofence, validateMission } from '../mission/missionRules'
 import { describePlanIssue } from '../mission/planIssueText'
 import type { CommandEnvelope, SimulatedFault } from '../protocol/commands'
 import type { SimulatorFlightMode } from '../protocol/flightModes'
@@ -27,7 +27,6 @@ export interface Simulator {
   handleCommand: (envelope: CommandEnvelope) => TelemetryMessage[]
 }
 
-const CRUISE_ALTITUDE_M = 40
 const CRUISE_SPEED_MS = 12
 const ACCELERATION_MS2 = 2
 const MAX_TURN_RATE_DEG_S = 60
@@ -37,7 +36,7 @@ const WAYPOINT_RADIUS_M = 10
 const HOME_RADIUS_M = 2
 
 const STANDBY_DURATION_MS = 5000
-const BATTERY_DRAIN_PERCENT_PER_S = 0.3
+const BATTERY_DRAIN_PERCENT_PER_S = 0.15
 const RTL_BATTERY_PERCENT = 30
 
 const GPS_UPDATE_INTERVAL_MS = 1000
@@ -191,7 +190,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
         break
       }
       case 'TAKEOFF':
-        if (vehicle.altitudeM >= CRUISE_ALTITUDE_M) {
+        if (vehicle.altitudeM >= MISSION_ALTITUDE_M) {
           vehicle.waypointIndex = 0
           setMode('AUTO')
         }
@@ -231,11 +230,11 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
       case 'LAND':
         return { target: null, altitudeM: 0, speedMs: 0 }
       case 'TAKEOFF':
-        return { target: null, altitudeM: CRUISE_ALTITUDE_M, speedMs: 0 }
+        return { target: null, altitudeM: MISSION_ALTITUDE_M, speedMs: 0 }
       case 'AUTO':
         return {
           target: currentWaypoint(),
-          altitudeM: CRUISE_ALTITUDE_M,
+          altitudeM: MISSION_ALTITUDE_M,
           speedMs: CRUISE_SPEED_MS,
         }
       case 'RTL': {
@@ -243,7 +242,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
         const brakingSpeed = Math.sqrt(2 * ACCELERATION_MS2 * distanceHome)
         return {
           target: home,
-          altitudeM: CRUISE_ALTITUDE_M,
+          altitudeM: MISSION_ALTITUDE_M,
           speedMs: Math.min(CRUISE_SPEED_MS, brakingSpeed),
         }
       }

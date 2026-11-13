@@ -12,6 +12,6 @@ test('connects to the simulated vehicle and shows it flying', async ({ page }) =
   await expect(page.getByRole('status')).toContainText(/Connected · (<1|\d+) ms/)
 
   await waitForMode(page, 'AUTO')
-  await expect(readout(page, 'Altitude')).toContainText('40.0 m')
+  await expect(readout(page, 'Altitude')).toContainText('80.0 m')
   await expect(readout(page, 'Arming')).toContainText('Armed')
 })

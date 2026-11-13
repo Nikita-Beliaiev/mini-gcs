@@ -22,7 +22,7 @@ def parse_args() -> BridgeConfig:
         default=[],
         help="Extra page origin allowed to connect, for example http://localhost:5174",
     )
-    parser.add_argument("--altitude", type=float, default=40.0, help="Takeoff altitude in metres")
+    parser.add_argument("--altitude", type=float, default=80.0, help="Takeoff altitude in metres")
     parser.add_argument("--tlog", type=Path, help="Record all MAVLink traffic to this .tlog file")
     args = parser.parse_args()
     return BridgeConfig(
