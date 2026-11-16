@@ -30,6 +30,8 @@ flowchart LR
   terrain --> readouts
   terrain --> planner
   terrain --> direct
+  markFiles["GeoJSON and CoT files"] -- "checked on import" --> marks["Marks<br/>Zustand, saved in local storage"]
+  marks --> direct
 ```
 
 | Module                  | Folder                                   | Responsibility                                                                   |
@@ -52,6 +54,7 @@ flowchart LR
 | Terrain                 | `src/terrain`                            | Terrain tiles, elevation sampling, altitudes and route profiles.                 |
 | Coordinates             | `src/geo`                                | Distances, bearings, point-in-polygon and MGRS references.                       |
 | Camera                  | `src/camera`                             | Camera geometry on the terrain, the synthetic view, its HUD and controls.        |
+| Marks                   | `src/marks`                              | Map marks with APP-6 symbols, their storage, GeoJSON and Cursor on Target files. |
 | Map, charts, instrument | `src/map`, `src/charts`, `src/telemetry` | Rendering that bypasses React for high-rate data.                                |
 
 ## Protocol
@@ -246,6 +249,20 @@ flowchart LR
 - **Replays include the camera.** Camera messages are recorded like any other, so a replay shows the same view and footprint, without the controls.
 - **The bridge does not control a camera yet.** It understands the camera commands, so the protocol stays in step, and answers that it does not support them. ArduPilot SITL can simulate a mount, which would be the next step.
 
+## Marks
+
+The operator places marks, points with an APP-6 military symbol, on a point picked on the map or in the camera view, and shares them with GIS tools and TAK clients such as ATAK. The demo starts with no marks.
+
+- **A symbol is an affiliation and a function.** APP-6 draws the affiliation as the frame (a blue rectangle for a friend, a red diamond for hostile, a green square for neutral, a yellow quatrefoil for unknown) and the function as the icon inside it. The station offers the four affiliations and six functions: ground track, infantry, armour, artillery, ground vehicle and UAV. A new mark starts as an unknown ground track, the way an unidentified contact is reported.
+- **One letter code for both formats.** A mark's symbol is a 15-character letter code of APP-6 B and MIL-STD-2525 C, such as `SHGPUCI--------` for hostile infantry. Cursor on Target types are spelled from the same letters: `a-h-G-U-C-I`. The function is kept as a path down the symbol tree (`U`, `C`, `I`: unit, combat, infantry), so both codes come from one table. The 20-digit numeric codes of APP-6 D would need a mapping table to CoT types.
+- **milsymbol draws the symbols.** It is about 200 KB gzipped, so it loads in its own chunk the first time a symbol is shown, and a unit test checks every code the station writes with milsymbol's own validation.
+- **Marks stay in the browser.** A Zustand store is saved to local storage with a format version. On load each mark is checked with Zod, and a damaged one is dropped without losing the rest. Marks belong to the operator, not to a flight: they show in live and in replay, and adding one sends nothing to the vehicle.
+- **GeoJSON for GIS tools.** The export is a FeatureCollection of points in longitude, latitude order, as RFC 7946 requires, with the name, affiliation, type, symbol code and time. The import takes any GeoJSON points: each missing or wrong property falls back on its own, to an unknown ground track named "Untitled mark", and features that are not points are counted as skipped.
+- **Cursor on Target for TAK.** Each mark downloads as one CoT event: its id as the `uid`, the type from its symbol, `how="h-g-i-g-o"` for a point entered by a person, a stale time 24 hours on and the name as the contact callsign. Height and errors carry CoT's unknown value `9999999.0`: the station knows the terrain height above sea level, but CoT wants the height above the WGS84 ellipsoid. The XML is built with the DOM and `XMLSerializer`, so a name with `<` or `&` cannot break it.
+- **Reading CoT.** The import reads every event in a file, takes the most specific symbol the station knows for its type (`a-h-G-U-C-I-Z`, motorised infantry, becomes infantry) and folds assumed, suspect and pending identities into the four affiliations. Events that are not atoms, such as chat or routes, are skipped. The browser's DOMParser loads no external entities, so a crafted XML file cannot reach the network or the disk.
+- **An id updates a mark.** Imported marks keep their GeoJSON id or CoT uid, so importing a file again updates its marks instead of adding them twice.
+- **On the map** each mark is a MapLibre marker with the symbol and its name, placed by the anchor point milsymbol reports for the symbol. Clicking a mark selects its point; the list can centre the map on a mark, rename it, remove it or download it as CoT.
+
 ## Languages
 
 The interface is available in English and Ukrainian.
@@ -269,21 +286,23 @@ The interface is available in English and Ukrainian.
 | `?server=` parameter            | No       | Only `ws:` and `wss:` addresses are used.                                                      |
 | `?lang=` and the saved language | No       | Only `en` and `uk` are used; anything else falls back.                                         |
 | Terrain tiles                   | No       | Decoded only into heights; a failed request or a tile of the wrong size means no terrain data. |
+| Imported mark files             | No       | Up to 1 MB; GeoJSON checked with Zod, CoT read by DOMParser; positions range-checked.          |
+| Saved marks                     | No       | Checked with Zod on load; a damaged mark is dropped.                                           |
 
 The simulator server and the bridge listen on `127.0.0.1` only. The Node simulator server does not check the `Origin` header, so any page open in the same browser could connect to it; that is acceptable for a local simulator. The bridge commands an autopilot, so it accepts only the station's own origins and clients without an `Origin` header.
 
 ## Testing
 
-| Layer         | Tool                              | What it covers                                                                                                                           |
-| ------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Logic         | Vitest                            | Geometry, MGRS, simulator flights with fixed seeds, stores, rules, backoff, protocol, terrain sampling, route profiles, camera geometry. |
-| Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names, in both languages.                                                               |
-| Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                                                                              |
-| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages, terrain from a stub tile, the camera.                       |
-| Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, drawing in Ukrainian, and with a point card and a terrain profile.                 |
-| MAVLink       | Vitest with pymavlink fixtures    | Frames, checksums, truncation, signing, damaged logs, mission transfers.                                                                 |
-| Bridge        | pytest, ruff, mypy (strict)       | A fake ArduCopter over real UDP and a real WebSocket client, no SITL needed.                                                             |
-| Contract      | JSON Schema from Zod              | Every message the bridge sends is valid for the station.                                                                                 |
+| Layer         | Tool                              | What it covers                                                                                                                                                          |
+| ------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Logic         | Vitest                            | Geometry, MGRS, simulator flights with fixed seeds, stores, rules, backoff, protocol, terrain sampling, route profiles, camera geometry, symbol codes, GeoJSON and CoT. |
+| Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names, in both languages.                                                                                              |
+| Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                                                                                                             |
+| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages, terrain from a stub tile, the camera, marks and their files.                               |
+| Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, drawing in Ukrainian, with a point card and a terrain profile, and adding marks.                                  |
+| MAVLink       | Vitest with pymavlink fixtures    | Frames, checksums, truncation, signing, damaged logs, mission transfers.                                                                                                |
+| Bridge        | pytest, ruff, mypy (strict)       | A fake ArduCopter over real UDP and a real WebSocket client, no SITL needed.                                                                                            |
+| Contract      | JSON Schema from Zod              | Every message the bridge sends is valid for the station.                                                                                                                |
 
 MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrappers are mocked in component tests and exercised in Playwright instead. The logic they rely on, such as GeoJSON builders and chart windows, has its own unit tests. Decoding a terrain tile needs a real canvas too, so component tests use a fake terrain and Playwright serves a flat tile built with pngjs, which keeps the end-to-end tests off the network for terrain and gives exact altitudes.
 
@@ -292,10 +311,10 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - **Custom telemetry store and Zustand side by side.** Telemetry changes many times per frame and needs batching and history; planning and alerts change on clicks and fit Zustand's simple model.
 - **Worker by default, WebSocket on request.** The worker keeps the demo working on static hosting. The WebSocket mode shows the same client against a separate process, with reconnect.
 - **Reconnect only for WebSocket.** In worker mode there is no network that can drop, and restarting the worker would start a new flight.
-- **Lazy loading.** MapLibre, uPlot, and Zod with the WebSocket transport or the flight log parser load only when needed; the initial bundle is about 80 KB gzipped.
+- **Lazy loading.** MapLibre, uPlot, milsymbol, and Zod with the WebSocket transport or the flight log parser load only when needed; the initial bundle is about 85 KB gzipped.
 - **Replay as a transport.** Replay reuses the whole station instead of a second set of components, and the player is tested on its own with a fake clock and fake frames.
 - **Rebuilding instead of snapshots.** Seeking back replays the log from the start. Periodic snapshots of the telemetry store would make long logs faster to seek, at the cost of more code and memory; 10 minutes does not need them.
-- **Own dictionaries instead of an i18n library.** For two languages and about 150 strings, typed objects give compile-time checks with no dependency. With translators, many languages or ICU message files, i18next or FormatJS would pay off.
+- **Own dictionaries instead of an i18n library.** For two languages and about 240 strings, typed objects give compile-time checks with no dependency. With translators, many languages or ICU message files, i18next or FormatJS would pay off.
 - **Mermaid instead of images.** Diagrams live as text next to the code, so they show up in diffs and are easy to keep current.
 - **The bridge translates, the station stays MAVLink-free.** The browser keeps one protocol and one set of transports; MAVLink details, retries and ArduPilot quirks live in one Python process. The cost is that the station can only use what its protocol describes.
 - **Python for the bridge.** pymavlink is the reference MAVLink implementation and most ArduPilot tooling is Python, so the bridge uses the same codec as MAVProxy instead of a port.
@@ -303,6 +322,8 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - **A synthetic view instead of video.** A real video stream needs imagery of the area; free aerial imagery detailed enough for a camera 80 m up, under a licence that allows this use, is not available. Drawing the view from map and terrain data keeps the demo self-contained and still exercises the geometry a real video overlay needs.
 - **Own ray casting instead of the view's `unproject`.** The footprint, the HUD and picking work without the second map, in tests and when the camera window is hidden, and give one answer everywhere.
 - **An own terrain sampler instead of the map's terrain.** The map's terrain heights depend on what it has drawn; the sampler gives the same height wherever it is asked, is a few dozen lines and runs in unit tests. MGRS, with its zones, bands and 100 km squares, comes from a small, well tested library instead.
+- **milsymbol instead of own symbols.** Four frames would be easy to draw, but icons, their placement and the details of the standards are not. milsymbol is the library web C2 tools use, and it costs nothing until the first symbol.
+- **One CoT event per mark.** CoT is a message format, one event per message, and a plain `.cot` file holds one event. ATAK shares several items as a data package, a zip with a manifest; GeoJSON covers the whole list without a zip writer.
 - **One mission altitude.** The station's profile, the simulator and the bridge all use 80 m above home. The protocol does not carry altitudes, so they are kept in step by a shared constant in TypeScript and the bridge's default.
 
 ## Known limitations
@@ -323,3 +344,5 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - The simulator and the bridge fly at a fixed altitude above home and do not follow the terrain.
 - The gimbal ignores the vehicle's roll and pitch as a stabilised one would, and zoom only narrows the synthetic view: map and terrain data have no more detail to show.
 - The camera exists only in the station's simulator: the bridge rejects camera commands, and MAVLink logs carry no camera data the station reads.
+- Marks are points only, without lines or areas, and live in one browser: stations share them only through files.
+- A CoT type outside the station's six symbols becomes the nearest one it knows, often a plain ground track, so detail is lost on import. Data packages and KML are not read.

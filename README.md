@@ -8,7 +8,7 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 
 ![The station flying a patrol, uploading a new mission, pointing the camera at a field and raising a link loss alert](docs/demo.gif)
 
-> **Status:** phases 0 to 9 are complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, an English and Ukrainian interface, MAVLink log replay, a Python bridge to ArduPilot SITL, terrain and MGRS coordinates, a gimbal camera with zoom and a synthetic view, end-to-end and accessibility tests. The next phases are listed in the [Roadmap](#roadmap).
+> **Status:** phases 0 to 10 are complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, an English and Ukrainian interface, MAVLink log replay, a Python bridge to ArduPilot SITL, terrain and MGRS coordinates, a gimbal camera with zoom and a synthetic view, map marks with APP-6 symbols shared as GeoJSON and Cursor on Target, end-to-end and accessibility tests. The next phases are listed in the [Roadmap](#roadmap).
 >
 > All flights are simulated, by the station's own simulator or by ArduPilot SITL. The project is not meant to control real aircraft.
 
@@ -19,6 +19,7 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 - Terrain from open elevation data: a hillshade and a 3D view on the map, and a terrain profile of a planned route that warns when a leg comes within 20 m of the ground
 - Coordinates under the cursor in decimal degrees and MGRS, and a card for a clicked point with its elevation, distance and bearing from home and from the vehicle, and copy buttons
 - A gimbal camera: its footprint cast onto the terrain on the map, a synthetic camera view with a HUD drawn from map and terrain data, tilt, pan and zoom controls, keeping a selected point in view, and the coordinates of any point clicked in the view
+- Map marks with APP-6 military symbols: a friend, hostile, neutral or unknown unit, vehicle or UAV on a point picked on the map or in the camera view, kept in the browser, listed with MGRS and time, renamed or removed, exported as GeoJSON or as Cursor on Target events for ATAK, and imported from both
 - Charts for the last 60 seconds of altitude, ground speed, battery and link quality
 - Mission planning: press "Draw route on map", click waypoints on the map, drag them, reorder or remove them in a list, check them against the rules and upload the route to the vehicle, which switches to it in flight
 - Geofence: draw a polygon, upload it, and the vehicle returns home when it crosses the border
@@ -56,6 +57,7 @@ The demo flies over farmland in Val d'Orcia, Tuscany.
 | Terrain          | AWS Terrain Tiles (Terrarium), own elevation sampler    |
 | Coordinates      | mgrs (proj4js) for MGRS references                      |
 | Camera view      | A second MapLibre map with terrain, Liberty style       |
+| Military symbols | milsymbol (APP-6)                                       |
 | Simulator server | Node.js, ws, tsx                                        |
 | MAVLink          | Own decoder in TypeScript, pymavlink in the bridge      |
 | ArduPilot bridge | Python 3.12, asyncio, websockets, pydantic              |
@@ -111,7 +113,7 @@ To fly ArduPilot SITL instead, start SITL and the Python bridge as described in 
 - [x] **Phase 7:** MAVLink log replay and a Python bridge that flies ArduPilot SITL
 - [x] **Phase 8:** terrain and coordinates: elevation, altitude above the ground, MGRS, route terrain profile
 - [x] **Phase 9:** a gimbal camera: its footprint on the map, a synthetic camera view, zoom and coordinates of a point clicked in it
-- [ ] **Phase 10:** a situational picture: map marks with APP-6 symbols, GeoJSON and Cursor on Target export
+- [x] **Phase 10:** a situational picture: map marks with APP-6 symbols, GeoJSON and Cursor on Target export and import
 - [ ] **Phase 11:** working offline: the station and the map of the area without an internet connection
 
 Stretch goals: multiple vehicles, ArduPilot SITL in CI.
