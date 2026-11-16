@@ -131,8 +131,8 @@ export const uk: Messages = {
       lookAhead: 'Дивитися вперед',
       lookDown: 'Дивитися вниз',
     },
-    zoomIn: 'Наблизити',
-    zoomOut: 'Віддалити',
+    zoomIn: 'Наблизити камеру',
+    zoomOut: 'Віддалити камеру',
   },
   charts: {
     title: (seconds) =>

@@ -12,12 +12,12 @@ test('opens in Ukrainian from a link and keeps a switch to English', async ({ pa
 
   await expectUkrainianStation(page)
   await expect(page.getByRole('img', { name: 'Точка старту' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Наблизити' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Наблизити', exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Останні 60 секунд' })).toContainText('Висота, м')
 
   await page.getByRole('button', { name: 'EN' }).click()
   await expect(page).toHaveURL(/[?&]lang=en(&|$)/)
-  await expect(page.getByRole('button', { name: 'Zoom in' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Zoom in', exact: true })).toBeVisible()
 
   await page.reload()
   await expect(page.getByRole('status')).toContainText('Connected', { timeout: 20_000 })

@@ -117,8 +117,8 @@ export const en = {
       lookAhead: 'Look ahead',
       lookDown: 'Look down',
     },
-    zoomIn: 'Zoom in',
-    zoomOut: 'Zoom out',
+    zoomIn: 'Zoom the camera in',
+    zoomOut: 'Zoom the camera out',
   },
   charts: {
     title: (seconds: number) => `Last ${String(seconds)} seconds`,

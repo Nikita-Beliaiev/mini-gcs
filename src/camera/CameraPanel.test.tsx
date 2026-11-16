@@ -104,8 +104,8 @@ describe('CameraPanel', () => {
     const { transport } = renderPanel({ zoom: 2, horizontalFovDeg: 33.2, verticalFovDeg: 18.9 })
 
     expect(panel()).toHaveTextContent('×2.0 FOV 33.2°')
-    await user.click(screen.getByRole('button', { name: 'Zoom in' }))
-    await user.click(screen.getByRole('button', { name: 'Zoom out' }))
+    await user.click(screen.getByRole('button', { name: 'Zoom the camera in' }))
+    await user.click(screen.getByRole('button', { name: 'Zoom the camera out' }))
 
     expect(transport.sent.map((envelope) => envelope.command)).toEqual([
       { type: 'zoomCamera', zoom: 4 },
@@ -115,15 +115,15 @@ describe('CameraPanel', () => {
 
   it('offers no zoom past the ends of the lens', () => {
     const { transport } = renderPanel({ zoom: 1 })
-    expect(screen.getByRole('button', { name: 'Zoom out' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Zoom in' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Zoom the camera out' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Zoom the camera in' })).toBeEnabled()
 
     act(() => {
       transport.receive(cameraMessage({ seq: 2, zoom: 8 }))
     })
 
-    expect(screen.getByRole('button', { name: 'Zoom in' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Zoom out' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Zoom the camera in' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Zoom the camera out' })).toBeEnabled()
   })
 
   it('says why the vehicle refused to move the camera', async () => {
