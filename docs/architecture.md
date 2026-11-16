@@ -58,20 +58,20 @@ flowchart LR
 
 Messages are loosely modelled on MAVLink: each type has its own rate, plus a sequence number and simulation time. The TypeScript types are inferred from Zod schemas, so one definition describes the protocol and validates untrusted data at runtime.
 
-| Message          | Rate      | Contents                                                       |
-| ---------------- | --------- | -------------------------------------------------------------- |
-| `heartbeat`      | 1 Hz      | flight mode (the simulator's or ArduCopter's), armed state     |
-| `position`       | 10 Hz     | latitude, longitude, altitude above home, speed, heading       |
-| `attitude`       | 50 Hz     | roll, pitch, yaw                                               |
-| `systemStatus`   | 2 Hz      | battery, GPS fix and satellites, link quality, geofence breach |
-| `home`           | 0.2 Hz    | home position                                                  |
-| `mission`        | 0.2 Hz    | id and waypoints of the mission on the vehicle                 |
-| `missionCurrent` | 1 Hz      | waypoint the vehicle is flying to                              |
-| `geofence`       | 0.2 Hz    | geofence polygon on the vehicle, or none                       |
-| `camera`         | 10 Hz     | gimbal tilt and pan, fields of view, the point it looks at     |
-| `commandAck`     | on demand | whether a command was accepted, and why not                    |
+| Message          | Rate      | Contents                                                         |
+| ---------------- | --------- | ---------------------------------------------------------------- |
+| `heartbeat`      | 1 Hz      | flight mode (the simulator's or ArduCopter's), armed state       |
+| `position`       | 10 Hz     | latitude, longitude, altitude above home, speed, heading         |
+| `attitude`       | 50 Hz     | roll, pitch, yaw                                                 |
+| `systemStatus`   | 2 Hz      | battery, GPS fix and satellites, link quality, geofence breach   |
+| `home`           | 0.2 Hz    | home position                                                    |
+| `mission`        | 0.2 Hz    | id and waypoints of the mission on the vehicle                   |
+| `missionCurrent` | 1 Hz      | waypoint the vehicle is flying to                                |
+| `geofence`       | 0.2 Hz    | geofence polygon on the vehicle, or none                         |
+| `camera`         | 10 Hz     | gimbal tilt and pan, zoom, fields of view, the point it looks at |
+| `commandAck`     | on demand | whether a command was accepted, and why not                      |
 
-Commands from the station: `uploadMission`, `uploadGeofence`, `clearGeofence`, `pointCamera`, `lookAtPoint` and `ping` for the vehicle, and `simulateFault` for the simulator itself. `mission` and `geofence` are also sent right after a change.
+Commands from the station: `uploadMission`, `uploadGeofence`, `clearGeofence`, `pointCamera`, `lookAtPoint`, `zoomCamera` and `ping` for the vehicle, and `simulateFault` for the simulator itself. `mission` and `geofence` are also sent right after a change.
 
 ## Keeping 50 Hz telemetry smooth
 
@@ -127,7 +127,7 @@ stateDiagram-v2
 - Roll is the bank angle a turn needs, `atan(v·ω/g)`. Pitch leans forward to accelerate and against drag, both limited to 35°.
 - Noise comes from a seeded generator, so a test with a fixed seed always sees the same flight.
 - Faults are injected on purpose: a 10 s link loss drops every message and vehicle command, a GPS loss leaves two satellites for 15 s, a battery drop sets the charge to 32%.
-- The camera sits on a stabilised gimbal: its tilt is measured from the horizon, its pan from the vehicle heading, and it turns at most 90°/s. Looking at a point, it aims at the point's height above home, which the station sends from the terrain.
+- The camera sits on a stabilised gimbal: its tilt is measured from the horizon, its pan from the vehicle heading, and it turns at most 90°/s. Its lens zooms from ×1 to ×8 by at most two stops a second. Looking at a point, it aims at the point's height above home, which the station sends from the terrain.
 
 ## Recording and replay
 
@@ -229,7 +229,7 @@ The simulated vehicle carries a gimbal camera. The station shows where it looks 
 
 `mermaid
 flowchart LR
-  camera["camera message<br/>tilt, pan, fields of view"] --> pose["Camera pose<br/>position, height, azimuth, tilt"]
+  camera["camera message<br/>tilt, pan, zoom, fields of view"] --> pose["Camera pose<br/>position, height, azimuth, tilt"]
   position["position message"] --> pose
   pose --> ray["Ray through a frame point"]
   ray -- "10 m steps over the terrain,<br/>then bisection" --> hit["Ground point and range"]
@@ -242,6 +242,7 @@ flowchart LR
 - **One geometry for everything.** Pure functions turn the vehicle position, its heading and the gimbal angles into a ray for any point of the frame and march it over the terrain in 10 m steps, refining the hit by bisection. The footprint corners, the frame centre in the HUD and a point clicked in the view all come from the same functions, which are unit tested on flat ground, a cliff and a step. Corners that see the sky are drawn 1.5 km out.
 - **The synthetic view is a second map.** A MapLibre map with the Liberty style, terrain at true scale and a sky puts its camera at the vehicle's position and altitude above sea level with `calculateCameraOptionsFromCameraLngLatAltRotation`, turned to the gimbal's bearing and tilt, with the camera's vertical field of view and a 16:9 frame. Its centre is not clamped to the ground, so the camera stays where the vehicle is. In the browser, the map's own ground point under the centre of the view closely matches the geometry's frame centre. The view is labelled as synthetic: it stands in for a video stream, which would carry the same angles as metadata.
 - **Picking and pointing.** Clicking the view marks the ground point under the cursor, and Enter marks the point under the crosshair. The point card can point the camera at a selected point; the vehicle then keeps it in view while flying. Manual tilt and pan buttons move in 10° steps from the reported angles and end the tracking.
+- **Zoom narrows the field of view.** The zoom divides the tangent of the half angle, not the angle: at ×8 the horizontal view is 8.5°, not 61.3° / 8, and the frame on the ground is eight times narrower. Everything else already reads the fields of view from the camera message, so the footprint, the HUD, picking and the synthetic view follow the zoom without changes. Tilt and pan steps are divided by the zoom: a 10° step at ×8 would jump past the whole frame. Zooming in does not add detail to the synthetic view, so the lens stops at ×8.
 - **Replays include the camera.** Camera messages are recorded like any other, so a replay shows the same view and footprint, without the controls.
 - **The bridge does not control a camera yet.** It understands the camera commands, so the protocol stays in step, and answers that it does not support them. ArduPilot SITL can simulate a mount, which would be the next step.
 
@@ -320,5 +321,5 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - The terrain is a 25 to 30 m model of the ground without trees or buildings, so the profile keeps a 20 m margin and is a planning aid, not obstacle avoidance.
 - Altitude above sea level is the terrain height at home plus the altitude above home, not the GPS altitude, so it can differ from the autopilot's by a few metres.
 - The simulator and the bridge fly at a fixed altitude above home and do not follow the terrain.
-- The camera has no zoom, and the gimbal ignores the vehicle's roll and pitch as a stabilised one would.
+- The gimbal ignores the vehicle's roll and pitch as a stabilised one would, and zoom only narrows the synthetic view: map and terrain data have no more detail to show.
 - The camera exists only in the station's simulator: the bridge rejects camera commands, and MAVLink logs carry no camera data the station reads.
