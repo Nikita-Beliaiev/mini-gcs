@@ -102,7 +102,11 @@ async function playScenario(page: Page): Promise<void> {
   await delay(600)
   await clickLocator(page, page.getByRole('button', { name: 'Point camera here' }))
   await page.getByText('Tracking a point').waitFor()
-  await delay(3000)
+  await delay(1000)
+  await clickLocator(page, page.getByRole('button', { name: 'Zoom the camera in' }))
+  await delay(800)
+  await clickLocator(page, page.getByRole('button', { name: 'Zoom the camera in' }))
+  await delay(2200)
 
   await clickLocator(page, page.getByRole('tab', { name: 'Simulator' }))
   await delay(600)
