@@ -19,7 +19,7 @@ test('plans a mission on the map and uploads it to the vehicle', async ({ page }
     throw new Error('The map is not visible')
   }
   await page.getByRole('img', { name: 'Draft waypoint 1' }).dragTo(mapCanvas(page), {
-    targetPosition: { x: canvasBox.width / 2 + 220, y: canvasBox.height / 2 + 60 },
+    targetPosition: { x: canvasBox.width / 2 - 220, y: canvasBox.height / 2 + 60 },
   })
   await expect(waypoints.first()).not.toHaveText(firstBeforeDrag ?? '')
   await expect(waypoints).toHaveCount(2)

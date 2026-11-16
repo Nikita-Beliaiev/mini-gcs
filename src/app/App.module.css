@@ -50,6 +50,21 @@
   min-width: 0;
 }
 
+@media (min-width: 769px) {
+  .layout {
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100svh;
+  }
+
+  .main {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    overflow-y: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .main {
     grid-template-columns: 1fr;
