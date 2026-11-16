@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useMessages } from '../i18n/localeStore'
-import { useConnectionStatus, useGroundStation } from '../station/stationContext'
+import type { Command } from '../protocol/commands'
+import { useConnectionStatus, useGroundStation, useTelemetry } from '../station/stationContext'
 import buttonStyles from '../ui/button.module.css'
 import { describeCameraCommand } from './cameraCommandText'
-import { moveCamera, type CameraMove } from './cameraMoves'
+import { moveCamera, nextZoom, type CameraMove, type ZoomStep } from './cameraMoves'
 import styles from './CameraPanel.module.css'
 
 const ARROWS: readonly { move: CameraMove; symbol: string }[] = [
@@ -13,6 +14,11 @@ const ARROWS: readonly { move: CameraMove; symbol: string }[] = [
   { move: 'panRight', symbol: '→' },
 ]
 
+const ZOOM_STEPS: readonly { step: ZoomStep; symbol: string }[] = [
+  { step: 'zoomOut', symbol: '−' },
+  { step: 'zoomIn', symbol: '+' },
+]
+
 const VIEWS: readonly CameraMove[] = ['lookAhead', 'lookDown']
 
 export function CameraControls() {
@@ -20,18 +26,26 @@ export function CameraControls() {
   const text = messages.camera
   const station = useGroundStation()
   const isConnected = useConnectionStatus() === 'connected'
+  const zoom = useTelemetry((state) => state.camera?.zoom ?? 1)
   const [status, setStatus] = useState('')
+
+  async function send(command: Command): Promise<void> {
+    const result = await station.sendCommand(command)
+    setStatus(describeCameraCommand(result, '', messages))
+  }
 
   async function move(cameraMove: CameraMove): Promise<void> {
     const camera = station.telemetry.getSnapshot().camera
-    if (!camera) {
-      return
+    if (camera) {
+      await send({ type: 'pointCamera', ...moveCamera(camera, cameraMove) })
     }
-    const result = await station.sendCommand({
-      type: 'pointCamera',
-      ...moveCamera(camera, cameraMove),
-    })
-    setStatus(describeCameraCommand(result, '', messages))
+  }
+
+  async function zoomBy(step: ZoomStep): Promise<void> {
+    const camera = station.telemetry.getSnapshot().camera
+    if (camera) {
+      await send({ type: 'zoomCamera', zoom: nextZoom(camera.zoom, step) })
+    }
   }
 
   return (
@@ -46,6 +60,19 @@ export function CameraControls() {
             title={text.moves[cameraMove]}
             disabled={!isConnected}
             onClick={() => void move(cameraMove)}
+          >
+            {symbol}
+          </button>
+        ))}
+        {ZOOM_STEPS.map(({ step, symbol }) => (
+          <button
+            key={step}
+            type="button"
+            className={buttonStyles.button}
+            aria-label={text[step]}
+            title={text[step]}
+            disabled={!isConnected || nextZoom(zoom, step) === zoom}
+            onClick={() => void zoomBy(step)}
           >
             {symbol}
           </button>

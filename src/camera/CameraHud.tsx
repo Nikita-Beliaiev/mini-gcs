@@ -2,7 +2,13 @@ import { formatMgrs } from '../geo/mgrs'
 import type { Messages } from '../i18n/en'
 import { useMessages } from '../i18n/localeStore'
 import { useTelemetry } from '../station/stationContext'
-import { formatCoordinates, formatDistance, formatSignedAngle, NO_VALUE } from '../telemetry/format'
+import {
+  formatCoordinates,
+  formatDecimal,
+  formatDistance,
+  formatSignedAngle,
+  NO_VALUE,
+} from '../telemetry/format'
 import type { TelemetryState } from '../telemetry/telemetryStore'
 import { useTerrain } from '../terrain/terrainContext'
 import type { TerrainSampler } from '../terrain/terrainSampler'
@@ -14,6 +20,13 @@ function describeAngles({ camera }: TelemetryState, text: Messages['camera']): s
     return NO_VALUE
   }
   return `${text.tilt} ${formatSignedAngle(camera.tiltDeg)}  ${text.pan} ${formatSignedAngle(camera.panDeg)}`
+}
+
+function describeLens({ camera }: TelemetryState, text: Messages['camera']): string {
+  if (!camera) {
+    return NO_VALUE
+  }
+  return `×${formatDecimal(camera.zoom, 1)}  ${text.fov} ${formatDecimal(camera.horizontalFovDeg, 1)}°`
 }
 
 function describeCenter(
@@ -36,11 +49,15 @@ export function CameraHud() {
   const messages = useMessages()
   const terrain = useTerrain()
   const angles = useTelemetry((state) => describeAngles(state, messages.camera))
+  const lens = useTelemetry((state) => describeLens(state, messages.camera))
   const center = useTelemetry((state) => describeCenter(state, terrain, messages))
 
   return (
     <div className={styles.hud}>
-      <span className={styles.hudTopLeft}>{angles}</span>
+      <span className={styles.hudTopLeft}>
+        <span>{angles}</span>
+        <span>{lens}</span>
+      </span>
       <span className={styles.crosshair} aria-hidden="true" />
       <span className={styles.hudBottom}>{center}</span>
     </div>

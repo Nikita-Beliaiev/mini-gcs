@@ -118,6 +118,7 @@ export const uk: Messages = {
     tracking: 'Утримує точку',
     tilt: 'Нахил',
     pan: 'Поворот',
+    fov: 'Поле зору',
     range: (distance) => `Дальність ${distance}`,
     aboveHorizon: 'Центр кадру над горизонтом',
     pick: 'Вибрати точку на виді камери',
@@ -130,6 +131,8 @@ export const uk: Messages = {
       lookAhead: 'Дивитися вперед',
       lookDown: 'Дивитися вниз',
     },
+    zoomIn: 'Наблизити',
+    zoomOut: 'Віддалити',
   },
   charts: {
     title: (seconds) =>

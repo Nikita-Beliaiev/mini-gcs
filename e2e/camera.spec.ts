@@ -24,6 +24,20 @@ test('shows a synthetic camera view with its angles and frame centre', async ({ 
   await expect(camera).toContainText('Synthetic view')
 })
 
+test('zooms the camera without moving the frame centre', async ({ page }) => {
+  await openStation(page)
+  await waitForMode(page, 'AUTO')
+  const camera = cameraPanel(page)
+
+  await camera.getByRole('button', { name: 'Zoom in' }).click()
+  await expect(camera).toContainText('×2.0 FOV 33.0°')
+  await expect(camera).toContainText('Range 309 m')
+
+  await camera.getByRole('button', { name: 'Zoom out' }).click()
+  await expect(camera).toContainText('×1.0 FOV 61.3°')
+  await expect(camera.getByRole('button', { name: 'Zoom out' })).toBeDisabled()
+})
+
 test('steers the camera and keeps a clicked point in view', async ({ page }) => {
   await openStation(page)
   await waitForMapAtHome(page)

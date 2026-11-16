@@ -104,6 +104,7 @@ export const en = {
     tracking: 'Tracking a point',
     tilt: 'Tilt',
     pan: 'Pan',
+    fov: 'FOV',
     range: (distance: string) => `Range ${distance}`,
     aboveHorizon: 'Frame centre above the horizon',
     pick: 'Pick a point in the camera view',
@@ -116,6 +117,8 @@ export const en = {
       lookAhead: 'Look ahead',
       lookDown: 'Look down',
     },
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
   },
   charts: {
     title: (seconds: number) => `Last ${String(seconds)} seconds`,
