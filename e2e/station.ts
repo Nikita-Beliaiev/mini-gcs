@@ -26,6 +26,6 @@ export async function clickMapFromCenter(page: Page, dx: number, dy: number): Pr
 }
 
 export async function waitForMapAtHome(page: Page): Promise<void> {
-  await expect(page.getByRole('img', { name: 'Home' })).toBeVisible()
-  await expect(page.getByRole('img', { name: 'Vehicle' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Home', exact: true })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Vehicle', exact: true })).toBeVisible()
 }

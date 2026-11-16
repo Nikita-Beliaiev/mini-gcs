@@ -59,6 +59,23 @@ test('meets WCAG 2.2 AA checks with a selected point and a terrain profile', asy
   expect(await violations(page)).toEqual([])
 })
 
+test('meets WCAG 2.2 AA checks while adding a mark and with marks listed', async ({ page }) => {
+  await serveFlatTerrain(page, 300)
+  await openStation(page)
+  await waitForMapAtHome(page)
+
+  await clickMapFromCenter(page, -100, 60)
+  const card = page.getByRole('region', { name: 'Selected point' })
+  await card.getByRole('button', { name: 'Add mark' }).click()
+  await expect(card.getByRole('form', { name: 'New mark' }).locator('img')).toBeVisible()
+  expect(await violations(page)).toEqual([])
+
+  await card.getByRole('combobox', { name: 'Affiliation' }).selectOption({ label: 'Hostile' })
+  await card.getByRole('button', { name: 'Save mark' }).click()
+  await expect(page.getByRole('img', { name: 'Mark 1: Ground track (hostile)' })).toBeVisible()
+  expect(await violations(page)).toEqual([])
+})
+
 test('meets WCAG 2.2 AA checks on the flight log tab and during a replay', async ({ page }) => {
   await openStation(page)
   await waitForMapAtHome(page)
