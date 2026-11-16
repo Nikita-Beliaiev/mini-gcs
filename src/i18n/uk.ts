@@ -180,7 +180,7 @@ export const uk: Messages = {
     saveName: 'Зберегти назву',
     removed: (name: string) => `Мітку «${name}» видалено`,
     downloadGeoJson: 'Завантажити GeoJSON',
-    downloadCot: (name: string) => `Завантажити «${name}» як Cursor on Target`,
+    downloadCot: (name: string) => `Завантажити «${name}» як CoT`,
     import: 'Імпортувати мітки',
     formats:
       'GeoJSON (.geojson, .json) для ГІС і події Cursor on Target (.cot, .xml) з ATAK та інших клієнтів TAK.',

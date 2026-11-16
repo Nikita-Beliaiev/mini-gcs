@@ -163,7 +163,7 @@ export const en = {
     saveName: 'Save name',
     removed: (name: string) => `Mark “${name}” removed`,
     downloadGeoJson: 'Download GeoJSON',
-    downloadCot: (name: string) => `Download ${name} as Cursor on Target`,
+    downloadCot: (name: string) => `Download ${name} as CoT`,
     import: 'Import marks',
     formats:
       'GeoJSON (.geojson, .json) for GIS tools and Cursor on Target events (.cot, .xml) from ATAK and other TAK clients.',

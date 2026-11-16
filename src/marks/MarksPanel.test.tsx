@@ -140,7 +140,7 @@ describe('MarksPanel', () => {
     const { downloads } = captureDownloads()
     const { user } = renderPanel()
 
-    await user.click(screen.getByRole('button', { name: 'Download Ford as Cursor on Target' }))
+    await user.click(screen.getByRole('button', { name: 'Download Ford as CoT' }))
 
     expect(downloads[0]?.fileName).toBe('Ford.cot')
     expect(await downloads[0]?.blob.text()).toContain('type="a-h-G-E-V"')
