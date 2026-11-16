@@ -3,6 +3,7 @@ import { useMessages } from '../i18n/localeStore'
 import { useLiveSession, useSession } from '../session/sessionContext'
 import { formatDuration } from '../telemetry/format'
 import buttonStyles from '../ui/button.module.css'
+import fileInputStyles from '../ui/fileInput.module.css'
 import { downloadTextFile } from './download'
 import {
   createFlightLog,
@@ -126,12 +127,12 @@ export function FlightLogControls() {
           {text.download}
         </button>
       </div>
-      <label className={styles.open}>
+      <label className={fileInputStyles.picker}>
         {text.open}
         <input
           type="file"
           accept=".json,.tlog,application/json"
-          className={styles.fileInput}
+          className={fileInputStyles.input}
           onChange={handleFileChange}
         />
       </label>
