@@ -5,6 +5,7 @@ import { initialAlertData, useAlertStore } from '../alerts/alertStore'
 import { initialLatencyData, useLatencyStore } from '../connection/latencyStore'
 import { initialLocaleData, useLocaleStore } from '../i18n/localeStore'
 import { initialMapPointsData, useMapPointsStore } from '../map/mapPointsStore'
+import { initialMarksData, useMarksStore } from '../marks/marksStore'
 import { initialPlanningData, usePlanningStore } from '../planning/planningStore'
 
 afterEach(() => {
@@ -14,4 +15,5 @@ afterEach(() => {
   useLatencyStore.setState(initialLatencyData)
   useLocaleStore.setState(initialLocaleData)
   useMapPointsStore.setState(initialMapPointsData)
+  useMarksStore.setState(initialMarksData)
 })

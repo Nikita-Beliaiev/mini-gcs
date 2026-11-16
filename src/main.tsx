@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Root } from './app/Root'
 import { startLocaleSync } from './i18n/localeSync'
+import { startMarksSync } from './marks/marksStorage'
 import { createLiveSession } from './session/stationSession'
 import { loadTerrariumTile } from './terrain/loadTerrariumTile'
 import { createTerrainSampler } from './terrain/terrainSampler'
@@ -29,6 +30,7 @@ if (!rootElement) {
 }
 
 startLocaleSync()
+startMarksSync()
 const live = createLiveSession(await createTransport())
 const terrain = createTerrainSampler({ loadTile: loadTerrariumTile })
 
