@@ -1,7 +1,24 @@
+import type { Affiliation, MarkKind, MarkSymbol } from '../marks/mark'
 import { pluralize } from './plural'
 
 function count(value: number, one: string, other: string): string {
   return `${String(value)} ${pluralize('en', value, { one, other })}`
+}
+
+const AFFILIATION_NAMES: Record<Affiliation, string> = {
+  friend: 'Friend',
+  hostile: 'Hostile',
+  neutral: 'Neutral',
+  unknown: 'Unknown',
+}
+
+const KIND_NAMES: Record<MarkKind, string> = {
+  ground: 'Ground track',
+  infantry: 'Infantry',
+  armour: 'Armour',
+  artillery: 'Artillery',
+  vehicle: 'Vehicle',
+  uav: 'UAV',
 }
 
 export const en = {
@@ -119,6 +136,23 @@ export const en = {
     },
     zoomIn: 'Zoom the camera in',
     zoomOut: 'Zoom the camera out',
+  },
+  marks: {
+    affiliations: AFFILIATION_NAMES,
+    kinds: KIND_NAMES,
+    symbol: ({ affiliation, kind }: MarkSymbol) =>
+      `${KIND_NAMES[kind]} (${AFFILIATION_NAMES[affiliation].toLowerCase()})`,
+    marker: (name: string, symbol: string) => `${name}: ${symbol}`,
+    add: 'Add mark',
+    form: 'New mark',
+    name: 'Name',
+    affiliation: 'Affiliation',
+    kind: 'Type',
+    save: 'Save mark',
+    cancel: 'Cancel',
+    defaultName: (number: number) => `Mark ${String(number)}`,
+    added: (name: string) => `Mark “${name}” added`,
+    full: (max: number) => `The station keeps at most ${String(max)} marks.`,
   },
   charts: {
     title: (seconds: number) => `Last ${String(seconds)} seconds`,

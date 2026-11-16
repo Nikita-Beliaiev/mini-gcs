@@ -57,6 +57,12 @@
   font-family: var(--font-sans);
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .status {
   min-height: 1.45em;
   font-size: 11px;

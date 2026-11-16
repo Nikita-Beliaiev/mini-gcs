@@ -1,3 +1,4 @@
+import type { Affiliation, MarkKind, MarkSymbol } from '../marks/mark'
 import type { Messages } from './en'
 import { pluralize, type PluralForms } from './plural'
 
@@ -10,6 +11,23 @@ const POINTS_GENITIVE = { one: 'точки', other: 'точок' }
 const VERTICES = { one: 'вершина', few: 'вершини', many: 'вершин', other: 'вершини' }
 const VERTICES_ACCUSATIVE = { one: 'вершину', few: 'вершини', many: 'вершин', other: 'вершини' }
 const VERTICES_GENITIVE = { one: 'вершини', other: 'вершин' }
+const MARKS_GENITIVE = { one: 'мітки', other: 'міток' }
+
+const AFFILIATION_NAMES: Record<Affiliation, string> = {
+  friend: 'Свій',
+  hostile: 'Противник',
+  neutral: 'Нейтральний',
+  unknown: 'Невідомий',
+}
+
+const KIND_NAMES: Record<MarkKind, string> = {
+  ground: 'Наземний об’єкт',
+  infantry: 'Піхота',
+  armour: 'Бронетехніка',
+  artillery: 'Артилерія',
+  vehicle: 'Транспортний засіб',
+  uav: 'БпЛА',
+}
 
 export const uk: Messages = {
   app: {
@@ -133,6 +151,23 @@ export const uk: Messages = {
     },
     zoomIn: 'Наблизити камеру',
     zoomOut: 'Віддалити камеру',
+  },
+  marks: {
+    affiliations: AFFILIATION_NAMES,
+    kinds: KIND_NAMES,
+    symbol: ({ affiliation, kind }: MarkSymbol) =>
+      `${KIND_NAMES[kind]} (${AFFILIATION_NAMES[affiliation].toLowerCase()})`,
+    marker: (name: string, symbol: string) => `${name}: ${symbol}`,
+    add: 'Додати мітку',
+    form: 'Нова мітка',
+    name: 'Назва',
+    affiliation: 'Належність',
+    kind: 'Тип',
+    save: 'Зберегти мітку',
+    cancel: 'Скасувати',
+    defaultName: (number: number) => `Мітка ${String(number)}`,
+    added: (name: string) => `Мітку «${name}» додано`,
+    full: (max: number) => `Станція зберігає не більше ${count(max, MARKS_GENITIVE)}.`,
   },
   charts: {
     title: (seconds) =>

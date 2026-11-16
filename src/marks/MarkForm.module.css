@@ -1,0 +1,17 @@
+.form {
+  display: grid;
+  gap: 6px;
+}
+
+.symbol {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 6px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

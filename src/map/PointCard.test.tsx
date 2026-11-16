@@ -3,11 +3,22 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { LatLon } from '../geo/geo'
 import { useLocaleStore } from '../i18n/localeStore'
+import { MAX_MARKS, type Mark } from '../marks/mark'
+import { useMarksStore } from '../marks/marksStore'
 import { cameraMessage, commandAckMessage, homeMessage, positionMessage } from '../test/messages'
 import { renderWithStation } from '../test/render'
 import { flatTerrain } from '../test/terrain'
 import { useMapPointsStore } from './mapPointsStore'
 import { PointCard } from './PointCard'
+
+vi.mock('../marks/symbolImages', () => ({
+  symbolImage: () => ({
+    url: 'data:image/svg+xml,',
+    width: 36,
+    height: 36,
+    anchor: { x: 18, y: 18 },
+  }),
+}))
 
 const POINT = { lat: 43.1, lon: 11.645 }
 
@@ -127,6 +138,106 @@ describe('PointCard', () => {
     })
 
     expect(screen.getByText('The camera keeps this point in view')).toBeInTheDocument()
+  })
+
+  it('adds a mark at the point with a name, an affiliation and a type', async () => {
+    const { user } = renderCard()
+    select(POINT)
+
+    await user.click(screen.getByRole('button', { name: 'Add mark' }))
+    const form = screen.getByRole('form', { name: 'New mark' })
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Mark 1')
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus()
+    await user.clear(screen.getByRole('textbox', { name: 'Name' }))
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Ford')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Affiliation' }), 'Hostile')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Type' }), 'Vehicle')
+    await user.click(screen.getByRole('button', { name: 'Save mark' }))
+
+    expect(form).not.toBeInTheDocument()
+    expect(useMarksStore.getState().marks).toEqual([
+      expect.objectContaining({ ...POINT, name: 'Ford', affiliation: 'hostile', kind: 'vehicle' }),
+    ])
+    expect(screen.getByText('Mark “Ford” added')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add mark' })).toHaveFocus()
+  })
+
+  it('starts a new mark as an unknown ground track', async () => {
+    const { user } = renderCard()
+    select(POINT)
+
+    await user.click(screen.getByRole('button', { name: 'Add mark' }))
+
+    expect(screen.getByRole('combobox', { name: 'Affiliation' })).toHaveDisplayValue('Unknown')
+    expect(screen.getByRole('combobox', { name: 'Type' })).toHaveDisplayValue('Ground track')
+  })
+
+  it('needs a name to save a mark', async () => {
+    const { user } = renderCard()
+    select(POINT)
+
+    await user.click(screen.getByRole('button', { name: 'Add mark' }))
+    await user.clear(screen.getByRole('textbox', { name: 'Name' }))
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), '   ')
+
+    expect(screen.getByRole('button', { name: 'Save mark' })).toBeDisabled()
+  })
+
+  it('leaves the new mark with Escape', async () => {
+    const { user } = renderCard()
+    select(POINT)
+
+    await user.click(screen.getByRole('button', { name: 'Add mark' }))
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('form', { name: 'New mark' })).not.toBeInTheDocument()
+    expect(useMarksStore.getState().marks).toEqual([])
+    expect(screen.getByRole('button', { name: 'Add mark' })).toHaveFocus()
+  })
+
+  it('closes the new mark when another point is selected', async () => {
+    const { user } = renderCard()
+    select(POINT)
+
+    await user.click(screen.getByRole('button', { name: 'Add mark' }))
+    select({ lat: 43.09, lon: 11.65 })
+
+    expect(screen.queryByRole('form', { name: 'New mark' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add mark' })).toBeInTheDocument()
+  })
+
+  it('says when there is no room for another mark', async () => {
+    const { user } = renderCard()
+    const mark: Mark = {
+      id: 'mark',
+      name: 'Mark',
+      ...POINT,
+      affiliation: 'unknown',
+      kind: 'ground',
+      createdAt: '2026-11-16T10:00:00.000Z',
+    }
+    useMarksStore.setState({
+      marks: Array.from({ length: MAX_MARKS }, (_, index) => ({ ...mark, id: String(index) })),
+    })
+    select(POINT)
+
+    await user.click(screen.getByRole('button', { name: 'Add mark' }))
+
+    expect(screen.queryByRole('form', { name: 'New mark' })).not.toBeInTheDocument()
+    expect(screen.getByText('The station keeps at most 200 marks.')).toBeInTheDocument()
+  })
+
+  it('adds a mark in Ukrainian', async () => {
+    useLocaleStore.getState().setLocale('uk')
+    const { user } = renderCard()
+    select(POINT)
+
+    await user.click(screen.getByRole('button', { name: 'Додати мітку' }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Належність' }), 'Свій')
+    await user.click(screen.getByRole('button', { name: 'Зберегти мітку' }))
+
+    expect(screen.getByText('Мітку «Мітка 1» додано')).toBeInTheDocument()
+    expect(useMarksStore.getState().marks[0]?.affiliation).toBe('friend')
   })
 
   it('offers the camera only when the vehicle has one', () => {

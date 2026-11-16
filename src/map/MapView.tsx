@@ -4,6 +4,8 @@ import { useEffect, useEffectEvent, useRef } from 'react'
 import { cameraTarget } from '../camera/cameraTarget'
 import type { LatLon } from '../geo/geo'
 import { useMessages } from '../i18n/localeStore'
+import { useMarksStore } from '../marks/marksStore'
+import { loadSymbolImages } from '../marks/symbolLoader'
 import type {
   CameraMessage,
   GeofenceMessage,
@@ -24,6 +26,7 @@ import {
 import { addMapLayers, setSourceData, SOURCES } from './mapLayers'
 import { createDraftMarkers, createHomeMarker, createVehicleMarker, placeMarker } from './markers'
 import { useMapPointsStore } from './mapPointsStore'
+import { createMarkMarkers } from './markMarkers'
 import { addTerrainLayers, showTerrainSurface, TERRAIN_3D_PITCH } from './terrainLayers'
 import './maplibreWorker'
 import styles from './MapView.module.css'
@@ -91,7 +94,14 @@ export default function MapView({
         usePlanningStore.getState().movePoint('geofence', id, position)
       },
     })
+    const markMarkers = createMarkMarkers(map, {
+      label: (mark) => messages.marks.marker(mark.name, messages.marks.symbol(mark)),
+      onClick: (mark) => {
+        handlePointClick({ lat: mark.lat, lon: mark.lon })
+      },
+    })
     const unsubscribers: (() => void)[] = []
+    let isRemoved = false
     let centeredOnHome = lastView !== null
     let shownMission: MissionMessage | null = null
     let shownActiveIndex: number | null = null
@@ -186,6 +196,30 @@ export default function MapView({
       setSourceData(map, SOURCES.selectedPoint, createPointData(point ? [point] : [], null))
     }
 
+    function renderMarks(): void {
+      if (useMarksStore.getState().marks.length === 0) {
+        markMarkers.remove()
+        return
+      }
+      loadSymbolImages().then(
+        (images) => {
+          if (!isRemoved) {
+            markMarkers.update(useMarksStore.getState().marks, images)
+          }
+        },
+        () => undefined,
+      )
+    }
+
+    function handlePointClick(point: LatLon): void {
+      const { editMode, addPoint } = usePlanningStore.getState()
+      if (showPlanning && editMode) {
+        addPoint(editMode, point)
+      } else {
+        useMapPointsStore.getState().select(point)
+      }
+    }
+
     function applyEditMode(mode: PlanTarget | null): void {
       map.getCanvas().style.cursor = mode ? 'crosshair' : ''
       if (mode) {
@@ -208,6 +242,14 @@ export default function MapView({
         useMapPointsStore.subscribe((state, previous) => {
           if (state.selected !== previous.selected) {
             renderSelectedPoint(state.selected)
+          }
+        }),
+      )
+      renderMarks()
+      unsubscribers.push(
+        useMarksStore.subscribe((state, previous) => {
+          if (state.marks !== previous.marks) {
+            renderMarks()
           }
         }),
       )
@@ -234,13 +276,7 @@ export default function MapView({
       )
     })
     map.on('click', (event) => {
-      const point = { lat: event.lngLat.lat, lon: event.lngLat.lng }
-      const { editMode, addPoint } = usePlanningStore.getState()
-      if (showPlanning && editMode) {
-        addPoint(editMode, point)
-      } else {
-        useMapPointsStore.getState().select(point)
-      }
+      handlePointClick({ lat: event.lngLat.lat, lon: event.lngLat.lng })
     })
     map.on('mousemove', (event) => {
       useMapPointsStore.getState().setCursor({ lat: event.lngLat.lat, lon: event.lngLat.lng })
@@ -253,6 +289,7 @@ export default function MapView({
     })
 
     return () => {
+      isRemoved = true
       loadedMapRef.current = null
       lastViewRef.current = centeredOnHome
         ? {
@@ -268,6 +305,7 @@ export default function MapView({
       useMapPointsStore.getState().setCursor(null)
       missionDraftMarkers.remove()
       geofenceDraftMarkers.remove()
+      markMarkers.remove()
       map.remove()
     }
   }, [telemetry, terrain, showPlanning, messages])
