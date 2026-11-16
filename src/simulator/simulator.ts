@@ -5,7 +5,6 @@ import {
   isPointInPolygon,
   signedAngleDifference,
   toDegrees,
-  toRadians,
   type LatLon,
 } from '../geo/geo'
 import { en } from '../i18n/en'
@@ -15,6 +14,7 @@ import type { CommandEnvelope, SimulatedFault } from '../protocol/commands'
 import type { SimulatorFlightMode } from '../protocol/flightModes'
 import type { GpsFix, TelemetryMessage } from '../protocol/telemetry'
 import { clamp } from '../shared/math'
+import { fieldOfViewAt, moveZoom } from './cameraLens'
 import { approach, tiltForMotion, turnToward, type Tilt } from './motion'
 import { createRandom, randomBetween } from './random'
 
@@ -58,11 +58,6 @@ const GPS_LOSS_DURATION_MS = 15_000
 const GPS_LOSS_SATELLITES = 2
 const BATTERY_DROP_PERCENT = 32
 
-const CAMERA_VERTICAL_FOV_DEG = 36.87
-const CAMERA_ASPECT = 16 / 9
-const CAMERA_HORIZONTAL_FOV_DEG = toDegrees(
-  2 * Math.atan(CAMERA_ASPECT * Math.tan(toRadians(CAMERA_VERTICAL_FOV_DEG / 2))),
-)
 const DEFAULT_CAMERA_TILT_DEG = -15
 const GIMBAL_RATE_DEG_S = 90
 
@@ -103,6 +98,11 @@ interface Mission {
 interface CameraAngles {
   tiltDeg: number
   panDeg: number
+}
+
+interface Lens {
+  zoom: number
+  targetZoom: number
 }
 
 type CameraAim =
@@ -149,6 +149,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
   let geofence: readonly LatLon[] | null = null
   let cameraAim: CameraAim = { kind: 'angles', tiltDeg: DEFAULT_CAMERA_TILT_DEG, panDeg: 0 }
   const gimbal: CameraAngles = { tiltDeg: DEFAULT_CAMERA_TILT_DEG, panDeg: 0 }
+  const lens: Lens = { zoom: 1, targetZoom: 1 }
   const nextMessageAtMs: Record<ScheduledMessageType, number> = {
     heartbeat: 0,
     home: 0,
@@ -326,6 +327,7 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     const maxStepDeg = GIMBAL_RATE_DEG_S * dtS
     gimbal.tiltDeg = approach(gimbal.tiltDeg, target.tiltDeg, maxStepDeg)
     gimbal.panDeg = signedAngleDifference(0, turnToward(gimbal.panDeg, target.panDeg, maxStepDeg))
+    lens.zoom = moveZoom(lens.zoom, lens.targetZoom, dtS)
   }
 
   function vibration(): number {
@@ -411,8 +413,8 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
           ...header,
           tiltDeg: gimbal.tiltDeg,
           panDeg: gimbal.panDeg,
-          horizontalFovDeg: CAMERA_HORIZONTAL_FOV_DEG,
-          verticalFovDeg: CAMERA_VERTICAL_FOV_DEG,
+          zoom: lens.zoom,
+          ...fieldOfViewAt(lens.zoom),
           lookAt: cameraAim.kind === 'point' ? cameraAim.point : null,
         }
     }
@@ -490,6 +492,12 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
     return null
   }
 
+  function zoomCamera(zoom: number): null {
+    lens.targetZoom = zoom
+    nextMessageAtMs.camera = timeMs
+    return null
+  }
+
   function isLinkLost(): boolean {
     return timeMs < linkLostUntilMs
   }
@@ -544,6 +552,8 @@ export function createSimulator({ home, defaultMission, seed }: SimulatorConfig)
               }),
             ),
           ]
+        case 'zoomCamera':
+          return [acknowledge(envelope, zoomCamera(command.zoom))]
       }
     },
   }

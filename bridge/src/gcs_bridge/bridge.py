@@ -245,7 +245,7 @@ class Bridge:
                     await self._simulate_fault(command.fault)
                 case protocol.Ping():
                     await self._control().ping()
-                case protocol.PointCamera() | protocol.LookAtPoint():
+                case protocol.PointCamera() | protocol.LookAtPoint() | protocol.ZoomCamera():
                     raise UnsupportedCommandError("The bridge does not control a camera yet")
         except (
             NotReadyError,

@@ -23,7 +23,7 @@ describe('simulator camera', () => {
 
     expect(ofType(messages, 'camera')).toHaveLength(10)
     const camera = lastOfType(messages, 'camera')
-    expect(camera).toMatchObject({ tiltDeg: -15, panDeg: 0, lookAt: null })
+    expect(camera).toMatchObject({ tiltDeg: -15, panDeg: 0, zoom: 1, lookAt: null })
     expect(camera.verticalFovDeg).toBeCloseTo(36.87, 2)
     expect(camera.horizontalFovDeg).toBeCloseTo(61.3, 1)
   })
@@ -46,6 +46,22 @@ describe('simulator camera', () => {
     expect(Math.max(...steps.map((step) => step.tiltDeg))).toBeCloseTo(9, 6)
     expect(Math.max(...steps.map((step) => step.panDeg))).toBeCloseTo(9, 6)
     expect(cameras.at(-1)).toMatchObject({ tiltDeg: -90, panDeg: -60, lookAt: null })
+  })
+
+  it('zooms the lens by at most two stops a second and narrows the view', () => {
+    const simulator = createDemoSimulator()
+    run(simulator, 1)
+
+    const ack = sendCommand(simulator, { type: 'zoomCamera', zoom: 8 })
+    const cameras = ofType(run(simulator, 2), 'camera')
+    const ratios = cameras
+      .slice(1)
+      .map((camera, index) => camera.zoom / (cameras[index]?.zoom ?? camera.zoom))
+
+    expect(ack.accepted).toBe(true)
+    expect(Math.max(...ratios)).toBeCloseTo(2 ** 0.2, 6)
+    expect(cameras.at(-1)?.zoom).toBe(8)
+    expect(cameras.at(-1)?.horizontalFovDeg).toBeCloseTo(8.47, 2)
   })
 
   it('keeps looking at a point while the vehicle flies', () => {

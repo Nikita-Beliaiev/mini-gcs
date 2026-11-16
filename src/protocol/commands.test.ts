@@ -11,6 +11,7 @@ describe('parseCommandEnvelope', () => {
     { commandId: 5, command: { type: 'uploadGeofence', polygon: [{ lat: 43.1, lon: 11.6 }] } },
     { commandId: 6, command: { type: 'pointCamera', tiltDeg: -45, panDeg: 30 } },
     { commandId: 7, command: { type: 'lookAtPoint', lat: 43.1, lon: 11.6, altitudeM: -12 } },
+    { commandId: 8, command: { type: 'zoomCamera', zoom: 2.5 } },
   ])('accepts $command.type', (envelope) => {
     expect(parseCommandEnvelope(envelope)).toEqual(envelope)
   })
@@ -28,6 +29,8 @@ describe('parseCommandEnvelope', () => {
       'a camera point without its altitude',
       { commandId: 1, command: { type: 'lookAtPoint', lat: 43.1, lon: 11.6 } },
     ],
+    ['a zoom wider than the lens', { commandId: 1, command: { type: 'zoomCamera', zoom: 0.5 } }],
+    ['a zoom past the lens', { commandId: 1, command: { type: 'zoomCamera', zoom: 9 } }],
     [
       'a waypoint off the globe',
       { commandId: 1, command: { type: 'uploadMission', waypoints: [{ lat: 0, lon: 200 }] } },

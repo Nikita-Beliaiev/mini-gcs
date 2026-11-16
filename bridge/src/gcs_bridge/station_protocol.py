@@ -5,6 +5,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 MAX_POINTS_PER_MESSAGE = 100
+MAX_CAMERA_ZOOM = 8
 
 type Telemetry = dict[str, Any]
 type GpsFix = Literal["none", "2d", "3d"]
@@ -16,6 +17,7 @@ type CommandType = Literal[
     "ping",
     "pointCamera",
     "lookAtPoint",
+    "zoomCamera",
 ]
 
 
@@ -65,6 +67,11 @@ class LookAtPoint(BaseModel):
     altitude_m: float = Field(alias="altitudeM")
 
 
+class ZoomCamera(BaseModel):
+    type: Literal["zoomCamera"]
+    zoom: float = Field(ge=1, le=MAX_CAMERA_ZOOM)
+
+
 type Command = Annotated[
     UploadMission
     | UploadGeofence
@@ -72,7 +79,8 @@ type Command = Annotated[
     | SimulateFault
     | Ping
     | PointCamera
-    | LookAtPoint,
+    | LookAtPoint
+    | ZoomCamera,
     Field(discriminator="type"),
 ]
 

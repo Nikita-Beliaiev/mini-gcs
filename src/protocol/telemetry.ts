@@ -77,6 +77,7 @@ const cameraMessageSchema = z.object({
   ...header,
   tiltDeg: z.number(),
   panDeg: z.number(),
+  zoom: z.number().min(1),
   horizontalFovDeg: z.number(),
   verticalFovDeg: z.number(),
   lookAt: latLonSchema.nullable(),

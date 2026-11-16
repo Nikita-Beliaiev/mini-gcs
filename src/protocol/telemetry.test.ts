@@ -40,6 +40,7 @@ describe('parseTelemetryMessage', () => {
     ['a value that is not a number', { ...positionMessage(), altitudeM: Number.NaN }],
     ['an unknown flight mode', { ...heartbeatMessage(), mode: 'HYPERSPACE' }],
     ['a latitude off the globe', { ...homeMessage(), lat: 123 }],
+    ['a camera zoomed out past its widest view', cameraMessage({ zoom: 0.5 })],
   ])('rejects %s', (_, data) => {
     expect(parseTelemetryMessage(data)).toBeNull()
   })

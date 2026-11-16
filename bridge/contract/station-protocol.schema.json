@@ -398,6 +398,10 @@
           "panDeg": {
             "type": "number"
           },
+          "zoom": {
+            "type": "number",
+            "minimum": 1
+          },
           "horizontalFovDeg": {
             "type": "number"
           },
@@ -438,6 +442,7 @@
           "timeMs",
           "tiltDeg",
           "panDeg",
+          "zoom",
           "horizontalFovDeg",
           "verticalFovDeg",
           "lookAt"
@@ -473,7 +478,8 @@
               "simulateFault",
               "ping",
               "pointCamera",
-              "lookAtPoint"
+              "lookAtPoint",
+              "zoomCamera"
             ]
           },
           "accepted": {
@@ -685,6 +691,25 @@
               "lat",
               "lon",
               "altitudeM"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "zoomCamera"
+              },
+              "zoom": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 8
+              }
+            },
+            "required": [
+              "type",
+              "zoom"
             ],
             "additionalProperties": false
           }

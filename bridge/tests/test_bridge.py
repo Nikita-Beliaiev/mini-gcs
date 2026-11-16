@@ -320,6 +320,7 @@ async def test_says_it_does_not_control_a_camera_yet(system: System) -> None:
     for command in (
         {"type": "pointCamera", "tiltDeg": -45, "panDeg": 0},
         {"type": "lookAtPoint", "lat": 43.1, "lon": 11.6, "altitudeM": 0},
+        {"type": "zoomCamera", "zoom": 2},
     ):
         ack = await station.command(command)
         assert ack["accepted"] is False

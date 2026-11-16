@@ -105,6 +105,7 @@ export function cameraMessage(overrides: Partial<CameraMessage> = {}): CameraMes
     timeMs: 0,
     tiltDeg: -35,
     panDeg: 0,
+    zoom: 1,
     horizontalFovDeg: 61.3,
     verticalFovDeg: 36.87,
     lookAt: null,

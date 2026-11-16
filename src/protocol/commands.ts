@@ -9,7 +9,10 @@ export const commandTypeSchema = z.enum([
   'ping',
   'pointCamera',
   'lookAtPoint',
+  'zoomCamera',
 ])
+
+export const MAX_CAMERA_ZOOM = 8
 
 export const simulatedFaultSchema = z.enum(['linkLoss', 'gpsLoss', 'batteryDrop'])
 
@@ -48,6 +51,11 @@ const lookAtPointCommandSchema = z.object({
   altitudeM: z.number(),
 })
 
+const zoomCameraCommandSchema = z.object({
+  type: z.literal('zoomCamera'),
+  zoom: z.number().min(1).max(MAX_CAMERA_ZOOM),
+})
+
 export const commandSchema = z.discriminatedUnion('type', [
   uploadMissionCommandSchema,
   uploadGeofenceCommandSchema,
@@ -56,6 +64,7 @@ export const commandSchema = z.discriminatedUnion('type', [
   pingCommandSchema,
   pointCameraCommandSchema,
   lookAtPointCommandSchema,
+  zoomCameraCommandSchema,
 ])
 
 export const commandEnvelopeSchema = z.object({
@@ -71,6 +80,7 @@ export type SimulateFaultCommand = z.infer<typeof simulateFaultCommandSchema>
 export type PingCommand = z.infer<typeof pingCommandSchema>
 export type PointCameraCommand = z.infer<typeof pointCameraCommandSchema>
 export type LookAtPointCommand = z.infer<typeof lookAtPointCommandSchema>
+export type ZoomCameraCommand = z.infer<typeof zoomCameraCommandSchema>
 export type Command = z.infer<typeof commandSchema>
 export type CommandType = z.infer<typeof commandTypeSchema>
 export type CommandEnvelope = z.infer<typeof commandEnvelopeSchema>
