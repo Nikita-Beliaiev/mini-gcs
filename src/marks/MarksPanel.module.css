@@ -1,0 +1,73 @@
+.marks {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.note,
+.status {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.status {
+  min-height: 1.45em;
+}
+
+.list {
+  display: grid;
+  gap: 6px;
+  max-height: 300px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.mark {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 4px 8px 4px 4px;
+  border-radius: var(--radius);
+  background: var(--color-surface-raised);
+}
+
+.markText {
+  display: grid;
+  min-width: 0;
+}
+
+.markName {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.markDetails {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.markDetails span {
+  white-space: nowrap;
+}
+
+.markActions,
+.renameActions {
+  display: flex;
+  gap: 4px;
+}
+
+.rename {
+  display: grid;
+  grid-column: 2 / -1;
+  gap: 4px;
+}

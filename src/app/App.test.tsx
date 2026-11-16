@@ -26,6 +26,7 @@ describe('App', () => {
     expect(screen.getByRole('region', { name: 'Map' })).toBeInTheDocument()
     expect(screen.getByRole('complementary', { name: 'Telemetry' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Controls' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Marks' })).toBeInTheDocument()
     expect(await screen.findByText('Map view')).toBeInTheDocument()
   })
 
@@ -85,6 +86,7 @@ describe('App', () => {
     expect(screen.queryByRole('region', { name: 'Controls' })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Flight replay' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Flight log' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Marks' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Back to live' }))
     expect(returnToLive).toHaveBeenCalledOnce()

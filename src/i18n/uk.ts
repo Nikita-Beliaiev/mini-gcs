@@ -168,6 +168,15 @@ export const uk: Messages = {
     defaultName: (number: number) => `Мітка ${String(number)}`,
     added: (name: string) => `Мітку «${name}» додано`,
     full: (max: number) => `Станція зберігає не більше ${count(max, MARKS_GENITIVE)}.`,
+    note: 'Мітки зберігаються в цьому браузері. Виберіть точку на карті або в кадрі камери й натисніть «Додати мітку».',
+    title: 'Мітки',
+    empty: 'Міток ще немає.',
+    show: (name: string) => `Показати «${name}» на карті`,
+    rename: (name: string) => `Перейменувати «${name}»`,
+    remove: (name: string) => `Видалити «${name}»`,
+    newName: 'Нова назва',
+    saveName: 'Зберегти назву',
+    removed: (name: string) => `Мітку «${name}» видалено`,
   },
   charts: {
     title: (seconds) =>

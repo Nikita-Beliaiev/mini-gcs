@@ -6,6 +6,7 @@ import { ConnectionControl } from '../connection/ConnectionControl'
 import { startLatencyMonitor } from '../connection/latencyMonitor'
 import { LanguageSwitcher } from '../i18n/LanguageSwitcher'
 import { MapPanel } from '../map/MapPanel'
+import { MarksPanel } from '../marks/MarksPanel'
 import { FlightLogPanel } from '../replay/FlightLogPanel'
 import { ReplayBar } from '../replay/ReplayBar'
 import { ReplayStatus } from '../replay/ReplayStatus'
@@ -58,6 +59,7 @@ export function App() {
         <div className={styles.sidebar}>
           <TelemetryPanel />
           {isLive ? <ControlsPanel /> : <FlightLogPanel />}
+          <MarksPanel />
         </div>
       </main>
     </div>

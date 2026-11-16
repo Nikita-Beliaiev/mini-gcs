@@ -243,6 +243,10 @@ export default function MapView({
           if (state.selected !== previous.selected) {
             renderSelectedPoint(state.selected)
           }
+          if (state.centerRequest && state.centerRequest !== previous.centerRequest) {
+            handleUserPan()
+            map.easeTo({ center: toLngLat(state.centerRequest.point) })
+          }
         }),
       )
       renderMarks()
