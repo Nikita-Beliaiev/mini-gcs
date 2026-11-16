@@ -6,7 +6,7 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 
 **Live demo:** https://nikita-beliaiev.github.io/mini-gcs/ ([in Ukrainian](https://nikita-beliaiev.github.io/mini-gcs/?lang=uk))
 
-![The station flying a patrol, uploading a new mission, pointing the camera at a field and raising a link loss alert](docs/demo.gif)
+![The station flying a patrol, uploading a new mission, pointing the camera at a field, marking a vehicle seen in the camera view and raising a link loss alert](docs/demo.gif)
 
 > **Status:** phases 0 to 10 are complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, an English and Ukrainian interface, MAVLink log replay, a Python bridge to ArduPilot SITL, terrain and MGRS coordinates, a gimbal camera with zoom and a synthetic view, map marks with APP-6 symbols shared as GeoJSON and Cursor on Target, end-to-end and accessibility tests. The next phases are listed in the [Roadmap](#roadmap).
 >
