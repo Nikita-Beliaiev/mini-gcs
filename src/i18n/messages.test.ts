@@ -25,6 +25,17 @@ describe('Ukrainian messages', () => {
     expect(uk.planIssues.tooManyVertices(20)).toBe('Не більше 20 вершин')
   })
 
+  it('counts imported marks and skipped items in the right case', () => {
+    expect(uk.marks.imported(1, 0)).toBe('Імпортовано 1 мітку.')
+    expect(uk.marks.imported(3, 2)).toBe(
+      'Імпортовано 3 мітки, пропущено 2 об’єкти без придатної точки.',
+    )
+    expect(uk.marks.imported(5, 1)).toBe(
+      'Імпортовано 5 міток, пропущено 1 об’єкт без придатної точки.',
+    )
+    expect(uk.marks.full(200)).toBe('Станція зберігає не більше 200 міток.')
+  })
+
   it('keeps the chart window title natural', () => {
     expect(uk.charts.title(60)).toBe('Останні 60 секунд')
   })

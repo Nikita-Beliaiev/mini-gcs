@@ -1,9 +1,10 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useLocaleStore } from '../i18n/localeStore'
 import { useMapPointsStore } from '../map/mapPointsStore'
-import type { Mark } from './mark'
+import { captureDownloads } from '../test/downloads'
+import { MAX_MARKS, type Mark } from './mark'
 import { MarksPanel } from './MarksPanel'
 import { useMarksStore } from './marksStore'
 
@@ -27,6 +28,13 @@ const FORD: Mark = {
 }
 
 const MILL: Mark = { ...FORD, id: 'mill', name: 'Mill', affiliation: 'neutral', kind: 'ground' }
+
+const ALPHA_COT =
+  '<event uid="alpha" type="a-f-G-U-C-I" time="2026-11-16T09:30:00Z"><point lat="43.1" lon="11.65"/><detail><contact callsign="Alpha"/></detail></event>'
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 function renderPanel(marks: Mark[] = [FORD, MILL]) {
   useMarksStore.setState({ marks })
@@ -108,6 +116,66 @@ describe('MarksPanel', () => {
 
     expect(useMarksStore.getState().marks).toEqual([MILL])
     expect(screen.getByText('Mark “Ford” removed')).toBeInTheDocument()
+  })
+
+  it('downloads the marks as GeoJSON', async () => {
+    const { downloads } = captureDownloads()
+    const { user } = renderPanel()
+
+    await user.click(screen.getByRole('button', { name: 'Download GeoJSON' }))
+
+    const download = downloads[0]
+    expect(download?.fileName).toMatch(/^mini-gcs-marks-.+\.geojson$/)
+    const geoJson = JSON.parse((await download?.blob.text()) ?? '') as { features: unknown[] }
+    expect(geoJson.features).toHaveLength(2)
+  })
+
+  it('offers no GeoJSON without marks', () => {
+    renderPanel([])
+
+    expect(screen.getByRole('button', { name: 'Download GeoJSON' })).toBeDisabled()
+  })
+
+  it('downloads one mark as a Cursor on Target event', async () => {
+    const { downloads } = captureDownloads()
+    const { user } = renderPanel()
+
+    await user.click(screen.getByRole('button', { name: 'Download Ford as Cursor on Target' }))
+
+    expect(downloads[0]?.fileName).toBe('Ford.cot')
+    expect(await downloads[0]?.blob.text()).toContain('type="a-h-G-E-V"')
+  })
+
+  it('imports marks from a CoT file', async () => {
+    const { user } = renderPanel()
+
+    await user.upload(screen.getByLabelText('Import marks'), new File([ALPHA_COT], 'alpha.cot'))
+
+    expect(await screen.findByText('Imported 1 mark.')).toBeInTheDocument()
+    expect(row('Alpha')).toHaveTextContent('Infantry (friend)')
+    expect(useMarksStore.getState().marks).toHaveLength(3)
+  })
+
+  it('says why a file could not be imported', async () => {
+    const { user } = renderPanel()
+
+    await user.upload(screen.getByLabelText('Import marks'), new File(['{}'], 'notes.geojson'))
+
+    expect(await screen.findByText('notes.geojson: The file is not GeoJSON.')).toBeInTheDocument()
+    expect(useMarksStore.getState().marks).toEqual([FORD, MILL])
+  })
+
+  it('imports nothing when the marks would not fit', async () => {
+    const { user } = renderPanel(
+      Array.from({ length: MAX_MARKS }, (_, index) => ({ ...FORD, id: String(index) })),
+    )
+
+    await user.upload(screen.getByLabelText('Import marks'), new File([ALPHA_COT], 'alpha.cot'))
+
+    expect(
+      await screen.findByText('alpha.cot: The station keeps at most 200 marks.'),
+    ).toBeInTheDocument()
+    expect(useMarksStore.getState().marks).toHaveLength(MAX_MARKS)
   })
 
   it('speaks Ukrainian', () => {

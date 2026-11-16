@@ -12,6 +12,8 @@ const VERTICES = { one: 'вершина', few: 'вершини', many: 'верш
 const VERTICES_ACCUSATIVE = { one: 'вершину', few: 'вершини', many: 'вершин', other: 'вершини' }
 const VERTICES_GENITIVE = { one: 'вершини', other: 'вершин' }
 const MARKS_GENITIVE = { one: 'мітки', other: 'міток' }
+const MARKS_ACCUSATIVE = { one: 'мітку', few: 'мітки', many: 'міток', other: 'мітки' }
+const ITEMS = { one: 'об’єкт', few: 'об’єкти', many: 'об’єктів', other: 'об’єкта' }
 
 const AFFILIATION_NAMES: Record<Affiliation, string> = {
   friend: 'Свій',
@@ -177,6 +179,24 @@ export const uk: Messages = {
     newName: 'Нова назва',
     saveName: 'Зберегти назву',
     removed: (name: string) => `Мітку «${name}» видалено`,
+    downloadGeoJson: 'Завантажити GeoJSON',
+    downloadCot: (name: string) => `Завантажити «${name}» як Cursor on Target`,
+    import: 'Імпортувати мітки',
+    formats:
+      'GeoJSON (.geojson, .json) для ГІС і події Cursor on Target (.cot, .xml) з ATAK та інших клієнтів TAK.',
+    untitled: 'Мітка без назви',
+    imported: (marks, skipped) =>
+      `Імпортовано ${count(marks, MARKS_ACCUSATIVE)}${
+        skipped > 0 ? `, пропущено ${count(skipped, ITEMS)} без придатної точки` : ''
+      }.`,
+    fileError: (fileName, error) => `${fileName}: ${error}`,
+    errors: {
+      unsupported: 'Потрібен файл .geojson, .json, .cot або .xml.',
+      tooLarge: (megabytes) => `Файл більший за ${String(megabytes)} МБ.`,
+      notGeoJson: 'Це не файл GeoJSON.',
+      notCot: 'Це не подія Cursor on Target.',
+      noMarks: 'У файлі немає точок для імпорту.',
+    },
   },
   charts: {
     title: (seconds) =>

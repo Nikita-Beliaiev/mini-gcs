@@ -3,10 +3,12 @@ import { flushSync } from 'react-dom'
 import { formatMgrs } from '../geo/mgrs'
 import { useMessages } from '../i18n/localeStore'
 import { useMapPointsStore } from '../map/mapPointsStore'
+import { downloadTextFile } from '../replay/download'
 import { formatCoordinates, formatUtcTime } from '../telemetry/format'
 import buttonStyles from '../ui/button.module.css'
 import { classNames } from '../ui/classNames'
 import fieldStyles from '../ui/field.module.css'
+import { cotFileName, markToCot } from './cotMarks'
 import { cleanMarkName, MAX_MARK_NAME_LENGTH, type Mark } from './mark'
 import { useMarksStore } from './marksStore'
 import styles from './MarksPanel.module.css'
@@ -83,6 +85,17 @@ export function MarkRow({ mark, onRemove }: MarkRowProps) {
               }}
             >
               ✎
+            </button>
+            <button
+              type="button"
+              className={iconButton}
+              aria-label={text.downloadCot(mark.name)}
+              title={text.downloadCot(mark.name)}
+              onClick={() => {
+                downloadTextFile(markToCot(mark, new Date()), cotFileName(mark), 'application/xml')
+              }}
+            >
+              CoT
             </button>
             <button
               type="button"

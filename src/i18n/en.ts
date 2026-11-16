@@ -162,6 +162,24 @@ export const en = {
     newName: 'New name',
     saveName: 'Save name',
     removed: (name: string) => `Mark “${name}” removed`,
+    downloadGeoJson: 'Download GeoJSON',
+    downloadCot: (name: string) => `Download ${name} as Cursor on Target`,
+    import: 'Import marks',
+    formats:
+      'GeoJSON (.geojson, .json) for GIS tools and Cursor on Target events (.cot, .xml) from ATAK and other TAK clients.',
+    untitled: 'Untitled mark',
+    imported: (marks: number, skipped: number) =>
+      `Imported ${count(marks, 'mark', 'marks')}${
+        skipped > 0 ? `, skipped ${count(skipped, 'item', 'items')} without a usable point` : ''
+      }.`,
+    fileError: (fileName: string, error: string) => `${fileName}: ${error}`,
+    errors: {
+      unsupported: 'Use a .geojson, .json, .cot or .xml file.',
+      tooLarge: (megabytes: number) => `The file is larger than ${String(megabytes)} MB.`,
+      notGeoJson: 'The file is not GeoJSON.',
+      notCot: 'The file is not a Cursor on Target event.',
+      noMarks: 'The file has no points to import.',
+    },
   },
   charts: {
     title: (seconds: number) => `Last ${String(seconds)} seconds`,

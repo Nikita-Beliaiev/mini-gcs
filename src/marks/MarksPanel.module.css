@@ -14,6 +14,16 @@
   min-height: 1.45em;
 }
 
+.status[data-error='true'] {
+  color: var(--color-danger);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .list {
   display: grid;
   gap: 6px;
