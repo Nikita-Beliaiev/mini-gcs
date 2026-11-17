@@ -6,6 +6,7 @@ import { initialLatencyData, useLatencyStore } from '../connection/latencyStore'
 import { initialLocaleData, useLocaleStore } from '../i18n/localeStore'
 import { initialMapPointsData, useMapPointsStore } from '../map/mapPointsStore'
 import { initialMarksData, useMarksStore } from '../marks/marksStore'
+import { initialAppUpdateData, useAppUpdateStore } from '../offline/appUpdate'
 import { initialPlanningData, usePlanningStore } from '../planning/planningStore'
 
 afterEach(() => {
@@ -16,4 +17,5 @@ afterEach(() => {
   useLocaleStore.setState(initialLocaleData)
   useMapPointsStore.setState(initialMapPointsData)
   useMarksStore.setState(initialMarksData)
+  useAppUpdateStore.setState({ ...initialAppUpdateData, applyUpdate: () => undefined })
 })

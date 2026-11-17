@@ -24,12 +24,15 @@
     "test:e2e": "playwright test",
     "demo:record": "npm run build && tsx scripts/recordDemo.ts",
     "area:build": "tsx scripts/buildAreaPackage.ts",
+    "icons:render": "tsx scripts/renderIcons.ts",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test"
   },
   "dependencies": {
+    "@protomaps/basemaps": "^5.7.2",
     "maplibre-gl": "^6.17.0",
     "mgrs": "^2.2.0",
     "milsymbol": "^3.0.5",
+    "pmtiles": "^4.5.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "uplot": "^1.6.32",
@@ -64,7 +67,9 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.6",
+    "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.1.0",
+    "workbox-window": "^7.4.1",
     "ws": "^8.22.2"
   }
 }

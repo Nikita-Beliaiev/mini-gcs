@@ -7,6 +7,7 @@ import { startLatencyMonitor } from '../connection/latencyMonitor'
 import { LanguageSwitcher } from '../i18n/LanguageSwitcher'
 import { MapPanel } from '../map/MapPanel'
 import { MarksPanel } from '../marks/MarksPanel'
+import { UpdatePrompt } from '../offline/UpdatePrompt'
 import { FlightLogPanel } from '../replay/FlightLogPanel'
 import { ReplayBar } from '../replay/ReplayBar'
 import { ReplayStatus } from '../replay/ReplayStatus'
@@ -45,6 +46,7 @@ export function App() {
       <header className={styles.header}>
         <h1 className={styles.title}>Mini GCS</h1>
         <div className={styles.headerStatus}>
+          <UpdatePrompt />
           <AlertSummary />
           {isLive ? <ConnectionControl /> : <ReplayStatus />}
           <LanguageSwitcher />

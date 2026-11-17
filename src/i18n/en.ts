@@ -195,6 +195,10 @@ export const en = {
       noMarks: 'The file has no points to import.',
     },
   },
+  offline: {
+    updateReady: 'A new version of the station is ready.',
+    reload: 'Reload',
+  },
   charts: {
     title: (seconds: number) => `Last ${String(seconds)} seconds`,
     loading: 'Loading charts…',

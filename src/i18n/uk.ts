@@ -212,6 +212,10 @@ export const uk: Messages = {
       noMarks: 'У файлі немає точок для імпорту.',
     },
   },
+  offline: {
+    updateReady: 'Готова нова версія станції.',
+    reload: 'Перезавантажити',
+  },
   charts: {
     title: (seconds) =>
       `Останні ${count(seconds, { one: 'секунда', few: 'секунди', many: 'секунд', other: 'секунди' })}`,

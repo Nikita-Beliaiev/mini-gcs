@@ -14,6 +14,7 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${String(PORT)}/`,
     locale: 'en-US',
+    serviceWorkers: 'block',
     trace: 'retain-on-failure',
   },
   projects: [
