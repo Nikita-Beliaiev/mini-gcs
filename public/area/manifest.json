@@ -1,0 +1,93 @@
+{
+  "builtAt": "2026-11-17",
+  "files": [
+    {
+      "path": "fonts/Noto Sans Italic/0-255.pbf",
+      "bytes": 79344
+    },
+    {
+      "path": "fonts/Noto Sans Italic/1024-1279.pbf",
+      "bytes": 128015
+    },
+    {
+      "path": "fonts/Noto Sans Italic/256-511.pbf",
+      "bytes": 132976
+    },
+    {
+      "path": "fonts/Noto Sans Italic/8192-8447.pbf",
+      "bytes": 52891
+    },
+    {
+      "path": "fonts/Noto Sans Medium/0-255.pbf",
+      "bytes": 77628
+    },
+    {
+      "path": "fonts/Noto Sans Medium/1024-1279.pbf",
+      "bytes": 128608
+    },
+    {
+      "path": "fonts/Noto Sans Medium/256-511.pbf",
+      "bytes": 129635
+    },
+    {
+      "path": "fonts/Noto Sans Medium/8192-8447.pbf",
+      "bytes": 65101
+    },
+    {
+      "path": "fonts/Noto Sans Regular/0-255.pbf",
+      "bytes": 76044
+    },
+    {
+      "path": "fonts/Noto Sans Regular/1024-1279.pbf",
+      "bytes": 125320
+    },
+    {
+      "path": "fonts/Noto Sans Regular/256-511.pbf",
+      "bytes": 127726
+    },
+    {
+      "path": "fonts/Noto Sans Regular/8192-8447.pbf",
+      "bytes": 64220
+    },
+    {
+      "path": "sprites/dark.json",
+      "bytes": 3549
+    },
+    {
+      "path": "sprites/dark.png",
+      "bytes": 16054
+    },
+    {
+      "path": "sprites/dark@2x.json",
+      "bytes": 3579
+    },
+    {
+      "path": "sprites/dark@2x.png",
+      "bytes": 28407
+    },
+    {
+      "path": "sprites/light.json",
+      "bytes": 3549
+    },
+    {
+      "path": "sprites/light.png",
+      "bytes": 16174
+    },
+    {
+      "path": "sprites/light@2x.json",
+      "bytes": 3579
+    },
+    {
+      "path": "sprites/light@2x.png",
+      "bytes": 28852
+    },
+    {
+      "path": "val-dorcia-terrain.pmtiles",
+      "bytes": 5133849
+    },
+    {
+      "path": "val-dorcia.pmtiles",
+      "bytes": 3429312
+    }
+  ]
+}
