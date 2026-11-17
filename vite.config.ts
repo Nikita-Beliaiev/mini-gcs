@@ -35,6 +35,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,mjs,css,html,svg,png,webmanifest}'],
         globIgnores: ['area/**'],
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.includes('/area/'),

@@ -13,24 +13,29 @@ test('opens without a network from the saved area', async ({ page, context }) =>
   await expect(offline).toContainText('The station opens without a network.', {
     timeout: 30_000,
   })
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null)
   await offline.getByRole('button', { name: 'Save the area for offline use' }).click()
   await expect(offline).toContainText(/The area is saved: \d+\.\d MB/, { timeout: 30_000 })
 
   const failedAreaRequests: string[] = []
-  const externalRequests: string[] = []
   page.on('requestfailed', (request) => {
     if (request.url().includes('/area/')) {
       failedAreaRequests.push(request.url())
     }
   })
+
+  await context.setOffline(true)
+  await expect(page.getByText('No network', { exact: true })).toBeVisible()
+  await expect(readout(page, 'Above sea level')).toContainText(/\d{3}\.\d\s*m/)
+  await page.waitForTimeout(2000)
+  await page.reload({ waitUntil: 'commit' })
+
+  const externalRequests: string[] = []
   page.on('request', (request) => {
     if (!request.url().startsWith('http://127.0.0.1')) {
       externalRequests.push(new URL(request.url()).host)
     }
   })
-
-  await context.setOffline(true)
-  await page.reload()
 
   await expect(page.getByRole('status')).toContainText('Connected', { timeout: 20_000 })
   await expect(page.getByText('No network', { exact: true })).toBeVisible()
