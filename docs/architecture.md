@@ -264,6 +264,25 @@ The operator places marks, points with an APP-6 military symbol, on a point pick
 - **An id updates a mark.** Imported marks keep their GeoJSON id or CoT uid, so importing a file again updates its marks instead of adding them twice.
 - **On the map** each mark is a MapLibre marker with the symbol and its name, placed by the anchor point milsymbol reports for the symbol. Clicking a mark selects its point; the list can centre the map on a mark, rename it, remove it or download it as CoT.
 
+## Working without a network
+
+A station in the field cannot count on the internet. The station works offline in two layers: the app itself, and the map and terrain of one area.
+
+```mermaid
+flowchart LR
+  page["Station page"] -- "fetch" --> sw["Service worker<br/>Workbox"]
+  sw -- "app shell, chunks, map worker" --> precache["Precache<br/>filled at install"]
+  sw -- "area files, range requests" --> area["Area cache<br/>filled by Save"]
+  sw -- "anything else" --> network["Network"]
+  save["Save the area"] -- "manifest, then every file" --> area
+```
+
+- **The app shell is precached.** vite-plugin-pwa generates a Workbox service worker at build time that caches the page, every chunk and the MapLibre worker, so the station opens without a network once it has been opened online. The simulator runs in a Web Worker, so a flight works offline too. The worker takes control of the open page as soon as it is installed, so saving the area and losing the network in the same visit works. A new version waits until the operator presses Reload, so the code never changes under a flight.
+- **The area is saved on purpose.** The map and terrain of the demo area are about 10 MB, too much to download on every first visit over a mobile link. The operator saves them with a button that shows the size and the progress, the way field tablets load maps before a mission. Saving asks the browser for persistent storage, so the area is not evicted under storage pressure.
+- **The area package** holds two PMTiles archives and a manifest of every file with its size. The map is OpenStreetMap vector data cut from a Protomaps planet build with `pmtiles extract`; the terrain is the same Terrarium tiles the station uses online, zooms 0 to 13, packed through MBTiles with `pmtiles convert`. The fonts and sprites of the Protomaps style come along. `npm run area:build` rebuilds it, and the files are committed, so builds and CI do not depend on outside servers.
+- **One file, read in pieces.** A PMTiles archive is a single file with a directory of tiles, read with HTTP range requests, so no tile server is needed; GitHub Pages answers ranges with 206. A saved file sits whole in Cache Storage, and the service worker answers range requests from it with Workbox's `RangeRequestsPlugin`. An area that is not saved is read from the site, and the partial responses are not cached.
+- **Choosing the source.** The station follows the browser's `online` and `offline` events. Without a network, or when the operator asks for the area map, both maps load a Protomaps style, dark for the map and light for the camera view, through the `pmtiles://` protocol, and their terrain layers read the terrain archive. The terrain sampler tries the network first and falls back to the package, so a link that is up but has no internet still gives heights, and the numbers are the same offline because the tiles are the same.
+
 ## Languages
 
 The interface is available in English and Ukrainian.
@@ -289,6 +308,7 @@ The interface is available in English and Ukrainian.
 | Terrain tiles                   | No       | Decoded only into heights; a failed request or a tile of the wrong size means no terrain data. |
 | Imported mark files             | No       | Up to 1 MB; GeoJSON checked with Zod, CoT read by DOMParser; positions range-checked.          |
 | Saved marks                     | No       | Checked with Zod on load; a damaged mark is dropped.                                           |
+| Area manifest                   | No       | Checked with Zod; a damaged manifest counts as an area that is not saved.                      |
 
 The simulator server and the bridge listen on `127.0.0.1` only. The Node simulator server does not check the `Origin` header, so any page open in the same browser could connect to it; that is acceptable for a local simulator. The bridge commands an autopilot, so it accepts only the station's own origins and clients without an `Origin` header.
 
@@ -299,7 +319,7 @@ The simulator server and the bridge listen on `127.0.0.1` only. The Node simulat
 | Logic         | Vitest                            | Geometry, MGRS, simulator flights with fixed seeds, stores, rules, backoff, protocol, terrain sampling, route profiles, camera geometry, symbol codes, GeoJSON and CoT. |
 | Components    | React Testing Library (jsdom)     | Panels and controls through roles and accessible names, in both languages.                                                                                              |
 | Server        | Vitest (Node)                     | A real WebSocket server on a random port with real clients.                                                                                                             |
-| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages, terrain from a stub tile, the camera, marks and their files.                               |
+| End to end    | Playwright with the system Chrome | Map editing, uploads, geofence breach, alerts, reconnect, replay, languages, terrain from a stub tile, the camera, marks and their files, opening without a network.    |
 | Accessibility | axe with Playwright               | WCAG 2.2 AA on every tab, with an alert, in a replay, drawing in Ukrainian, with a point card and a terrain profile, and adding marks.                                  |
 | MAVLink       | Vitest with pymavlink fixtures    | Frames, checksums, truncation, signing, damaged logs, mission transfers.                                                                                                |
 | Bridge        | pytest, ruff, mypy (strict)       | A fake ArduCopter over real UDP and a real WebSocket client, no SITL needed.                                                                                            |
@@ -312,7 +332,7 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - **Custom telemetry store and Zustand side by side.** Telemetry changes many times per frame and needs batching and history; planning and alerts change on clicks and fit Zustand's simple model.
 - **Worker by default, WebSocket on request.** The worker keeps the demo working on static hosting. The WebSocket mode shows the same client against a separate process, with reconnect.
 - **Reconnect only for WebSocket.** In worker mode there is no network that can drop, and restarting the worker would start a new flight.
-- **Lazy loading.** MapLibre, uPlot, milsymbol, and Zod with the WebSocket transport or the flight log parser load only when needed; the initial bundle is about 85 KB gzipped.
+- **Lazy loading.** MapLibre, uPlot, milsymbol, PMTiles, and Zod with the WebSocket transport or the flight log parser load only when needed; the initial bundle is about 88 KB gzipped.
 - **Replay as a transport.** Replay reuses the whole station instead of a second set of components, and the player is tested on its own with a fake clock and fake frames.
 - **Rebuilding instead of snapshots.** Seeking back replays the log from the start. Periodic snapshots of the telemetry store would make long logs faster to seek, at the cost of more code and memory; 10 minutes does not need them.
 - **Own dictionaries instead of an i18n library.** For two languages and about 240 strings, typed objects give compile-time checks with no dependency. With translators, many languages or ICU message files, i18next or FormatJS would pay off.
@@ -325,6 +345,9 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - **An own terrain sampler instead of the map's terrain.** The map's terrain heights depend on what it has drawn; the sampler gives the same height wherever it is asked, is a few dozen lines and runs in unit tests. MGRS, with its zones, bands and 100 km squares, comes from a small, well tested library instead.
 - **milsymbol instead of own symbols.** Four frames would be easy to draw, but icons, their placement and the details of the standards are not. milsymbol is the library web C2 tools use, and it costs nothing until the first symbol.
 - **One CoT event per mark.** CoT is a message format, one event per message, and a plain `.cot` file holds one event. ATAK shares several items as a data package, a zip with a manifest; GeoJSON covers the whole list without a zip writer.
+- **PMTiles instead of a folder of tiles.** One file per layer is one download, one cache entry and one thing to update, and range requests replace a tile server. The same file works from GitHub Pages and from Cache Storage.
+- **A different style offline.** OpenFreeMap styles use the OpenMapTiles schema and Protomaps tiles use their own, so the offline map uses the Protomaps style and looks a little different from the online one. Bringing the online map onto Protomaps tiles would need a Protomaps API key or a tile host.
+- **An explicit save instead of precaching the area.** Precaching would cost every visitor 10 MB on the first visit; a button costs one decision and shows what is stored.
 - **One mission altitude.** The station's profile, the simulator and the bridge all use 80 m above home. The protocol does not carry altitudes, so they are kept in step by a shared constant in TypeScript and the bridge's default.
 
 ## Known limitations
@@ -347,3 +370,6 @@ MapLibre and uPlot need WebGL and canvas, which jsdom lacks, so their React wrap
 - The camera exists only in the station's simulator: the bridge rejects camera commands, and MAVLink logs carry no camera data the station reads.
 - Marks are points only, without lines or areas, and live in one browser: stations share them only through files.
 - A CoT type outside the station's six symbols becomes the nearest one it knows, often a plain ground track, so detail is lost on import. Data packages and KML are not read.
+- Only the demo area, about 10 by 10 km, works offline. Outside it the offline map has no detail.
+- The offline map is a snapshot of the day the package was built; `npm run area:build` refreshes it.
+- The sample ArduPilot flight is not cached and needs a network.

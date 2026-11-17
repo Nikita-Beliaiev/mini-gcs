@@ -8,7 +8,7 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 
 ![The station flying a patrol, uploading a new mission, pointing the camera at a field, marking a vehicle seen in the camera view and raising a link loss alert](docs/demo.gif)
 
-> **Status:** phases 0 to 10 are complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, an English and Ukrainian interface, MAVLink log replay, a Python bridge to ArduPilot SITL, terrain and MGRS coordinates, a gimbal camera with zoom and a synthetic view, map marks with APP-6 symbols shared as GeoJSON and Cursor on Target, end-to-end and accessibility tests. The next phases are listed in the [Roadmap](#roadmap).
+> **Status:** phases 0 to 11 are complete: live telemetry, mission planning, geofencing, alerts, charts, a WebSocket simulator, flight recording and replay, an English and Ukrainian interface, MAVLink log replay, a Python bridge to ArduPilot SITL, terrain and MGRS coordinates, a gimbal camera with zoom and a synthetic view, map marks with APP-6 symbols shared as GeoJSON and Cursor on Target, an installable app that works without a network with the map and terrain of the area, end-to-end and accessibility tests. The next phases are listed in the [Roadmap](#roadmap).
 >
 > All flights are simulated, by the station's own simulator or by ArduPilot SITL. The project is not meant to control real aircraft.
 
@@ -30,6 +30,7 @@ A mini ground control station in the browser: a live map and telemetry dashboard
 - Connection status with a latency readout
 - Replay of MAVLink telemetry logs (`.tlog`) from ArduPilot, Mission Planner or QGroundControl, parsed in a Web Worker by an own MAVLink 1 and 2 decoder, with a sample ArduCopter flight one click away
 - A Python bridge to ArduPilot SITL: missions and geofences go to a real ArduCopter over the MAVLink mission protocol, and it takes off, flies the route and lands
+- Works without a network: an installable app whose code is cached by a service worker, and a 10 MB package of the demo area's map, terrain, fonts and symbols in PMTiles that the operator saves on purpose; without a network the map, the camera view and the terrain readouts read the package
 - Interface in English and Ukrainian, picked from the link, the last choice or the browser language
 - Simulated quadcopter that acquires GPS, takes off to 80 m above home, flies its mission once, returns home, lands, swaps the battery and flies again
 
@@ -58,6 +59,7 @@ The demo flies over farmland in Val d'Orcia, Tuscany.
 | Coordinates      | mgrs (proj4js) for MGRS references                      |
 | Camera view      | A second MapLibre map with terrain, Liberty style       |
 | Military symbols | milsymbol (APP-6)                                       |
+| Offline          | vite-plugin-pwa (Workbox), PMTiles, Protomaps basemap   |
 | Simulator server | Node.js, ws, tsx                                        |
 | MAVLink          | Own decoder in TypeScript, pymavlink in the bridge      |
 | ArduPilot bridge | Python 3.12, asyncio, websockets, pydantic              |
@@ -99,6 +101,8 @@ To fly ArduPilot SITL instead, start SITL and the Python bridge as described in 
 | `npm run test:e2e`        | Run the Playwright end-to-end and accessibility tests against a production build in Google Chrome |
 | `npm run demo:record`     | Record `docs/demo.gif` from a scripted Playwright session                                         |
 | `npm run protocol:schema` | Export the station protocol as JSON Schema for the Python bridge                                  |
+| `npm run area:build`      | Rebuild the offline package of the demo area in `public/area` (needs the `pmtiles` tool)          |
+| `npm run icons:render`    | Render the app icons from `public/favicon.svg`                                                    |
 | `npm run format`          | Format all files with Prettier                                                                    |
 
 ## Roadmap
@@ -114,13 +118,15 @@ To fly ArduPilot SITL instead, start SITL and the Python bridge as described in 
 - [x] **Phase 8:** terrain and coordinates: elevation, altitude above the ground, MGRS, route terrain profile
 - [x] **Phase 9:** a gimbal camera: its footprint on the map, a synthetic camera view, zoom and coordinates of a point clicked in it
 - [x] **Phase 10:** a situational picture: map marks with APP-6 symbols, GeoJSON and Cursor on Target export and import
-- [ ] **Phase 11:** working offline: the station and the map of the area without an internet connection
+- [x] **Phase 11:** working offline: the station and the map of the area without an internet connection
 
 Stretch goals: multiple vehicles, ArduPilot SITL in CI.
 
 ## Credits
 
 Map tiles by [OpenFreeMap](https://openfreemap.org), map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
+
+The offline map of the area is cut from a [Protomaps](https://protomaps.com) basemap build of OpenStreetMap data and drawn with the Protomaps basemap style, fonts (Noto Sans, SIL Open Font License, see `public/area/fonts/OFL.txt`) and sprites.
 
 Terrain from [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) by Mapzen, with data produced using Copernicus data and information funded by the European Union (EU-DEM layers), SRTM and GMTED2010 courtesy of the U.S. Geological Survey, and ETOPO1 from the U.S. National Oceanic and Atmospheric Administration. [Full attribution](https://github.com/tilezen/joerd/blob/master/docs/attribution.md).
 
