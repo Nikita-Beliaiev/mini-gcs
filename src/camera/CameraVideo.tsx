@@ -1,7 +1,11 @@
 import { Map as MapLibreMap, type SkySpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef, useState } from 'react'
+import { useLocale } from '../i18n/localeStore'
 import '../map/maplibreWorker'
+import { areaStyle } from '../offline/areaStyle'
+import { useUsesAreaPackage } from '../offline/mapSourceStore'
+import { registerPmtilesProtocol } from '../offline/pmtilesProtocol'
 import { addTerrainLayers, LIGHT_HILLSHADE, showTerrainSurface } from '../map/terrainLayers'
 import type { CameraMessage, PositionMessage } from '../protocol/telemetry'
 import { useGroundStation } from '../station/stationContext'
@@ -31,6 +35,8 @@ export default function CameraVideo({ label }: CameraVideoProps) {
   const [isAimed, setIsAimed] = useState(false)
   const { telemetry } = useGroundStation()
   const terrain = useTerrain()
+  const locale = useLocale()
+  const usesArea = useUsesAreaPackage()
 
   useEffect(() => {
     const container = containerRef.current
@@ -38,9 +44,10 @@ export default function CameraVideo({ label }: CameraVideoProps) {
       return
     }
 
+    registerPmtilesProtocol()
     const map = new MapLibreMap({
       container,
-      style: VIDEO_STYLE_URL,
+      style: usesArea ? areaStyle('light', locale) : VIDEO_STYLE_URL,
       interactive: false,
       attributionControl: false,
       maxPitch: MAX_VIDEO_PITCH_DEG,
@@ -81,7 +88,7 @@ export default function CameraVideo({ label }: CameraVideoProps) {
     }
 
     map.on('load', () => {
-      addTerrainLayers(map, LIGHT_HILLSHADE)
+      addTerrainLayers(map, LIGHT_HILLSHADE, usesArea)
       showTerrainSurface(map, true, TRUE_SCALE)
       map.setSky(SKY)
       aim()
@@ -92,7 +99,7 @@ export default function CameraVideo({ label }: CameraVideoProps) {
       unsubscribe()
       map.remove()
     }
-  }, [telemetry, terrain, label])
+  }, [telemetry, terrain, label, locale, usesArea])
 
   return <div ref={containerRef} className={styles.video} data-aimed={isAimed} />
 }

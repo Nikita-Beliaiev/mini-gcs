@@ -5,12 +5,8 @@ import {
   type TileAddress,
 } from './terrarium'
 
-export async function loadTerrariumTile(tile: TileAddress): Promise<Float32Array> {
-  const response = await fetch(terrainTileUrl(tile))
-  if (!response.ok) {
-    throw new Error(`Terrain tile request failed with HTTP ${String(response.status)}`)
-  }
-  const image = await createImageBitmap(await response.blob(), {
+export async function decodeTerrariumTile(png: Blob): Promise<Float32Array> {
+  const image = await createImageBitmap(png, {
     colorSpaceConversion: 'none',
     premultiplyAlpha: 'none',
   })
@@ -28,4 +24,12 @@ export async function loadTerrariumTile(tile: TileAddress): Promise<Float32Array
   } finally {
     image.close()
   }
+}
+
+export async function loadTerrariumTile(tile: TileAddress): Promise<Float32Array> {
+  const response = await fetch(terrainTileUrl(tile))
+  if (!response.ok) {
+    throw new Error(`Terrain tile request failed with HTTP ${String(response.status)}`)
+  }
+  return decodeTerrariumTile(await response.blob())
 }

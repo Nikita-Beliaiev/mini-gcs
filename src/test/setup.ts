@@ -7,6 +7,7 @@ import { initialLocaleData, useLocaleStore } from '../i18n/localeStore'
 import { initialMapPointsData, useMapPointsStore } from '../map/mapPointsStore'
 import { initialMarksData, useMarksStore } from '../marks/marksStore'
 import { initialAppUpdateData, useAppUpdateStore } from '../offline/appUpdate'
+import { initialMapSourceData, useMapSourceStore } from '../offline/mapSourceStore'
 import { initialPlanningData, usePlanningStore } from '../planning/planningStore'
 
 afterEach(() => {
@@ -18,4 +19,5 @@ afterEach(() => {
   useMapPointsStore.setState(initialMapPointsData)
   useMarksStore.setState(initialMarksData)
   useAppUpdateStore.setState({ ...initialAppUpdateData, applyUpdate: () => undefined })
+  useMapSourceStore.setState(initialMapSourceData)
 })

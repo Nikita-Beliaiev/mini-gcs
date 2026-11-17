@@ -3,6 +3,8 @@ import type {
   Map as MapLibreMap,
   RasterDEMSourceSpecification,
 } from 'maplibre-gl'
+import { AREA_TERRAIN_FILE } from '../offline/area'
+import { areaFileUrl } from '../offline/areaFiles'
 import { TERRAIN_MAX_ZOOM, TERRAIN_TILE_SIZE, TERRAIN_TILE_URL } from '../terrain/terrarium'
 
 const SHADING_SOURCE = 'terrain-shading'
@@ -31,13 +33,15 @@ export const LIGHT_HILLSHADE: HillshadePaint = {
 const TERRAIN_ATTRIBUTION =
   '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Terrain: Mapzen, Copernicus EU-DEM, USGS, NOAA</a>'
 
-function elevationSource(): RasterDEMSourceSpecification {
+function elevationSource(fromArea: boolean): RasterDEMSourceSpecification {
+  const tiles = fromArea
+    ? { url: `pmtiles://${areaFileUrl(AREA_TERRAIN_FILE)}` }
+    : { tiles: [TERRAIN_TILE_URL], maxzoom: TERRAIN_MAX_ZOOM }
   return {
     type: 'raster-dem',
-    tiles: [TERRAIN_TILE_URL],
+    ...tiles,
     encoding: 'terrarium',
     tileSize: TERRAIN_TILE_SIZE,
-    maxzoom: TERRAIN_MAX_ZOOM,
     attribution: TERRAIN_ATTRIBUTION,
   }
 }
@@ -47,9 +51,13 @@ function firstLayerAboveAreas(map: MapLibreMap): string | undefined {
   return layers.find((layer) => layer.type !== 'background' && layer.type !== 'fill')?.id
 }
 
-export function addTerrainLayers(map: MapLibreMap, shading: HillshadePaint = DARK_HILLSHADE): void {
-  map.addSource(SHADING_SOURCE, elevationSource())
-  map.addSource(SURFACE_SOURCE, elevationSource())
+export function addTerrainLayers(
+  map: MapLibreMap,
+  shading: HillshadePaint = DARK_HILLSHADE,
+  fromArea = false,
+): void {
+  map.addSource(SHADING_SOURCE, elevationSource(fromArea))
+  map.addSource(SURFACE_SOURCE, elevationSource(fromArea))
   map.addLayer(
     { id: SHADING_LAYER, type: 'hillshade', source: SHADING_SOURCE, paint: shading },
     firstLayerAboveAreas(map),

@@ -3,9 +3,10 @@ import { createRoot } from 'react-dom/client'
 import { Root } from './app/Root'
 import { startLocaleSync } from './i18n/localeSync'
 import { startMarksSync } from './marks/marksStorage'
+import { startNetworkWatch } from './offline/mapSourceStore'
 import { startServiceWorker } from './offline/serviceWorker'
 import { createLiveSession } from './session/stationSession'
-import { loadTerrariumTile } from './terrain/loadTerrariumTile'
+import { loadTerrainTile } from './terrain/loadTerrainTile'
 import { createTerrainSampler } from './terrain/terrainSampler'
 import { simulatorServerUrl } from './transport/serverUrl'
 import type { Transport } from './transport/transport'
@@ -33,8 +34,9 @@ if (!rootElement) {
 startLocaleSync()
 startMarksSync()
 startServiceWorker()
+startNetworkWatch()
 const live = createLiveSession(await createTransport())
-const terrain = createTerrainSampler({ loadTile: loadTerrariumTile })
+const terrain = createTerrainSampler({ loadTile: loadTerrainTile })
 
 createRoot(rootElement).render(
   <StrictMode>

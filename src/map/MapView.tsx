@@ -3,9 +3,12 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useEffectEvent, useRef } from 'react'
 import { cameraTarget } from '../camera/cameraTarget'
 import type { LatLon } from '../geo/geo'
-import { useMessages } from '../i18n/localeStore'
+import { useLocale, useMessages } from '../i18n/localeStore'
 import { useMarksStore } from '../marks/marksStore'
 import { loadSymbolImages } from '../marks/symbolLoader'
+import { areaStyle } from '../offline/areaStyle'
+import { useUsesAreaPackage } from '../offline/mapSourceStore'
+import { registerPmtilesProtocol } from '../offline/pmtilesProtocol'
 import type {
   CameraMessage,
   GeofenceMessage,
@@ -28,7 +31,12 @@ import { addMapLayers, setSourceData, SOURCES } from './mapLayers'
 import { createDraftMarkers, createHomeMarker, createVehicleMarker, placeMarker } from './markers'
 import { useMapPointsStore } from './mapPointsStore'
 import { createMarkMarkers } from './markMarkers'
-import { addTerrainLayers, showTerrainSurface, TERRAIN_3D_PITCH } from './terrainLayers'
+import {
+  addTerrainLayers,
+  DARK_HILLSHADE,
+  showTerrainSurface,
+  TERRAIN_3D_PITCH,
+} from './terrainLayers'
 import './maplibreWorker'
 import styles from './MapView.module.css'
 
@@ -55,6 +63,8 @@ export default function MapView({
   const lastViewRef = useRef<CameraOptions | null>(null)
   const loadedMapRef = useRef<MapLibreMap | null>(null)
   const messages = useMessages()
+  const locale = useLocale()
+  const usesArea = useUsesAreaPackage()
   const { telemetry } = useGroundStation()
   const terrain = useTerrain()
   const isFollowingVehicle = useEffectEvent(() => followVehicle)
@@ -71,9 +81,10 @@ export default function MapView({
     }
 
     const lastView = lastViewRef.current
+    registerPmtilesProtocol()
     const map = new MapLibreMap({
       container,
-      style: MAP_STYLE_URL,
+      style: usesArea ? areaStyle('dark', locale) : MAP_STYLE_URL,
       ...(lastView ?? WORLD_VIEW),
       locale: messages.map.controls,
       attributionControl: { compact: true },
@@ -235,7 +246,7 @@ export default function MapView({
     }
 
     map.on('load', () => {
-      addTerrainLayers(map)
+      addTerrainLayers(map, DARK_HILLSHADE, usesArea)
       showTerrainSurface(map, isTerrain3d())
       addMapLayers(map)
       if (isInsetMap()) {
@@ -319,7 +330,7 @@ export default function MapView({
       markMarkers.remove()
       map.remove()
     }
-  }, [telemetry, terrain, showPlanning, messages])
+  }, [telemetry, terrain, showPlanning, messages, locale, usesArea])
 
   useEffect(() => {
     const map = loadedMapRef.current
