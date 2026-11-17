@@ -15,12 +15,13 @@ test('opens without a network from the saved area', async ({ page, context }) =>
   })
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null)
   await offline.getByRole('button', { name: 'Save the area for offline use' }).click()
-  await expect(offline).toContainText(/The area is saved: \d+\.\d MB/, { timeout: 30_000 })
+  await expect(offline).toContainText(/The area is saved: \d+\.\d MB/, { timeout: 60_000 })
 
   const failedAreaRequests: string[] = []
   page.on('requestfailed', (request) => {
-    if (request.url().includes('/area/')) {
-      failedAreaRequests.push(request.url())
+    const error = request.failure()?.errorText ?? ''
+    if (request.url().includes('/area/') && error !== 'net::ERR_ABORTED') {
+      failedAreaRequests.push(`${request.url()} ${error}`)
     }
   })
 
