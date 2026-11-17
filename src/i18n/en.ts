@@ -103,6 +103,20 @@ export const en = {
     loading: 'Loading map…',
     vehicle: 'Vehicle',
     home: 'Home',
+    windows: {
+      swap: 'Swap the map and the camera',
+      width: (width: number) => `${String(width)} px`,
+      camera: {
+        enlarge: 'Enlarge the camera window',
+        shrink: 'Shrink the camera window',
+        size: 'Camera window size',
+      },
+      map: {
+        enlarge: 'Enlarge the map window',
+        shrink: 'Shrink the map window',
+        size: 'Map window size',
+      },
+    },
     controls: {
       'AttributionControl.ToggleAttribution': 'Toggle attribution',
       'AttributionControl.MapFeedback': 'Map feedback',

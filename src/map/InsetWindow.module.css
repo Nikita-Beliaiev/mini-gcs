@@ -1,0 +1,40 @@
+.actions {
+  display: flex;
+  gap: 4px;
+}
+
+.handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  border-bottom-left-radius: var(--radius);
+  background: linear-gradient(
+    225deg,
+    transparent 0 45%,
+    var(--color-text-muted) 45% 52%,
+    transparent 52% 64%,
+    var(--color-text-muted) 64% 71%,
+    transparent 71%
+  );
+  cursor: nesw-resize;
+  touch-action: none;
+}
+
+.handle:hover {
+  background: linear-gradient(
+    225deg,
+    transparent 0 45%,
+    var(--color-accent) 45% 52%,
+    transparent 52% 64%,
+    var(--color-accent) 64% 71%,
+    transparent 71%
+  );
+}
+
+.handle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}

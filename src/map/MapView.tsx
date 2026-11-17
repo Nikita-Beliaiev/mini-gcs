@@ -16,6 +16,7 @@ import { usePlanningStore, type PlanTarget } from '../planning/planningStore'
 import { activeWaypointIndex } from '../planning/vehicleMission'
 import { useGroundStation } from '../station/stationContext'
 import { useTerrain } from '../terrain/terrainContext'
+import { foldAttribution } from './attribution'
 import {
   createLineData,
   createPointData,
@@ -35,6 +36,7 @@ export interface MapViewProps {
   followVehicle: boolean
   showPlanning: boolean
   terrain3d: boolean
+  isInset: boolean
   onUserPan: () => void
 }
 
@@ -46,6 +48,7 @@ export default function MapView({
   followVehicle,
   showPlanning,
   terrain3d,
+  isInset,
   onUserPan,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -56,6 +59,7 @@ export default function MapView({
   const terrain = useTerrain()
   const isFollowingVehicle = useEffectEvent(() => followVehicle)
   const isTerrain3d = useEffectEvent(() => terrain3d)
+  const isInsetMap = useEffectEvent(() => isInset)
   const handleUserPan = useEffectEvent(() => {
     onUserPan()
   })
@@ -234,6 +238,9 @@ export default function MapView({
       addTerrainLayers(map)
       showTerrainSurface(map, isTerrain3d())
       addMapLayers(map)
+      if (isInsetMap()) {
+        foldAttribution(container)
+      }
       loadedMapRef.current = map
       renderTelemetry()
       unsubscribers.push(telemetry.subscribe(renderTelemetry))
@@ -322,6 +329,13 @@ export default function MapView({
     showTerrainSurface(map, terrain3d)
     map.easeTo({ pitch: terrain3d ? TERRAIN_3D_PITCH : 0 })
   }, [terrain3d])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (isInset && container) {
+      foldAttribution(container)
+    }
+  }, [isInset])
 
   return <div ref={containerRef} className={styles.map} />
 }

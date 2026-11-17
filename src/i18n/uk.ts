@@ -119,6 +119,20 @@ export const uk: Messages = {
     loading: 'Завантаження карти…',
     vehicle: 'Апарат',
     home: 'Точка старту',
+    windows: {
+      swap: 'Поміняти карту й камеру місцями',
+      width: (width) => `${String(width)} пкс`,
+      camera: {
+        enlarge: 'Збільшити вікно камери',
+        shrink: 'Зменшити вікно камери',
+        size: 'Розмір вікна камери',
+      },
+      map: {
+        enlarge: 'Збільшити вікно карти',
+        shrink: 'Зменшити вікно карти',
+        size: 'Розмір вікна карти',
+      },
+    },
     controls: {
       'AttributionControl.ToggleAttribution': 'Показати або сховати джерела карти',
       'AttributionControl.MapFeedback': 'Відгук про карту',

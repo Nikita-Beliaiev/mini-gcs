@@ -1,5 +1,5 @@
 .map {
-  min-height: 320px;
+  min-height: 0;
   border-radius: var(--radius);
   overflow: hidden;
 }

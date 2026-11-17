@@ -1,8 +1,9 @@
-import { lazy, Suspense, useId, type MouseEvent } from 'react'
+import { lazy, Suspense, useId, type MouseEvent, type ReactNode } from 'react'
 import { useMessages } from '../i18n/localeStore'
 import { useMapPointsStore } from '../map/mapPointsStore'
 import { useGroundStation, useTelemetry } from '../station/stationContext'
 import { useTerrain } from '../terrain/terrainContext'
+import { classNames } from '../ui/classNames'
 import { groundPointAt } from './cameraGeometry'
 import { framePosition } from './cameraMoves'
 import { CameraControls } from './CameraControls'
@@ -14,9 +15,19 @@ const CameraVideo = lazy(() => import('./CameraVideo'))
 
 interface CameraPanelProps {
   canControl: boolean
+  isMain?: boolean
+  width?: string
+  windowActions?: ReactNode
+  resizeHandle?: ReactNode
 }
 
-export function CameraPanel({ canControl }: CameraPanelProps) {
+export function CameraPanel({
+  canControl,
+  isMain = false,
+  width,
+  windowActions,
+  resizeHandle,
+}: CameraPanelProps) {
   const text = useMessages().camera
   const titleId = useId()
   const station = useGroundStation()
@@ -43,32 +54,42 @@ export function CameraPanel({ canControl }: CameraPanelProps) {
   }
 
   return (
-    <section className={styles.panel} aria-labelledby={titleId}>
+    <section
+      className={classNames(styles.panel, isMain && styles.main)}
+      style={width ? { width } : undefined}
+      aria-labelledby={titleId}
+    >
       <div className={styles.header}>
         <h3 id={titleId} className={styles.title}>
           {text.title}
         </h3>
-        {isTracking ? <span className={styles.tracking}>{text.tracking}</span> : null}
+        <span className={styles.headerEnd}>
+          {isTracking ? <span className={styles.tracking}>{text.tracking}</span> : null}
+          {windowActions}
+        </span>
       </div>
-      {hasCamera ? (
-        <div className={styles.screen}>
-          <Suspense fallback={null}>
-            <CameraVideo label={text.view} />
-          </Suspense>
-          <button
-            type="button"
-            className={styles.pick}
-            aria-label={text.pick}
-            title={text.pick}
-            onClick={pickPoint}
-          />
-          <CameraHud />
-        </div>
-      ) : (
-        <p className={styles.empty}>{text.noCamera}</p>
-      )}
+      <div className={styles.frame}>
+        {hasCamera ? (
+          <div className={styles.screen}>
+            <Suspense fallback={null}>
+              <CameraVideo label={text.view} />
+            </Suspense>
+            <button
+              type="button"
+              className={styles.pick}
+              aria-label={text.pick}
+              title={text.pick}
+              onClick={pickPoint}
+            />
+            <CameraHud />
+          </div>
+        ) : (
+          <p className={styles.empty}>{text.noCamera}</p>
+        )}
+      </div>
       {hasCamera && canControl ? <CameraControls /> : null}
       <p className={styles.caption}>{text.syntheticNote}</p>
+      {resizeHandle}
     </section>
   )
 }

@@ -13,11 +13,41 @@
   box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
 }
 
+.main {
+  inset: 0;
+  z-index: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  width: auto;
+  box-shadow: none;
+}
+
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.headerEnd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.main .frame {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  container-type: size;
+}
+
+.main .screen,
+.main .empty {
+  width: min(100cqw, 100cqh * 16 / 9);
+}
+
+.main .hud {
+  font-size: 13px;
 }
 
 .title {
@@ -155,4 +185,14 @@
   min-height: 1.45em;
   font-size: 11px;
   color: var(--color-text-muted);
+}
+
+.main .controls,
+.main .caption {
+  justify-self: end;
+  text-align: right;
+}
+
+.main .buttons {
+  justify-content: flex-end;
 }
