@@ -38,6 +38,50 @@ test('zooms the camera without moving the frame centre', async ({ page }) => {
   await expect(camera.getByRole('button', { name: 'Zoom the camera out' })).toBeDisabled()
 })
 
+test('swaps the camera and the map and resizes the small window', async ({ page }) => {
+  await openStation(page)
+  await waitForMode(page, 'AUTO')
+  const camera = cameraPanel(page)
+  const smallWidth = (await camera.boundingBox())?.width ?? 0
+
+  await camera.getByRole('button', { name: 'Enlarge the camera window' }).click()
+  await expect
+    .poll(async () => (await camera.boundingBox())?.width)
+    .toBeGreaterThan(smallWidth * 1.8)
+
+  await camera.getByRole('button', { name: 'Swap the map and the camera' }).click()
+  const mapPanelWidth =
+    (
+      await page
+        .getByRole('region', { name: 'Map', exact: true })
+        .and(page.locator('section'))
+        .boundingBox()
+    )?.width ?? 0
+  await expect
+    .poll(async () => (await camera.boundingBox())?.width)
+    .toBeGreaterThan(mapPanelWidth * 0.9)
+  await expect(camera.locator('[data-aimed="true"]')).toBeVisible()
+
+  const mapSize = page.getByRole('slider', { name: 'Map window size' })
+  await expect(mapSize).toHaveAttribute('aria-valuenow', '320')
+  const handle = await mapSize.boundingBox()
+  if (!handle) {
+    throw new Error('The map window has no resize handle')
+  }
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(handle.x - 100, handle.y + 40, { steps: 5 })
+  await page.mouse.up()
+  await expect(mapSize).toHaveAttribute('aria-valuenow', /^4[2-3]\d$/)
+
+  await camera.getByRole('button', { name: 'Pick a point in the camera view' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('region', { name: 'Selected point' })).toContainText(MGRS)
+
+  await page.getByRole('button', { name: 'Swap the map and the camera' }).click()
+  await expect(camera.getByRole('button', { name: 'Shrink the camera window' })).toBeVisible()
+})
+
 test('steers the camera and keeps a clicked point in view', async ({ page }) => {
   await openStation(page)
   await waitForMapAtHome(page)

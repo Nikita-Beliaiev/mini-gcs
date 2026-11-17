@@ -76,6 +76,17 @@ test('meets WCAG 2.2 AA checks while adding a mark and with marks listed', async
   expect(await violations(page)).toEqual([])
 })
 
+test('meets WCAG 2.2 AA checks with the camera as the main view', async ({ page }) => {
+  await serveFlatTerrain(page, 300)
+  await openStation(page)
+  await waitForMapAtHome(page)
+
+  await page.getByRole('button', { name: 'Swap the map and the camera' }).click()
+  await expect(page.getByRole('slider', { name: 'Map window size' })).toBeVisible()
+
+  expect(await violations(page)).toEqual([])
+})
+
 test('meets WCAG 2.2 AA checks on the flight log tab and during a replay', async ({ page }) => {
   await openStation(page)
   await waitForMapAtHome(page)
