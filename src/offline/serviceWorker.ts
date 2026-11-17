@@ -9,6 +9,11 @@ export function startServiceWorker(): void {
     onOfflineReady: () => {
       useAppUpdateStore.setState({ offlineReady: true })
     },
+    onRegisteredSW: (_url, registration) => {
+      if (registration?.active) {
+        useAppUpdateStore.setState({ offlineReady: true })
+      }
+    },
   })
   useAppUpdateStore.setState({
     applyUpdate: () => {

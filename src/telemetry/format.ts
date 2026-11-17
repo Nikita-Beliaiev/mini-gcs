@@ -76,6 +76,10 @@ export function formatUtcTime(isoTime: string): string {
   return `${isoTime.slice(0, 10)} ${isoTime.slice(11, 16)} UTC`
 }
 
+export function formatMegabytes(bytes: number, units: Messages['units']): string {
+  return `${(bytes / 1_000_000).toFixed(1)} ${units.megabytes}`
+}
+
 export function formatDuration(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000))
   const minutes = Math.floor(totalSeconds / 60)

@@ -33,6 +33,7 @@ export const en = {
     milliseconds: 'ms',
     percent: '%',
     satellites: 'sats',
+    megabytes: 'MB',
   },
   connection: {
     status: {
@@ -198,6 +199,23 @@ export const en = {
   offline: {
     updateReady: 'A new version of the station is ready.',
     reload: 'Reload',
+    title: 'Offline map',
+    noNetwork: 'No network',
+    noNetworkNote: 'No network: the map and terrain come from the area package.',
+    appReady: 'The station opens without a network.',
+    appNotReady: 'The station opens without a network once it has been opened online.',
+    checking: 'Checking the area package…',
+    notSaved: (size: string) =>
+      `The map and terrain of the demo area (${size}) are not saved in this browser yet.`,
+    unavailable: 'The area package cannot be reached.',
+    saving: (saved: string, total: string) => `Saving the area: ${saved} of ${total}`,
+    saved: (size: string, builtAt: string) => `The area is saved: ${size}, map data of ${builtAt}.`,
+    failed: 'The area could not be saved. Check the network and try again.',
+    save: 'Save the area for offline use',
+    remove: 'Remove the saved area',
+    progress: 'Saving the area',
+    useArea: 'Use the area map',
+    useAreaNote: 'Shows the map and terrain from the area package even with a network.',
   },
   charts: {
     title: (seconds: number) => `Last ${String(seconds)} seconds`,

@@ -7,6 +7,8 @@ import { startLatencyMonitor } from '../connection/latencyMonitor'
 import { LanguageSwitcher } from '../i18n/LanguageSwitcher'
 import { MapPanel } from '../map/MapPanel'
 import { MarksPanel } from '../marks/MarksPanel'
+import { NetworkBadge } from '../offline/NetworkBadge'
+import { OfflinePanel } from '../offline/OfflinePanel'
 import { UpdatePrompt } from '../offline/UpdatePrompt'
 import { FlightLogPanel } from '../replay/FlightLogPanel'
 import { ReplayBar } from '../replay/ReplayBar'
@@ -47,6 +49,7 @@ export function App() {
         <h1 className={styles.title}>Mini GCS</h1>
         <div className={styles.headerStatus}>
           <UpdatePrompt />
+          <NetworkBadge />
           <AlertSummary />
           {isLive ? <ConnectionControl /> : <ReplayStatus />}
           <LanguageSwitcher />
@@ -62,6 +65,7 @@ export function App() {
           <TelemetryPanel />
           {isLive ? <ControlsPanel /> : <FlightLogPanel />}
           <MarksPanel />
+          <OfflinePanel />
         </div>
       </main>
     </div>

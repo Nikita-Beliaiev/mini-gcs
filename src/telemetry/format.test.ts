@@ -12,6 +12,7 @@ import {
   formatGps,
   formatHeading,
   formatLatency,
+  formatMegabytes,
   formatRangeAndBearing,
   formatSignedAngle,
   formatUtcTime,
@@ -128,6 +129,13 @@ describe('formatRangeAndBearing', () => {
 describe('formatCoordinates', () => {
   it('shows latitude and longitude with five decimals', () => {
     expect(formatCoordinates({ lat: 43.098211, lon: 11.6466 })).toBe('43.09821, 11.64660')
+  })
+})
+
+describe('formatMegabytes', () => {
+  it('shows sizes in megabytes with one decimal', () => {
+    expect(formatMegabytes(9_876_543, en.units)).toBe('9.9 MB')
+    expect(formatMegabytes(250_000, uk.units)).toBe('0.3 МБ')
   })
 })
 
