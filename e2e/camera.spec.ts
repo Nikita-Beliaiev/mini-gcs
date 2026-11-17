@@ -8,6 +8,15 @@ function cameraPanel(page: Page) {
   return page.getByRole('region', { name: 'Camera', exact: true })
 }
 
+async function holdOnLastReplayFrame(page: Page): Promise<void> {
+  await page.getByRole('tab', { name: 'Flight log' }).click()
+  await page.getByRole('button', { name: 'Replay recording' }).click()
+  await expect(page.getByRole('status')).toHaveText('Replay')
+  await page.getByRole('button', { name: 'Pause' }).click()
+  await page.getByRole('slider', { name: 'Replay position' }).press('End')
+  await waitForMode(page, 'AUTO', 10_000)
+}
+
 test.beforeEach(async ({ page }) => {
   await serveFlatTerrain(page, 300)
 })
@@ -41,6 +50,7 @@ test('zooms the camera without moving the frame centre', async ({ page }) => {
 test('swaps the camera and the map and resizes the small window', async ({ page }) => {
   await openStation(page)
   await waitForMode(page, 'AUTO')
+  await holdOnLastReplayFrame(page)
   const camera = cameraPanel(page)
   const smallWidth = (await camera.boundingBox())?.width ?? 0
 
@@ -103,12 +113,7 @@ test('steers the camera and keeps a clicked point in view', async ({ page }) => 
 test('marks the ground point under the crosshair of the camera view', async ({ page }) => {
   await openStation(page)
   await waitForMode(page, 'AUTO')
-  await page.getByRole('tab', { name: 'Flight log' }).click()
-  await page.getByRole('button', { name: 'Replay recording' }).click()
-  await expect(page.getByRole('status')).toHaveText('Replay')
-  await page.getByRole('button', { name: 'Pause' }).click()
-  await page.getByRole('slider', { name: 'Replay position' }).press('End')
-  await waitForMode(page, 'AUTO', 10_000)
+  await holdOnLastReplayFrame(page)
 
   const camera = cameraPanel(page)
   await expect(camera).toContainText(MGRS)
